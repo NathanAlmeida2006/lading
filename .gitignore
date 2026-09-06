@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dist-ssr/
+
+# Derivado do .design-sync/ds-bundle/ da base de documentacao.
+# Regenera com `npm run sync:ds`; nao versiona, pela mesma razao que a base
+# nao versiona graphify-out/: derivado que aponta para uma fonte que muda.
+public/fonts/
+src/styles/tokens/
+src/assets/wordmark.svg
+.superpowers/

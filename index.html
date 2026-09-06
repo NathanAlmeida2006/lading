@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Natural cresce · Protocolo de Hipertrofia</title>
+    <meta
+      name="description"
+      content="O que nao cresce e a comparacao com quem nao e natural. O teto natural foi medido, e existe um protocolo para chegar perto dele."
+    />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+
+    <!-- O tema NAO segue a preferencia do sistema, e isso e deliberado.
+         A pagina compoe os dois modos ao mesmo tempo: blocos Sigilo e blocos
+         Cartaz alternados, com a troca no limite da secao. Ligar o interruptor
+         global aqui jogaria a pagina inteira para o Cartaz e apagaria o ritmo,
+         porque as secoes Sigilo nao declaram tema: elas usam o :root.
+         Ver RNF-L19 em requisitos-landing.md. -->
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
+  </head>
+  <body>
+    <div id="raiz"><!--app-html--></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

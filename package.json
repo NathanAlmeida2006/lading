@@ -1,0 +1,25 @@
+{
+  "name": "fluor-landing",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Landing page do Projeto Fluor. Angulo teto-natural, protocolo hipertrofia.",
+  "scripts": {
+    "sync:ds": "node scripts/sync-ds.mjs",
+    "dev": "vite",
+    "build": "npm run sync:ds && vite build && vite build --ssr src/entry-server.jsx --outDir dist-ssr && node scripts/prerender.mjs && node scripts/check-size.mjs",
+    "preview": "vite preview",
+    "size": "node scripts/check-size.mjs",
+    "verificar": "node scripts/verificar.mjs"
+  },
+  "dependencies": {
+    "animejs": "^4.0.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "playwright-core": "^1.44.1",
+    "vite": "^6.0.0"
+  }
+}
