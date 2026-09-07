@@ -2,8 +2,9 @@
  * Verificacao automatizada dos requisitos nao funcionais que dao para medir.
  *
  * Cobre RNF-L09 (contraste), RNF-L11 (foco), RNF-L12 (zoom a 200%),
- * RNF-L13 (movimento reduzido) e RNF-L16 (legivel sem JavaScript), nos DOIS
- * temas, porque o RNF-L18 nao admite componente que so existe no escuro.
+ * RNF-L13 (movimento reduzido), RNF-L16 (legivel sem JavaScript), RNF-L35
+ * (nada preso invisivel), o manifesto, o odometro e a doca, nos DOIS temas,
+ * porque o RNF-L18 nao admite componente que so existe no escuro.
  *
  * O que ele NAO cobre continua sendo trabalho de olho: os 16 testes de
  * rejeicao de `extracao-pontos-negativos.md` §8 e a prova visual em tamanho
@@ -46,7 +47,7 @@ const linha = (id, ok, nota) => {
     ctas: [...document.querySelectorAll("a.botao")].map((a) => a.getAttribute("href")).filter(Boolean).length,
     escondido: [...document.querySelectorAll("[data-revelar]")].filter((e) => parseFloat(getComputedStyle(e).opacity) < 0.99).length,
   }));
-  linha("RNF-L16", r.texto > 2000 && r.h1 === 1 && r.ctas === 3 && r.escondido === 0,
+  linha("RNF-L16", r.texto > 2000 && r.h1 === 1 && r.ctas >= 3 && r.escondido === 0,
     `${r.texto} caracteres de texto, ${r.ctas} CTAs com href, ${r.escondido} elementos escondidos`);
   await ctx.close();
 }
@@ -84,11 +85,14 @@ for (const tema of ["dark", "light"]) {
       const tam = parseFloat(e.fontSize);
       const peso = parseInt(e.fontWeight, 10) || 400;
       const grande = tam >= 24 || (tam >= 18.66 && peso >= 700);
-      const a = lum(e.color), b = lum(fundoDe(el));
+      // Texto em contorno (`-webkit-text-stroke`) nao tem preenchimento: o que
+      // se ve e o traco, e e o traco que se mede.
+      const cor = parseFloat(e.getPropertyValue("-webkit-text-stroke-width")) > 0 ? e.getPropertyValue("-webkit-text-stroke-color") : e.color;
+      const a = lum(cor), b = lum(fundoDe(el));
       const razao = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
       const exigido = grande ? 3 : 4.5;
       if (razao < exigido) {
-        ruins.push(`${proprio.slice(0, 26)} ${razao.toFixed(2)}:1 < ${exigido} · ${e.color} sobre ${fundoDe(el)} · ${tam}px/${peso} · <${el.tagName.toLowerCase()} class="${el.className}">`);
+        ruins.push(`${proprio.slice(0, 26)} ${razao.toFixed(2)}:1 < ${exigido} · ${cor} sobre ${fundoDe(el)} · ${tam}px/${peso} · <${el.tagName.toLowerCase()} class="${el.className}">`);
       }
     }
     return ruins;
@@ -120,6 +124,7 @@ for (const tema of ["dark", "light"]) {
   await p.waitForTimeout(900);
   const r = await p.evaluate(() => ({
     escondido: [...document.querySelectorAll("[data-revelar]")].filter((e) => parseFloat(getComputedStyle(e).opacity) < 0.99).length,
+    quais: [...document.querySelectorAll("[data-revelar]")].filter((e) => parseFloat(getComputedStyle(e).opacity) < 0.99).slice(0, 6).map((e) => `${e.tagName.toLowerCase()}.${e.className.split(" ")[0]}`),
     transformados: [...document.querySelectorAll("[data-revelar]")].filter((e) => {
       const t = getComputedStyle(e).transform;
       return t && t !== "none" && !t.includes("1, 0, 0, 1, 0, 0");
@@ -127,6 +132,7 @@ for (const tema of ["dark", "light"]) {
   }));
   linha("RNF-L13", r.escondido === 0 && r.transformados === 0,
     `${r.escondido} escondidos, ${r.transformados} ainda com transform residual`);
+  if (r.quais.length) console.log("            " + r.quais.join(", "));
   await ctx.close();
 }
 
@@ -173,6 +179,8 @@ for (const tema of ["dark", "light"]) {
   const preso = await p.evaluate(() => ({
     opacos: [...document.querySelectorAll("[data-revelar]")]
       .filter((e) => parseFloat(getComputedStyle(e).opacity) < 0.99).length,
+    quais: [...document.querySelectorAll("[data-revelar]")]
+      .filter((e) => parseFloat(getComputedStyle(e).opacity) < 0.99).slice(0, 6).map((e) => `${e.tagName.toLowerCase()}.${e.className.split(" ")[0]}`),
     // Titulo com mascara falha de outro jeito: o pai fica em `opacity: 1` e
     // sao as LINHAS que ficam paradas fora do recorte, invisiveis. Olhar so a
     // opacidade do pai relata "tudo bem" com o titulo sumido, e foi assim que
@@ -184,6 +192,7 @@ for (const tema of ["dark", "light"]) {
   }));
   linha("RNF-L35", preso.opacos === 0 && preso.linhas === 0,
     `${preso.opacos} elementos e ${preso.linhas} linhas de titulo presos apos rolagem completa`);
+  if (preso.quais.length) console.log("            " + preso.quais.join(", "));
   await ctx.close();
 }
 
@@ -193,7 +202,9 @@ for (const tema of ["dark", "light"]) {
   const p = await ctx.newPage();
   await p.goto(URL, { waitUntil: "networkidle" });
   const semAnel = await p.evaluate(async () => {
-    const foco = [...document.querySelectorAll("a[href],button")];
+    // So o que esta na tela: a doca fora de cena e `display: none` e nao
+    // recebe foco, entao medir o anel dela e medir o nada.
+    const foco = [...document.querySelectorAll("a[href],button")].filter((el) => el.offsetParent !== null);
     const ruins = [];
     for (const el of foco) {
       el.focus();
@@ -207,102 +218,129 @@ for (const tema of ["dark", "light"]) {
   await ctx.close();
 }
 
-// --- CAP-01 e CAP-02: capitulos travados -----------------------------------
-// A mecanica se le da GEOMETRIA, nunca de classe, em duas propriedades:
-//
-//   1. O CONTRATO DE GRUDE (deterministico, lido do estilo computado, sem
-//      depender de instante de rolagem): um painel grudado num topo nao
-//      negativo tem que caber entre esse topo e a dobra. Se nao cabe, ele tem
-//      que ter topo negativo - ou seja, ser mais alto que a tela e grudar pelo
-//      rodape em vez de pelo topo. Painel alto grudado por topo nao negativo
-//      esconde o proprio rodape, que e o defeito que o RNF-L16 proibe. Medir
-//      isto no FIM do trilho nao serve: la o painel alto ja desgrudou, e a
-//      posicao dele passa a ser ditada pelo bloco de contencao, nao pelo
-//      `top` - um `top` quebrado e um `top` certo dao o mesmo numero nesse
-//      instante.
-//   2. A PERMANENCIA NA JANELA no fim do trilho: e o que distingue acumulo de
-//      substituicao. Um painel substituido rolou inteiro para fora, e o
-//      rodape dele (`bottom`) esta acima do topo da janela, ou o topo
-//      (`top`) esta abaixo da base dela. Topo negativo sozinho NAO e sinal de
-//      falha - e o comportamento correto de painel mais alto que a tela.
-//
-// E a caixa nunca apaga: quem recua e o conteudo (RNF-L35).
+// --- MAN-01 e SEM-01: manifesto e regua das doze semanas -------------------
+// Os dois efeitos ligados a rolagem. O que se mede e o ESTADO FINAL, que e o
+// unico que nao pode falhar: palavra que nao acendeu e texto invisivel, e
+// regua que nao chegou a 12 e progresso medido errado (RF-L11b).
 {
   const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
   const p = await ctx.newPage();
   await p.goto(URL, { waitUntil: "networkidle" });
   await p.click("text=Aceitar").catch(() => {});
 
-  const ids = await p.evaluate(() =>
-    [...document.querySelectorAll("[data-capitulo]")].map((s) => s.id),
-  );
-
-  const falhas = [];
-  for (const id of ids) {
-    // O contrato de grude, lido do estilo computado. E deterministico e nao
-    // depende de instante de rolagem, ao contrario da geometria no fim do
-    // trilho: la o painel alto JA DESGRUDOU, e a posicao dele passa a ser
-    // ditada pelo bloco de contencao. Medir so ali da o mesmo numero para o
-    // CSS certo e para o errado.
-    const contrato = await p.evaluate((alvo) => {
-      const secao = document.getElementById(alvo);
-      return [...secao.querySelectorAll(".painel-cap")].map((el, i) => {
-        const top = parseFloat(getComputedStyle(el).top) || 0;
-        const alto = el.offsetHeight;
-        // Cabe entre o proprio topo e a dobra, OU e mais alto que a tela e
-        // gruda pelo rodape (topo negativo). Painel alto grudado por topo nao
-        // negativo esconde o proprio rodape, que e o defeito que o RNF-L16
-        // proibe.
-        const ok = top + alto <= window.innerHeight + 1 || (top < 0 && alto > window.innerHeight);
-        return { i, top: Math.round(top), alto, ok };
-      });
-    }, id);
-    for (const c of contrato) {
-      if (!c.ok) falhas.push(`${id}: painel ${c.i} grudaria em top ${c.top} com ${c.alto}px de altura, escondendo o proprio rodape`);
-    }
-
-    // Rolar ate o FIM do trilho do capitulo: e la que o acumulo esta completo.
-    await p.evaluate((alvo) => {
-      const secao = document.getElementById(alvo);
-      window.scrollTo({ top: secao.offsetTop + secao.offsetHeight - window.innerHeight - 8, behavior: "instant" });
-    }, id);
-    await p.waitForTimeout(500);
-
-    const r = await p.evaluate((alvo) => {
-      const secao = document.getElementById(alvo);
-      const paineis = [...secao.querySelectorAll(".painel-cap")];
-      return {
-        total: paineis.length,
-        foraDaJanela: paineis.filter((el) => {
-          const rect = el.getBoundingClientRect();
-          // Acumular e CONTINUAR NA TELA no fim do trilho. Um painel
-          // SUBSTITUIDO teria rolado inteiro para fora, e o rodape dele estaria
-          // acima do topo da janela. Painel mais alto que a tela gruda pelo
-          // rodape e tem topo negativo de proposito: medir o topo reprovaria o
-          // caso certo.
-          return rect.bottom <= 0 || rect.top >= window.innerHeight;
-        }).length,
-        caixaApagada: paineis.filter((el) => {
-          const caixa = el.querySelector(".painel-cap__caixa");
-          return caixa && parseFloat(getComputedStyle(caixa).opacity) < 0.99;
-        }).length,
-      };
-    }, id);
-
-    if (r.total < 2) falhas.push(`${id}: ${r.total} paineis, minimo 2`);
-    if (r.foraDaJanela > 0) falhas.push(`${id}: ${r.foraDaJanela} paineis sairam da janela (substituiu em vez de acumular)`);
-    if (r.caixaApagada > 0) falhas.push(`${id}: ${r.caixaApagada} caixas apagadas (o recuo vai no conteudo, nao na caixa)`);
+  // Rolar ate o FIM da secao do mapa, em passos, para o `onScroll` acompanhar
+  // (ele sincroniza por quadro, nao por salto).
+  const alvo = await p.evaluate(() => {
+    const s = document.getElementById("mapa");
+    return s.offsetTop + s.offsetHeight - window.innerHeight;
+  });
+  for (let y = 0; y <= alvo; y += 240) {
+    await p.evaluate((v) => window.scrollTo({ top: v, behavior: "instant" }), y);
+    await p.waitForTimeout(40);
   }
+  await p.evaluate((v) => window.scrollTo({ top: v, behavior: "instant" }), alvo);
+  // 1,5 s, e nao 700 ms: quem chega rolando rapido dispara pela varredura, que
+  // acorda 120 ms depois da ultima rolagem, e a subida das linhas leva 820 ms
+  // mais o escalonamento. Medir aos 700 ms pega a animacao no meio do voo e
+  // relata linha presa onde nao ha nenhuma.
+  await p.waitForTimeout(1500);
 
-  linha("CAP-01", ids.length > 0 && falhas.length === 0,
-    `${ids.length} capitulos, ${falhas.length} falhas de mecanica`);
-  falhas.slice(0, 4).forEach((f) => console.log("            " + f));
+  const r = await p.evaluate(() => ({
+    acesas: document.querySelectorAll(".regua12__semana--acesa").length,
+    semanas: document.querySelectorAll(".regua12__semana").length,
+    slides: document.querySelectorAll(".slide").length,
+    linhas: [...document.querySelectorAll(".semanas__titulo .linha__texto")].filter((e) => {
+      const t = getComputedStyle(e).transform;
+      return t && t !== "none" && !t.endsWith(", 0)");
+    }).length,
+    apagadas: [...document.querySelectorAll("#reconhecimento .palavra")].filter((e) => !e.classList.contains("palavra--acesa")).length,
+  }));
 
-  const esperados = ["o-que-e", "mapa", "prova"];
-  const faltando = esperados.filter((e) => !ids.includes(e));
-  linha("CAP-02", faltando.length === 0,
-    faltando.length ? `faltam: ${faltando.join(", ")}` : "os tres capitulos da etapa E1 estao no ar");
+  linha("MAN-01", r.apagadas === 0, `${r.apagadas} palavras do manifesto ainda apagadas depois de passar por ele`);
+  linha("SEM-01", r.acesas === 12 && r.semanas === 12 && r.slides === 5 && r.linhas === 0,
+    `${r.acesas} de ${r.semanas} semanas acesas, ${r.slides} cards, ${r.linhas} linhas de titulo presas`);
   await ctx.close();
+}
+
+// --- PRV-01: a prova acende e o campo de pontos existe ---------------------
+// O estado final e o unico que nao pode falhar: palavra que nao acendeu e
+// texto invisivel. O campo e ornamento, entao o que se mede dele e que ele
+// existe, cobre a secao e NAO recebe evento de ponteiro.
+{
+  const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
+  const p = await ctx.newPage();
+  await p.goto(URL, { waitUntil: "networkidle" });
+  await p.click("text=Aceitar").catch(() => {});
+  const alvo = await p.evaluate(() => {
+    const s = document.getElementById("prova");
+    return s.offsetTop + s.offsetHeight - window.innerHeight;
+  });
+  for (let y = 0; y <= alvo; y += 240) {
+    await p.evaluate((v) => window.scrollTo({ top: v, behavior: "instant" }), y);
+    await p.waitForTimeout(40);
+  }
+  await p.evaluate((v) => window.scrollTo({ top: v, behavior: "instant" }), alvo);
+  await p.waitForTimeout(1200);
+  const r = await p.evaluate(() => {
+    const campo = document.querySelector(".prova .campo");
+    const secao = document.getElementById("prova");
+    const cr = campo?.getBoundingClientRect();
+    const sr = secao.getBoundingClientRect();
+    return {
+      apagadas: [...document.querySelectorAll(".prova .palavra")].filter((e) => !e.classList.contains("palavra--acesa")).length,
+      campo: !!campo,
+      cobre: cr && Math.abs(cr.width - sr.width) < 2,
+      inerte: campo ? getComputedStyle(campo).pointerEvents === "none" : false,
+      pintou: campo ? campo.width > 0 && campo.height > 0 : false,
+    };
+  });
+  linha("PRV-01", r.apagadas === 0 && r.campo && r.cobre && r.inerte && r.pintou,
+    `${r.apagadas} palavras apagadas; campo presente: ${r.campo}, cobrindo: ${r.cobre}, inerte: ${r.inerte}, com area: ${r.pintou}`);
+  await ctx.close();
+}
+
+// --- DOC-01: a doca entra depois da dobra e sai no fechamento --------------
+{
+  const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
+  const p = await ctx.newPage();
+  await p.goto(URL, { waitUntil: "networkidle" });
+  await p.click("text=Aceitar").catch(() => {});
+  const noTopo = await p.evaluate(() => document.querySelector(".doca")?.classList.contains("doca--ativa"));
+  await p.evaluate(() => window.scrollTo({ top: document.getElementById("oferta").offsetTop, behavior: "instant" }));
+  await p.waitForTimeout(400);
+  const noMeio = await p.evaluate(() => document.querySelector(".doca")?.classList.contains("doca--ativa"));
+  await p.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }));
+  await p.waitForTimeout(400);
+  const noFim = await p.evaluate(() => document.querySelector(".doca")?.classList.contains("doca--ativa"));
+  linha("DOC-01", noTopo === false && noMeio === true && noFim === false,
+    `doca no topo: ${noTopo}, na oferta: ${noMeio}, no fechamento: ${noFim}`);
+  await ctx.close();
+}
+
+// --- INT-01: a cortina de introducao -----------------------------------------
+// A cortina tem que estar na tela na primeira pintura, sumir sozinha em menos
+// de 4 s, e VOLTAR na recarga (toda carga tem cortina). Sob movimento reduzido
+// ela nao pode existir.
+{
+  const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
+  const p = await ctx.newPage();
+  await p.goto(URL, { waitUntil: "commit" });
+  await p.waitForTimeout(150);
+  const naEntrada = await p.evaluate(() => getComputedStyle(document.querySelector(".intro")).display !== "none");
+  await p.waitForTimeout(3800);
+  const depois = await p.evaluate(() => getComputedStyle(document.querySelector(".intro")).display === "none");
+  await p.reload({ waitUntil: "commit" });
+  await p.waitForTimeout(150);
+  const naRecarga = await p.evaluate(() => getComputedStyle(document.querySelector(".intro")).display !== "none");
+  await ctx.close();
+  const ctx2 = await nav.newContext({ viewport: { width: 360, height: 640 }, reducedMotion: "reduce" });
+  const p2 = await ctx2.newPage();
+  await p2.goto(URL, { waitUntil: "commit" });
+  await p2.waitForTimeout(150);
+  const reduzido = await p2.evaluate(() => getComputedStyle(document.querySelector(".intro")).display === "none");
+  await ctx2.close();
+  linha("INT-01", naEntrada && depois && naRecarga && reduzido,
+    `cortina na entrada: ${naEntrada}, sumiu em 4 s: ${depois}, presente na recarga: ${naRecarga}, ausente com movimento reduzido: ${reduzido}`);
 }
 
 await nav.close();

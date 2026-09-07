@@ -1,76 +1,117 @@
 import { useEffect, useRef } from "react";
-import { Secao } from "../components/Secao.jsx";
 import { Botao } from "../components/Botao.jsx";
-import { revelarEmCascata } from "../motion/index.js";
+import { Rotulo } from "../components/Rotulo.jsx";
+import { mascaraDeLinha, revelar, revelarEmCascata } from "../motion/index.js";
 import { config } from "../config.js";
 
 /**
- * A oferta.
+ * A oferta, como recibo.
  *
- * Preco visivel ANTES do clique (RF-L23): preco que so aparece depois e a
- * mecanica que a persona le como golpe (§13). Pix em primeiro plano (RF-L22),
- * porque e como ela paga. E o que acontece depois do pagamento esta escrito
- * (RF-L25): entrega implicita e objecao nao respondida.
+ * Preco visivel ANTES do clique (RF-L23), fatiado em tres elementos - moeda,
+ * valor, prazo - que e o que separa uma tabela de preco caseira de uma que
+ * parece produto (Nakula, Kora). Pix em primeiro plano (RF-L22), porque e
+ * como a persona paga. E o que acontece depois do pagamento esta escrito
+ * (RF-L25), em tres passos.
+ *
+ * A forma de recibo e o micro-registro do §7 do mestre visual em uso: serrilha
+ * nas bordas, marcadores em colchetes, selo de versao. Documento catalogado,
+ * nao anuncio. O valor e o unico lugar da pagina onde `--bone-pure` entra,
+ * porque e placar.
  */
 const INCLUI = [
-  "O protocolo de hipertrofia completo, em PDF, para ler no celular",
-  "O Kit: os sete anexos nomeados, para usar dentro da academia",
-  "A tabela de retorno, para a semana que você faltar",
+  "O protocolo de hipertrofia completo, em PDF e EPUB, pra ler no celular",
+  "O Kit: sete anexos nomeados, pra abrir dentro da academia",
+  "A tabela de retorno, pra semana que você faltar",
   "As fontes de cada afirmação técnica, com autor e ano",
+];
+
+const DEPOIS = [
+  "Paga no checkout da Ticto, em Pix.",
+  "O arquivo chega no seu e-mail em minutos.",
+  "Abre no celular. Sem área de membros, sem senha pra esquecer.",
 ];
 
 export function Oferta({ params }) {
   const raiz = useRef(null);
 
   useEffect(() => {
-    revelarEmCascata(raiz.current?.querySelectorAll(".inclui > li"), {
-      intervalo: 50,
-    });
+    const no = raiz.current;
+    if (!no) return;
+    revelar(no.querySelector(".rotulo"));
+    mascaraDeLinha(no.querySelector(".titulo"), { atraso: 60 });
+    revelar(no.querySelector(".recibo"));
+    revelarEmCascata(no.querySelectorAll(".recibo__itens > li"), { intervalo: 50 });
+    revelarEmCascata(no.querySelectorAll(".passos > li"), { intervalo: 60 });
+    revelar(no.querySelector(".chamada"));
   }, []);
 
   const { preco, moeda, parcelamento } = config.oferta;
 
   return (
-    <Secao id="oferta" indice={6} tema="cartaz" kicker="A oferta" titulo="O que está incluído">
-      <div className="oferta" ref={raiz}>
-        <ul className="inclui">
-          {INCLUI.map((item) => (
-            <li key={item} data-revelar>
-              <span className="inclui__marca" aria-hidden="true">
-                &#8224;
+    <section id="oferta" className="bloco oferta" data-theme="cartaz" ref={raiz}>
+      <div className="envelope oferta__grade">
+        <header className="oferta__cabeca">
+          <Rotulo>a oferta</Rotulo>
+          <h2 className="titulo h1" data-revelar>
+            O que chega no seu e-mail
+          </h2>
+        </header>
+
+        <article className="recibo" data-revelar>
+          <header className="recibo__cabeca">
+            <span className="overline">Protocolo 01 · Hipertrofia</span>
+            <span className="mono-reg" data-num>
+              [v1.0]
+            </span>
+          </header>
+
+          <ol className="recibo__itens">
+            {INCLUI.map((item, indice) => (
+              <li key={item} data-revelar>
+                <span className="mono-reg" data-num>
+                  [{String(indice + 1).padStart(2, "0")}]
+                </span>
+                <p className="body">{item}</p>
+              </li>
+            ))}
+          </ol>
+
+          <div className="recibo__total">
+            <span className="recibo__rotulo overline">total</span>
+            {preco ? (
+              <span className="recibo__preco">
+                <span className="recibo__moeda h3">{moeda}</span>
+                <span className="recibo__valor stat" data-num>
+                  {preco}
+                </span>
               </span>
-              <p className="body prosa">{item}</p>
-            </li>
-          ))}
-        </ul>
+            ) : (
+              <span className="recibo__valor h2">a definir</span>
+            )}
+            <span className="recibo__prazo label">à vista no Pix</span>
+            {parcelamento ? <span className="caption">ou no cartão em até {parcelamento}</span> : null}
+          </div>
+        </article>
 
-        <p className="oferta__preco">
-          {preco ? (
-            <>
-              <span className="oferta__moeda h3">{moeda}</span>
-              <span className="oferta__valor stat" data-num>
-                {preco}
-              </span>
-            </>
-          ) : (
-            <span className="oferta__valor h2">Preço a definir</span>
-          )}
-        </p>
+        <div className="oferta__depois">
+          <Rotulo>depois do Pix</Rotulo>
+          <ol className="passos">
+            {DEPOIS.map((passo, indice) => (
+              <li key={passo} data-revelar>
+                <span className="passos__indice h2" data-num>
+                  {String(indice + 1).padStart(2, "0")}
+                </span>
+                <p className="body-lg">{passo}</p>
+              </li>
+            ))}
+          </ol>
 
-        <p className="body">
-          Pagamento em <strong>Pix</strong>, à vista.
-          {parcelamento ? ` Cartão em até ${parcelamento}.` : ""}
-        </p>
-
-        <p className="body prosa" style={{ marginTop: "var(--space-4)" }}>
-          Depois do pagamento, o arquivo chega no seu e-mail. É download
-          direto, não é área de membros, e não tem senha para esquecer.
-        </p>
-
-        <div style={{ marginTop: "var(--space-5)" }}>
-          <Botao params={params} posicao="oferta" />
+          <div className="chamada" data-revelar>
+            <Botao params={params} posicao="oferta" />
+            <span className="microregistro mono-reg">Preço e Pix antes do clique. Nenhuma surpresa depois.</span>
+          </div>
         </div>
       </div>
-    </Secao>
+    </section>
   );
 }

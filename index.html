@@ -20,6 +20,15 @@
          Ver RNF-L19 em requisitos-landing.md. -->
     <script>
       document.documentElement.classList.add("js");
+      // A cortina de introducao e decidida AQUI, antes da primeira pintura,
+      // para nao piscar por cima do heroi ja pre-renderizado. Em TODA carga,
+      // inclusive recarga no meio da pagina (decisao do gerente do projeto,
+      // 06/09/2026); nunca sob movimento reduzido. Ver components/Intro.jsx.
+      try {
+        if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          document.documentElement.classList.add("intro-pendente");
+        }
+      } catch (e) {}
     </script>
   </head>
   <body>

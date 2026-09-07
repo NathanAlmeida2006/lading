@@ -1,4 +1,4 @@
-import { Secao } from "../components/Secao.jsx";
+import { Rotulo } from "../components/Rotulo.jsx";
 
 /**
  * Amostra: a unica secao opcional da sequencia (RF-L08).
@@ -9,10 +9,12 @@ import { Secao } from "../components/Secao.jsx";
  */
 export function Amostra() {
   return (
-    <Secao id="amostra" tema="cartaz" kicker="Amostra" titulo="Um trecho do miolo">
-      <p className="body-lg prosa">
-        Trecho real do protocolo entra aqui, quando houver.
-      </p>
-    </Secao>
+    <section id="amostra" className="bloco" data-theme="cartaz">
+      <div className="envelope">
+        <Rotulo>amostra</Rotulo>
+        <h2 className="titulo h1">Um trecho do miolo</h2>
+        <p className="body-lg prosa">Trecho real do protocolo entra aqui, quando houver.</p>
+      </div>
+    </section>
   );
 }

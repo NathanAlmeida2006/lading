@@ -1,18 +1,23 @@
 import { useEffect, useRef } from "react";
 import { Botao } from "../components/Botao.jsx";
+import { Marquise } from "../components/Marquise.jsx";
 import { Moldura } from "../components/Moldura.jsx";
+import { Rotulo } from "../components/Rotulo.jsx";
 import { abrirPainel } from "../motion/index.js";
-import { config } from "../config.js";
+import { config, VERBO_ACAO } from "../config.js";
+import { Fio } from "./Dobra.jsx";
 
 /**
- * Fechamento: o mesmo painel de tela cheia da dobra, espelhado.
+ * Fechamento: a segunda capa.
  *
- * Mesma escala, mesma familia, mesma frase, mesma moldura. A engenharia reversa
- * registra esse espelhamento de abertura e fechamento no site de origem, e ele
- * funciona pela mesma razao aqui: fecha o arco em vez de so terminar a pagina.
+ * O Rep Republic fecha a pagina com o wordmark em display gigante, no mesmo
+ * peso do heroi, e o Gaspar poe o unico marquee do site exatamente onde o
+ * leitor decide se continua: a navegacao para o proximo projeto. Aqui os dois
+ * se juntam - a headline de duas linhas espelha a dobra, e a marquise carrega
+ * o verbo do botao em laco, com o proprio botao logo abaixo.
  *
  * Sem argumento novo (RF-L08). O que muda em relacao a dobra sao os numeros
- * crus do rodape: la eles anunciam o programa, aqui anunciam a entrega.
+ * crus: la anunciam o programa, aqui anunciam a entrega.
  */
 export function Fechamento({ params }) {
   const raiz = useRef(null);
@@ -25,6 +30,7 @@ export function Fechamento({ params }) {
       fios: no.querySelectorAll(".painel__fio line"),
       kicker: no.querySelector(".painel__kicker"),
       titulo: no.querySelector(".painel__titulo"),
+      linhas: no.querySelectorAll(".linha__texto"),
       corpo: no.querySelector(".painel__corpo"),
       acao: no.querySelector(".painel__acao"),
       rodape: no.querySelector(".painel__rodape"),
@@ -36,34 +42,33 @@ export function Fechamento({ params }) {
     <section id="fechamento" className="painel painel--fechamento grao" ref={raiz}>
       <Moldura />
 
-      <span className="painel__indice stat" aria-hidden="true" data-num>
-        09
-      </span>
-
       <div className="painel__centro envelope">
-        <span className="painel__kicker overline" data-revelar>
-          <span className="glifo" aria-hidden="true">
-            &#8627;
-          </span>
-          O caminho começa aqui
-        </span>
+        <Rotulo className="painel__kicker">o caminho começa aqui</Rotulo>
 
         <Fio />
-        <h2 className="painel__titulo display-xl" data-revelar>
-          Natural Cresce
+        <h2 className="painel__titulo display-xxl" data-revelar>
+          <span className="linha">
+            <span className="linha__texto vazado">Natural</span>
+          </span>
+          <span className="linha">
+            <span className="linha__texto">Cresce.</span>
+          </span>
         </h2>
         <Fio />
 
         <p className="painel__corpo body-lg" data-revelar>
           O que não cresce é a comparação com quem não é natural.
         </p>
+      </div>
 
-        <div className="painel__acao" data-revelar>
+      <div className="painel__acao painel__acao--fechamento" data-revelar>
+        <Marquise palavras={[VERBO_ACAO, "Natural cresce", VERBO_ACAO, "Regra do 12"]} sentido={-1} tempo={20000} />
+        <div className="envelope painel__acao-centro">
           <Botao params={params} posicao="fechamento" />
           <span className="microregistro mono-reg">
             {config.oferta.garantiaDias
               ? `Garantia de ${config.oferta.garantiaDias} dias · reembolso por e-mail`
-              : "Prazo de garantia a definir"}
+              : "Garantia em texto, na seção acima · reembolso por e-mail"}
           </span>
         </div>
       </div>
@@ -82,18 +87,5 @@ export function Fechamento({ params }) {
         </ul>
       </div>
     </section>
-  );
-}
-
-function Fio() {
-  return (
-    <svg
-      className="painel__fio"
-      viewBox="0 0 100 1"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      <line x1="0" y1="0.5" x2="100" y2="0.5" stroke="currentColor" strokeWidth="1" />
-    </svg>
   );
 }

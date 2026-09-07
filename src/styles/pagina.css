@@ -4,16 +4,10 @@
    `tokens/cor.css` declara `--acento: var(--rubro)` dentro de `:root`, e o
    bloco `[data-theme="cartaz"]` redefine `--rubro` sem re-aliasar `--acento`.
    Substituicao de custom property resolve no elemento onde foi declarada,
-   entao `--acento` fica preso no Rubro do Sigilo (#d2202c) e desce assim para
-   dentro dos blocos Cartaz.
-
-   Isso nao aparecia enquanto o tema vivia na raiz. Passou a aparecer no dia em
-   que a pagina alternou tema por secao, e o sintoma foi contraste: o rotulo do
-   botao da oferta ficou em papel sobre o vermelho errado, 4,39:1, abaixo do
-   minimo do RNF-L09.
-
-   Re-aliasar aqui e token para token, nao valor solto. A correcao de verdade e
-   no `00-fundacao/identidade-visual/`, e ate ela existir esta linha fica.
+   entao `--acento` fica preso no Rubro do Sigilo e desce assim para dentro
+   dos blocos Cartaz. Re-aliasar aqui e token para token (RNF-L36). A correcao
+   de verdade e no `00-fundacao/identidade-visual/`, e ate ela existir esta
+   linha fica.
    ========================================================================== */
 [data-theme="cartaz"] {
   --acento: var(--rubro);
@@ -22,17 +16,10 @@
 /* ============================================================================
    Remapeamento de familia: --font-principal
    ============================================================================
-   Os tokens de escala display (`display-xl`, `display`) sao os unicos acima de
-   32px na tipografia canonica, e os dois pedem `--font-principal`, que aponta
-   para a Grenze Gotisch. Com a Suporte fora da peca (05/09/2026), a alternativa
-   seria descer a headline para 32px e perder a escala editorial inteira.
-
-   Entao o que se remapeia e a FAMILIA, nao a escala: os tamanhos, entrelinhas e
-   pesos continuam sendo os do token. E o resultado e o primeiro principio da
-   engenharia reversa - uma familia so, em muitos pesos e escalas.
-
-   A Secundaria e caixa alta com tracking, conforme RF-G05, entao a escala
-   display herda as duas coisas aqui.
+   `display-xl` e `display` pedem `--font-principal`, que e a Grenze Gotisch.
+   Com a Suporte fora da peca (05/09/2026), remapeia-se a FAMILIA, nao a
+   escala: tamanhos, entrelinhas e pesos continuam sendo os do token. Uma
+   familia so, em muitos pesos e escalas.
    ========================================================================== */
 :root {
   --font-principal: "Big Shoulders Display", "Oswald", "Arial Narrow", sans-serif;
@@ -45,12 +32,36 @@
   font-weight: var(--peso-black);
 }
 
-/* ============================================================================
-   Layout da pagina. Coluna unica, celular antes do desktop: e de onde o
-   trafego pago chega (persona §3). Um DOM so, sem duplicar conteudo por
-   breakpoint (RNF-G20 / TR-16).
-   ========================================================================== */
+/* ---- display-xxl: a escala de cartaz ------------------------------------
+   Existe em TRES lugares: a headline da dobra, a do fechamento e o numero da
+   semana. Nao e tamanho de texto, e tipografia como arquitetura (Rep
+   Republic): a palavra encosta nas bordas do container. Aparecer pouco e o
+   que mantem a escala como assinatura. Duas linhas no maximo, por regra da
+   Secundaria. */
+.display-xxl {
+  font-family: var(--font-secundaria);
+  font-weight: var(--peso-black);
+  font-size: clamp(72px, 27vw, 240px);
+  line-height: 0.86;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
 
+/* Palavra so em contorno: fio de 1,5px no lugar do preenchimento. E a segunda
+   linha da headline, e e o que faz as duas linhas lerem como uma peca, e nao
+   como duas palavras. */
+.vazado {
+  color: transparent;
+  /* Cor explicita, nunca `currentColor`: ele resolve para o `color` do proprio
+     elemento, que aqui e transparente, e o contorno sumia junto. */
+  -webkit-text-stroke: 1.5px var(--bone);
+}
+
+/* ============================================================================
+   Layout. Coluna unica, celular antes do desktop: e de onde o trafego pago
+   chega (persona §3). Um DOM so, sem duplicar conteudo por breakpoint (TR-16).
+   ========================================================================== */
 .envelope {
   width: 100%;
   max-width: 720px;
@@ -65,122 +76,54 @@
 /* Medida de linha: 65 caracteres, teto do RF-G08. */
 .prosa { max-width: var(--medida-max); }
 
-/* ---- Ritmo entre secoes --------------------------------------------------
-   96px no desktop, 48px no celular. O espaco interno de um grupo e sempre
-   menor que o espaco entre grupos, senao reprova em forma-espaco. */
-/* ---- Secao ---------------------------------------------------------------
-   O tema vive NA secao, nao na raiz. A pagina alterna blocos Sigilo e blocos
-   Cartaz, e a troca acontece no limite, em corte: sem transicao, sem gradiente
-   de passagem. E o RNF-G18 levado ao pe da letra - os dois temas sao nativos e
-   paritarios porque todo componente atravessa os dois na mesma rolagem.
+.pilha > * + * { margin-top: var(--space-4); }
 
-   `background` explicito porque a secao passa a pintar o proprio fundo; sem
-   ele o bloco Cartaz mostraria o void do body por baixo. */
-.secao {
+/* ---- Bloco de secao -------------------------------------------------------
+   O tema vive NA secao, nao na raiz. A pagina alterna blocos Sigilo e blocos
+   Cartaz, e a troca acontece no limite, em corte: sem transicao, sem
+   gradiente de passagem (RNF-L19). `background` explicito porque a secao
+   pinta o proprio fundo. `clip`, nunca `hidden`: `hidden` cria container de
+   rolagem e desliga `position: sticky` em todo descendente (RNF-L37). */
+.bloco {
   position: relative;
   padding-block: var(--space-8);
   background: var(--void);
   color: var(--bone);
-  /* `clip`, nao `hidden`. `overflow: hidden` cria um container de rolagem e
-     desliga `position: sticky` em TODO descendente - foi o que fez a trilha do
-     mapa e os cartoes de fase pararem de grudar. `clip` recorta igual sem
-     criar o container. */
+  border-top: var(--hairline) solid var(--line);
   overflow: clip;
 }
 
 @media (min-width: 768px) {
-  .secao { padding-block: var(--space-9); }
+  .bloco { padding-block: var(--space-9); }
 }
 
-/* ---- Cabeca de secao -----------------------------------------------------
-   O indice cru atras do titulo e o que traz a escala editorial que o token de
-   titulo nao alcanca. E ornamento, nao conteudo: aria-hidden no markup. */
-.secao__cabeca {
-  position: relative;
-  margin-bottom: var(--space-6);
-  padding-top: var(--space-5);
-}
-
-.secao__indice {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 0;
-  color: var(--surface-2);
-  line-height: 0.8;
-  pointer-events: none;
-  user-select: none;
-}
-
-/* O ornamento fica ATRAS. Numero cru que passa por cima da pergunta deixa de
-   ser textura e vira ruido. */
-.secao__kicker,
-.secao__titulo {
-  position: relative;
-  z-index: 1;
-}
-
-.secao__titulo {
-  position: relative;
-  color: var(--bone);
-}
-
-.secao__kicker {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
+/* O rotulo entre parenteses. Um sistema de ornamento so, sem excecao. */
+.rotulo {
+  display: block;
   color: var(--silver);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
-/* A seta que introduz o kicker. Glifo como interface, nao como decoracao:
-   e o mesmo papel do que a engenharia reversa registra no site de origem. */
-.glifo {
-  color: var(--acento);
-  font-family: var(--font-terciaria);
-}
+.titulo { color: var(--bone); }
 
-/* A mascara de linha precisa do recorte; o `wrap: clip` do splitText cria o
-   envelope, e aqui so garantimos que ele nao corte descendentes de acento.
+/* A mascara de linha precisa do recorte; `[data-line]` e como o `splitText`
+   do anime.js 4 marca a linha. O padding evita que o `g` e a cedilha sejam
+   comidos pelo `overflow: clip` do envelope. */
+.titulo [data-line] { padding-bottom: 0.08em; }
 
-   `[data-line]` porque e assim que o `splitText` do anime.js 4 marca a linha.
-   Escrita como `.line`, a regra nunca casou, e quem pagava era o `g` de
-   "perguntas" e a cedilha, comidos pelo `overflow: clip` do envelope. */
-.secao__titulo [data-line],
-.painel__titulo [data-line] {
-  padding-bottom: 0.08em;
-}
-
-/* `.painel-cap__caixa` e `#regua-honesta` reusam a mesma regra em vez de
-   ganhar classe propria: e o mesmo ritmo vertical, so que o conteudo de
-   capitulo perdeu o `<div className="pilha">` na conversao e ficou sem
-   nenhum. */
-.pilha > * + *,
-.painel-cap__caixa > * + *,
-#regua-honesta > * + * { margin-top: var(--space-4); }
-.pilha-larga > * + * { margin-top: var(--space-5); }
-
-/* ---- Cabecalho -----------------------------------------------------------
-   Sem menu: uma pagina, um destino (RF-L01). O wordmark e ancora para o topo,
-   e nada mais. */
-.cabecalho {
-  position: relative;
+/* A chamada: botao mais micro-registro, em toda secao que vende. */
+.chamada {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding-block: var(--space-4);
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: var(--space-7);
 }
 
+/* ---- Wordmark ------------------------------------------------------------ */
 .wordmark {
   display: block;
   width: 132px;
   color: var(--bone);
-}
-
-.cabecalho__selo {
-  color: var(--silver);
-  text-align: right;
 }
 
 /* ============================================================================
@@ -188,18 +131,11 @@
    ============================================================================
    `100svh` e nao `100vh`. No celular a barra do navegador entra e sai, e `vh`
    mede a viewport GRANDE: com `100vh` o botao cai para fora da tela exatamente
-   em quem chega pelo anuncio, que e o unico visitante que esta pagina tem.
+   em quem chega pelo anuncio (RF-L09).
 
-   A composicao usa so o que ja e do sistema: kit de molduras e cantos, fios de
-   1px como grade de painel, escala display, grao e numeros crus. Nenhum sigilo,
-   porque os tres do RF-G03 ainda nao existem na base e desenhar um aqui seria
-   criar ativo de marca fora de `00-fundacao/`.
+   Flex-column, nao grid: o rodape e absoluto, e filho absoluto de um grid
+   resolve o bloco de contencao pela area implicita dele.
    ========================================================================== */
-/* Flex-column, nao grid. O rodape e absoluto, e filho absoluto de um grid
-   resolve o bloco de contencao pela area implicita dele: o `bottom` media
-   contra a linha errada, e as tentativas de corrigir com `grid-row` e
-   `grid-area` desalinharam as colunas. Em flex, absoluto e simplesmente fora
-   de fluxo em relacao ao painel, e some a classe inteira de problema. */
 .painel {
   position: relative;
   display: flex;
@@ -211,13 +147,12 @@
   overflow: clip;
 }
 
-/* Navegadores sem `svh` caem no `vh`, que e o comportamento antigo. */
 @supports not (height: 100svh) {
   .painel { min-height: 100vh; }
 }
 
-/* Quatro cantos de tamanho fixo, um em cada quina do painel. Traco de 1,5px,
-   o minimo do RNF-G07: abaixo disso o traco colapsa em tela. */
+/* Quatro cantos de tamanho fixo, um em cada quina. Traco de 1,5px, o minimo
+   do RNF-G07. */
 .moldura {
   position: absolute;
   inset: var(--space-2);
@@ -241,43 +176,20 @@
   color: var(--silver);
 }
 
-/* O centro e o unico bloco que cresce: a mensagem fica no meio da tela em
-   qualquer altura de aparelho, sem calculo de margem. */
-/* Aperto deliberado. Um heroi de tela cheia com headline de duas linhas em
-   64px, paragrafo de quatro linhas, botao e faixa de numeros NAO cabe nos
-   ~560px uteis de um 360x640 com barra de navegador. Entao a faixa de numeros
-   sai do fluxo (ela e micro-registro, nao mensagem) e os respiros do centro
-   encolhem. O que nao encolhe e o botao: RF-L09 e sobre ele estar visivel. */
-/* `flex: 1` e o que centraliza: o centro toma toda a altura que sobra depois
-   do cabecalho, e centraliza o conteudo dentro dela. Funciona igual no painel
-   que tem cabecalho (a dobra) e no que nao tem (o fechamento). */
+/* `flex: 1` e o que centraliza: o centro toma toda a altura que sobra e
+   centraliza o conteudo dentro dela. O que nao encolhe e o botao (RF-L09). */
 .painel__centro {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
   gap: var(--space-2);
   padding-block: var(--space-3);
   min-height: 0;
 }
 
-.painel__centro .painel__corpo { margin-inline: auto; }
-
-.painel__centro .painel__acao {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.painel__kicker {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--silver);
-  margin-bottom: var(--space-2);
-}
+.painel__kicker { margin-bottom: var(--space-2); }
 
 /* Os dois fios que emolduram a headline. Entram desenhados, da esquerda. */
 .painel__fio {
@@ -287,15 +199,43 @@
   overflow: visible;
 }
 
+/* A headline de duas linhas, compostas a mao. Cada linha e um recorte, e o
+   texto sobe de dentro dele (`subirLinhas`). Encosta nas bordas do envelope:
+   e cartaz, nao paragrafo. */
 .painel__titulo {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   color: var(--bone);
   margin-block: var(--space-2);
+}
+
+.linha {
+  display: block;
+  overflow: clip;
+  /* Folga nos DOIS lados, e cada uma tem motivo proprio.
+
+     Embaixo: o `.` e a haste do `C` nao podem ser comidos pelo clip.
+
+     EM CIMA: com `line-height` abaixo de 1, o acento sai da caixa de linha e o
+     clip come o agudo de "JA" e o til de "ESTAO". Medido em 07/09/2026 no
+     titulo das doze semanas: o texto ia de 221px a 367px e a caixa da linha,
+     de 242px a 352px - 21px de acento cortados no topo, com fonte de 122px
+     (0,17em). A folga de cima nao vaza nada: o texto so viaja de +110% ate
+     0%, nunca acima do proprio topo. */
+  padding-block: 0.2em 0.04em;
+  margin-block: -0.2em -0.04em;
+}
+
+.linha__texto {
+  display: block;
+  will-change: transform;
 }
 
 .painel__corpo {
   color: var(--silver);
   max-width: var(--medida-max);
-  margin-top: var(--space-2);
+  margin-top: var(--space-3);
 }
 
 .painel__corpo strong {
@@ -325,22 +265,35 @@
   .painel__rodape { display: none; }
 }
 
-/* Tela baixa: a headline desce um degrau da escala canonica, de `display-xl`
-   para `display`. Nao e tamanho inventado - e o token de baixo, que existe
-   exatamente para isso. Vale a troca porque o RF-L09 e sobre o BOTAO estar
-   visivel, e headline grande que empurra o botao para fora nao vende nada. */
-@media (max-height: 660px) {
-  .painel__titulo {
-    font-size: clamp(40px, 4.5vw, 56px);
-    line-height: 1;
-  }
+/* Tela baixa: a headline cede, o botao nao. */
+@media (max-height: 700px) {
+  .painel__titulo { font-size: clamp(56px, 20vw, 120px); }
+}
+
+/* O indicador de rolagem em duas linhas curtas empilhadas, do lenis.dev. */
+.rolar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--silver);
+}
+
+.painel__seta {
+  display: block;
+  color: var(--silver);
+  font-family: var(--font-terciaria);
+  font-size: 18px;
+  line-height: 1;
+  margin-top: var(--space-1);
 }
 
 /* Numeros crus como ornamento honesto: dado exposto, nao enfeite desenhado. */
 .crus {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--space-2) var(--space-4);
+  text-align: right;
 }
 
 .crus b {
@@ -348,34 +301,33 @@
   font-weight: var(--peso-bold);
 }
 
-.painel__seta {
-  flex: none;
-  color: var(--silver);
-  font-size: 20px;
-  line-height: 1;
-}
-
-.painel__indice {
-  position: absolute;
-  top: var(--space-6);
-  right: var(--space-4);
-  z-index: 0;
-  color: var(--surface-2);
-  line-height: 0.8;
-  pointer-events: none;
-  user-select: none;
-}
-
 .painel__centro,
 .painel__rodape,
-.painel__cabecalho { position: relative; z-index: 1; }
+.painel__cabecalho,
+.painel__acao--fechamento { position: relative; z-index: 1; }
 
-/* O kicker tem uma seta a esquerda do texto; centralizado, o par seta mais
-   rotulo se mantem como uma unidade so. */
-.painel__kicker { justify-content: center; }
+/* O fechamento: a marquise do verbo atravessa a tela e o botao vem centrado
+   logo abaixo dela. E o "Next" do Gaspar com o CTA no meio. */
+.painel--fechamento .painel__centro { padding-bottom: var(--space-2); }
+
+.painel__acao--fechamento {
+  margin-top: 0;
+  margin-bottom: var(--space-9);
+}
+
+.painel__acao--fechamento .marquise { margin-bottom: var(--space-5); }
+
+.painel__acao-centro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
 
 /* ---- Marquise ------------------------------------------------------------
-   Faixa em laco entre blocos de tema. Costura e ornamento ao mesmo tempo. */
+   Faixa em laco. Duas na pagina inteira: uma depois do manifesto, onde a
+   energia cai, e uma no fechamento. Repetida em toda secao, o efeito morre
+   (Gaspar). */
 .marquise {
   position: relative;
   overflow: hidden;
@@ -386,11 +338,9 @@
   white-space: nowrap;
 }
 
-/* Inclina com a velocidade da rolagem (`ligarInerciaDeRolagem` em
-   motion/index.js). Na faixa, nao no trilho: o trilho ja carrega o
-   translateX do laco, e as duas transform brigariam no mesmo elemento.
-   Sem JS ou com `prefers-reduced-motion` a var nunca e escrita e o fallback
-   `0` zera o skew - nao precisa de regra propria fora de `.js`. */
+/* Inclina com a velocidade da rolagem, que o Lenis escreve em
+   `--scroll-velocity`. Na faixa, nao no trilho: o trilho ja carrega o
+   translateX do laco. Sem JS a var nunca e escrita e o fallback zera. */
 .js .marquise {
   transform: skewX(calc(var(--scroll-velocity, 0) * -0.35deg));
 }
@@ -414,15 +364,16 @@
 .marquise__ornamento { color: var(--acento); }
 
 /* ---- Botao ---------------------------------------------------------------
-   O acento vive aqui, e so aqui na superficie (RF-G09): uma cor de acento por
-   tela. Canto reto; o unico 2px do sistema e alvo de toque. */
+   O acento vive aqui, e so aqui na superficie: uma cor de acento por tela.
+   Canto reto; o unico 2px do sistema e alvo de toque. */
 .botao {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   width: 100%;
-  min-height: 56px;         /* >= 48px do RNF-L10, com folga para o polegar */
+  min-height: 56px;
   padding: var(--space-4) var(--space-5);
   border: var(--hairline) solid var(--acento);
   border-radius: var(--radius-touch);
@@ -430,14 +381,13 @@
   color: var(--bone);
   text-decoration: none;
   cursor: pointer;
+  overflow: clip;
   transition: background var(--motion-fast) var(--ease-default),
               color var(--motion-fast) var(--ease-default);
 }
 
-/* O acento e vermelho escuro nos DOIS temas, mas --bone inverte: vira tinta
-   quase preta no Modo Cartaz, e o rotulo do botao caia para 2,58:1 sobre o
-   proprio botao. No Cartaz quem contrasta com a inundacao de acento e --void,
-   que la e o papel. 6,33:1, dentro do RNF-L09. */
+/* O acento e vermelho nos DOIS temas, mas --bone inverte: no Cartaz quem
+   contrasta com a inundacao de acento e --void, que la e o papel. 6,33:1. */
 [data-theme="cartaz"] .botao { color: var(--void); }
 
 .botao:hover,
@@ -446,11 +396,42 @@
   color: var(--bone);
 }
 
+/* Text roll: o rotulo duplicado desliza no eixo Y no hover, e a copia entra
+   por baixo. Convencao do genero, quinze linhas de CSS. */
+.botao__rolo {
+  position: relative;
+  display: block;
+  height: 1em;
+  line-height: 1;
+  overflow: clip;
+}
+
+.botao__rotulo {
+  display: block;
+  transition: transform var(--motion-base) var(--ease-default);
+}
+
+.botao__rotulo + .botao__rotulo {
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+}
+
+.botao:hover .botao__rotulo,
+.botao:focus-visible .botao__rotulo { transform: translateY(-100%); }
+
 .botao__seta { transition: transform var(--motion-fast) var(--ease-default); }
 .botao:hover .botao__seta { transform: translateX(var(--space-1)); }
 
 @media (min-width: 480px) {
   .botao { width: auto; min-width: 280px; }
+}
+
+.botao--compacto {
+  width: auto;
+  min-width: 0;
+  min-height: 48px;
+  padding: var(--space-3) var(--space-4);
 }
 
 .microregistro {
@@ -459,71 +440,515 @@
   color: var(--silver);
 }
 
-/* ---- Lista de reconhecimento --------------------------------------------- */
-.marcas > li {
-  display: grid;
-  grid-template-columns: var(--space-6) 1fr;
-  gap: var(--space-3);
-  padding-block: var(--space-4);
-  border-bottom: var(--hairline) solid var(--line);
+/* ============================================================================
+   02 · Manifesto: palavras que acendem
+   ============================================================================
+   A secao e mais alta que a tela e o texto fica grudado no meio dela: e o
+   trilho que mede (`acenderPalavras` le a travessia da secao) e o texto que
+   exibe. Quem gruda nunca e quem mede.
+   ========================================================================== */
+.manifesto {
+  min-height: 170svh;
+  padding-block: 0;
 }
 
-.marcas__indice {
+.manifesto__fixo {
+  position: sticky;
+  top: 14svh;
+  padding-block: var(--space-7);
+}
+
+.manifesto__texto {
+  color: var(--bone);
+  text-transform: none;
+  letter-spacing: -0.005em;
+  line-height: 1.05;
+  max-width: 14ch;
+}
+
+/* Cada palavra troca de estado como carimbo. Nasce apagada so sob `.js`:
+   sem JavaScript o manifesto abre inteiro e legivel (RNF-L16). */
+.palavra {
+  display: inline-block;
+  transition: opacity var(--motion-fast) var(--ease-corte-2);
+}
+
+.js .palavra { opacity: 0.16; }
+.js .palavra--acesa,
+.palavra--acesa { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .manifesto { min-height: 0; padding-block: var(--space-8); }
+  .manifesto__fixo { position: static; padding-block: 0; }
+  .js .palavra { opacity: 1; }
+}
+
+/* ============================================================================
+   03 · Espelho: o baralho de cards do Rep Republic ("Find Your Program")
+   ============================================================================
+   Cada card gruda num degrau abaixo do anterior e o seguinte sobe por cima:
+   no fim, os cinco estao na tela, os cobertos reduzidos a faixa do indice. O
+   curso e o proprio fluxo da lista - nao ha trilho medido, porque o card nao
+   precisa ficar pinado uma tela inteira, so ate o proximo cobri-lo.
+
+   Travas herdadas: `overflow: clip` (nunca `hidden`) em qualquer ancestral, e
+   nenhum `transform` em ancestral de quem gruda. O card anima a si mesmo
+   (opacity e y na revelacao), e isso e permitido: a trava e sobre ancestrais.
+   ========================================================================== */
+.espelho__cabeca { margin-bottom: var(--space-6); }
+
+.espelho__sub {
   color: var(--silver);
-  padding-top: 3px;
+  margin-top: var(--space-4);
 }
 
-/* ---- Cartoes -------------------------------------------------------------
-   Elevacao e fio de 1px sobre cor de superficie. Zero sombra no sistema. */
-/* ---- Cartoes -------------------------------------------------------------
-   Grade de celulas desiguais, no lugar de duas colunas iguais. O ritmo
-   editorial vem da desigualdade: a coluna regular le como formulario, e o
-   olho para de andar. No celular tudo empilha, que e onde o trafego chega. */
-.cartoes {
-  display: grid;
+.baralho {
+  --degrau-carta: var(--space-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.carta {
+  position: sticky;
+  top: calc(var(--space-5) + var(--ordem) * var(--degrau-carta));
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
+  padding: var(--space-5);
+  background: var(--surface-1);
+  border: var(--hairline) solid var(--line-strong);
+}
+
+/* Alternancia de superficie, como o amarelo e o branco do site de origem: e o
+   que separa um card do proximo quando os dois sao do mesmo tema. */
+.carta:nth-child(even) { background: var(--void); }
+
+/* O indice e o acento da superficie: uma ocorrencia por card, como o laranja
+   do site de origem. Rubro sobre o papel do Cartaz da 6,34:1, acima do minimo
+   de texto corrente. */
+.carta__indice { color: var(--acento); }
+
+.carta__titulo {
+  color: var(--bone);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.carta__depois { color: var(--bone); }
+
+/* A linha de metadados e o "hoje", riscado: forma, nao so tom (RNF-L14). */
+.carta__hoje { color: var(--silver); }
+.carta__hoje-rotulo { color: var(--silver); margin-right: var(--space-1); }
+.carta__hoje s {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--line-strong);
+}
+
+.carta__rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  margin-top: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: var(--hairline) solid var(--line);
+}
+
+.carta__lastro { color: var(--silver); }
+
+/* Botao em contorno: mesmo verbo, sem a inundacao. Nos dois temas o texto e
+   `--bone`, que e o texto primario de cada um. */
+.botao--fantasma,
+[data-theme="cartaz"] .botao--fantasma {
+  background: transparent;
+  border-color: var(--bone);
+  color: var(--bone);
+}
+
+.botao--fantasma:hover,
+.botao--fantasma:focus-visible {
+  background: var(--bone);
+  color: var(--void);
+}
+
+@media (min-width: 768px) {
+  .carta { padding: var(--space-6); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carta { position: static; }
+}
+
+/* ============================================================================
+   04 · O que voce leva: a secao "Members' Words" do Rep Republic
+   ============================================================================
+   A cabeca fica centrada e GRUDADA no meio da tela; a lista de cards vem
+   depois dela no fluxo e passa por cima (z-index acima). No monitor os cards
+   caem em ziguezague de tres colunas com sobreposicao vertical; no celular,
+   empilhados. Os cards alternam escuro com grao e Cartaz pelo proprio
+   `data-theme`.
+
+   O `transform` de centralizacao fica na PROPRIA cabeca, que nao e ancestral
+   de nada grudado: a trava e sobre ancestrais.
+   ========================================================================== */
+/* O campo de pontos e o mesmo da prova. Os cards tem superficie propria, entao
+   a malha fica so atras da cabeca e do respiro entre eles. */
+.leva > *:not(.campo) { position: relative; z-index: 1; }
+
+.leva__palco { position: relative; }
+
+.leva__cabeca {
+  position: sticky;
+  top: max(var(--space-7), calc(50svh - 140px));
+  z-index: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block: var(--space-6);
+}
+
+.leva__cabeca .titulo {
+  text-transform: none;
+  letter-spacing: -0.005em;
+  line-height: 1.02;
+  max-width: 14ch;
+}
+
+.leva__sub {
+  color: var(--silver);
+  margin-top: var(--space-4);
+  text-align: center;
+}
+
+.vozes {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-top: var(--space-7);
+}
+
+/* O card: retrato, conteudo no alto, etiqueta no pe. Elevacao e fio. */
+.voz {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 380px;
+  padding: var(--space-5);
+  background: var(--surface-1);
+  color: var(--bone);
+  border: var(--hairline) solid var(--line-strong);
+}
+
+/* O card Cartaz pinta o proprio papel: sem isto ele herda o fundo escuro da
+   secao com os tokens claros por cima, e o texto some. */
+.voz[data-theme="cartaz"] { background: var(--surface-1); }
+
+/* O grao so nos cards escuros, no lugar da fotografia em duotone do site de
+   origem. Nunca sobre texto corrido: fica no ::before, atras. */
+.voz.grao::before { z-index: 0; }
+.voz > * { position: relative; z-index: 1; }
+
+/* As aspas: o acento da superficie, uma ocorrencia por card, como o laranja
+   do site de origem. */
+.voz__aspas {
+  color: var(--acento);
+  line-height: 0.6;
+  font-size: 48px;
+}
+
+.voz__fala {
+  color: var(--bone);
+  flex: 1 1 auto;
+}
+
+.voz__quem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.voz__nome { color: var(--bone); }
+.voz__governa { color: var(--silver); }
+
+.voz__onde {
+  display: block;
+  color: var(--silver);
+  padding-top: var(--space-4);
+  border-top: var(--hairline) solid var(--line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leva__cabeca { position: static; }
+}
+
+/* ============================================================================
+   05 · Doze semanas: a secao "Lenis runs the web" do lenis.dev
+   ============================================================================
+   Fio vertical a esquerda, titulo gigante em tres linhas quebradas a mao ao
+   lado dele, e o paragrafo de tese deslocado para a DIREITA e para BAIXO. Os
+   cards vem depois, em ziguezague vertical: nenhum alinha com o vizinho, que
+   e o que faz a grade ler como composicao e nao como tabela.
+
+   O odometro travado saiu daqui em 07/09/2026. O numero grande virou a CAPA
+   de cada card, que e o analogo do preview de video do showcase.
+   ========================================================================== */
+.semanas__manifesto {
+  position: relative;
+  margin-top: var(--space-5);
+  padding-left: var(--space-5);
+}
+
+/* O fio a esquerda do titulo: 1px em acento, da altura do bloco de linhas. */
+.semanas__manifesto::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--acento);
+}
+
+.semanas__titulo {
+  display: flex;
+  flex-direction: column;
+  color: var(--bone);
+  /* Escala PROPRIA, menor que a dos paineis. O recorte de `.linha` corta nos
+     dois eixos - e o que faz a linha subir de dentro dele - entao palavra mais
+     larga que a coluna sai cortada na horizontal. Nos paineis nunca apareceu
+     porque la as palavras sao curtas; aqui "ESCRITAS" tem oito caracteres. O
+     teto e o que faz a linha mais longa caber, medido, nao estimado. */
+  font-size: clamp(44px, 21vw, 96px);
+}
+
+/* As linhas reusam o primitivo `.linha` / `.linha__texto` dos paineis. */
+
+/* A tese deslocada: para a direita e para baixo, como no site de origem. */
+.semanas__tese {
+  color: var(--silver);
+  max-width: 46ch;
+  margin-top: var(--space-6);
+}
+
+.semanas__marca {
+  color: var(--acento);
+  font-weight: var(--peso-semi);
+}
+
+/* A regua das doze semanas: acende e apaga com a rolagem (RF-L11b). Duas
+   linhas de seis no celular; doze numa linha a 360px nao cabe legivel. */
+.regua12 {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-3) var(--space-2);
+  margin-top: var(--space-7);
+  padding-top: var(--space-5);
+  border-top: var(--hairline) solid var(--line);
+}
+
+.regua12__semana {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Corte seco na curva de degraus do sistema. Cor nunca sozinha (RNF-L14): a
+   semana acesa muda de PREENCHIMENTO, de vazado para cheio, e o numero muda
+   de peso junto. */
+.regua12__ponto {
+  display: block;
+  height: 6px;
+  background: transparent;
+  border: var(--hairline) solid var(--line-strong);
+  transition: background var(--motion-fast) var(--ease-corte-2),
+              border-color var(--motion-fast) var(--ease-corte-2);
+}
+
+.regua12__numero {
+  color: var(--silver);
+  transition: color var(--motion-fast) var(--ease-corte-2);
+}
+
+.regua12__semana--acesa .regua12__ponto {
+  background: var(--acento);
+  border-color: var(--acento);
+}
+
+.regua12__semana--acesa .regua12__numero {
+  color: var(--bone);
+  font-weight: var(--peso-bold);
 }
 
 @media (min-width: 640px) {
-  .cartoes {
-    grid-template-columns: repeat(6, 1fr);
-    gap: var(--space-4);
-  }
-  .cartao { grid-column: span 3; }
-  .cartao:nth-child(1) { grid-column: span 4; }
-  .cartao:nth-child(2) { grid-column: span 2; }
-  .cartao:nth-child(5) { grid-column: span 2; }
-  .cartao:nth-child(6) { grid-column: span 4; }
+  .regua12 { grid-template-columns: repeat(12, 1fr); }
 }
 
-.cartao {
+/* ---- Os cards -------------------------------------------------------------
+   Capa, nome, legenda: a anatomia do card de showcase. A capa e um bloco de
+   superficie com o numero em escala de cartaz, no lugar do preview de video -
+   nao ha fotografia nesta pagina, e o numero e o que a secao tem de proprio. */
+.slides {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+  margin-top: var(--space-8);
+}
+
+.slide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.slide__capa {
   position: relative;
-  padding: var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
   background: var(--surface-1);
-  border: var(--hairline) solid var(--line);
+  border: var(--hairline) solid var(--line-strong);
+  overflow: clip;
 }
 
-/* Numero cru no canto do cartao. Ornamento honesto, nao contador. */
-.cartao__indice {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-4);
-  color: var(--line-strong);
-}
-
-.cartao__titulo {
+.slide__numero {
   color: var(--bone);
-  margin-bottom: var(--space-2);
+  font-size: clamp(64px, 22vw, 132px);
+  line-height: 0.86;
 }
 
-.cartao__corpo { color: var(--silver); }
+.slide__faixa {
+  position: absolute;
+  left: var(--space-4);
+  bottom: var(--space-4);
+  color: var(--silver);
+}
 
-/* ---- Regua da prova ------------------------------------------------------ */
+.slide__nome { color: var(--bone); }
+.slide__texto { color: var(--silver); }
+
+/* ---- O fecho --------------------------------------------------------------
+   "Quer ver mais?" mais o CTA, na mesma linha do site de origem. */
+.semanas__mais {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: var(--hairline) solid var(--line);
+}
+
+.semanas__pergunta {
+  color: var(--bone);
+  max-width: 24ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .regua12__ponto { background: var(--acento); border-color: var(--acento); }
+  .regua12__numero { color: var(--bone); }
+}
+
+/* ============================================================================
+   06 · Prova: o fecho do Google Cloud x Team USA
+   ============================================================================
+   Bloco pinado no meio da tela sobre um campo de pontos animado, com o texto
+   grande e centrado acendendo PALAVRA A PALAVRA conforme a pagina desce, a
+   palavra da fronteira no acento. Passado o texto, a evidencia rola por cima
+   do mesmo fundo.
+
+   O campo de pontos esbarra no `TR-03` ("faisca ou particula"), e a decisao
+   esta em aberto no contrato. Ele vive isolado em `CampoDePontos.jsx` para
+   poder sair numa linha, e nada aqui depende dele: sem o canvas, o fundo fica
+   liso e o layout continua de pe.
+   ========================================================================== */
+.prova {
+  position: relative;
+  padding-block: 0 var(--space-9);
+  overflow: clip;
+}
+
+/* O campo cobre a secao inteira, atras de tudo. `pointer-events: none` porque
+   e imagem, nao interface, e `aria-hidden` no markup pelo mesmo motivo. */
+.campo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.prova > *:not(.campo) { position: relative; z-index: 1; }
+
+/* O palco e o trilho: e ele que MEDE a travessia que acende as palavras. O
+   bloco de dentro e quem gruda e exibe. Quem gruda nunca e quem mede. */
+.prova__palco {
+  min-height: 190svh;
+  display: flex;
+  align-items: flex-start;
+}
+
+@supports not (height: 100svh) {
+  .prova__palco { min-height: 190vh; }
+}
+
+.prova__fixo {
+  position: sticky;
+  top: 0;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-5);
+  padding-block: var(--space-7);
+}
+
+.prova__statement {
+  color: var(--bone);
+  text-transform: none;
+  letter-spacing: -0.005em;
+  line-height: 1.08;
+  max-width: 18ch;
+}
+
+/* A palavra apagada e opacidade, nao cor: e a mesma convencao do manifesto, e
+   e o que o `verificar` sabe descontar na checagem de contraste. */
+.prova .palavra { transition: opacity var(--motion-fast) var(--ease-corte-2),
+                              color var(--motion-fast) var(--ease-corte-2); }
+.js .prova .palavra { opacity: 0.22; }
+.js .prova .palavra--acesa,
+.prova .palavra--acesa { opacity: 1; }
+
+/* A palavra da fronteira, no acento: a unica ocorrencia dele nesta tela. */
+.prova .palavra--atual { color: var(--acento); }
+
+@media (prefers-reduced-motion: reduce) {
+  .prova__palco { min-height: 0; }
+  .prova__fixo { position: static; min-height: 0; padding-block: var(--space-8); }
+  .js .prova .palavra { opacity: 1; }
+  .prova .palavra--atual { color: inherit; }
+}
+
+/* ---- A evidencia ---------------------------------------------------------
+   Regua, intervalo e a nota honesta, rolando sobre o mesmo fundo. */
+.prova__corpo { padding-top: var(--space-8); }
+
 .regua { margin-block: var(--space-6); }
 .regua__svg { width: 100%; height: auto; color: var(--line-strong); }
 
 /* O acento aparece UMA vez nesta superficie, e e o traco da fronteira dentro
-   do SVG. O numero fica em osso: dois usos reprovariam no checklist de cor. */
+   do SVG. O numero fica em osso. */
 .regua__numero {
   color: var(--bone);
   line-height: 1;
@@ -544,7 +969,6 @@
   gap: var(--space-2);
 }
 
-/* Cor nunca sozinha: cada chave carrega forma alem do tom (RNF-L14). */
 .regua__amostra {
   width: 14px;
   height: 14px;
@@ -558,116 +982,460 @@
   );
 }
 
-.fonte-citada {
+/* A nota de rodape metodologica (Kora): o limite e o que da credibilidade ao
+   numero. Nunca escondida. */
+.prova__nota {
   display: block;
-  margin-top: var(--space-4);
   color: var(--silver);
+  border-left: var(--hairline) solid var(--line-strong);
+  padding-left: var(--space-3);
+  margin-top: var(--space-4);
 }
 
-/* ---- Oferta -------------------------------------------------------------- */
-.oferta {
+.prova__nota strong { color: var(--bone); font-weight: var(--peso-semi); }
+
+.intervalo {
+  margin-top: var(--space-7);
+  padding-top: var(--space-7);
+  border-top: var(--hairline) solid var(--line);
+}
+
+.intervalo__numero {
+  color: var(--bone);
+  font-size: clamp(56px, 16vw, 132px);
+  text-transform: none;
+  margin-bottom: var(--space-3);
+}
+
+.intervalo__texto { color: var(--silver); }
+.intervalo__texto strong { color: var(--bone); font-weight: var(--peso-semi); }
+
+/* Superficie opaca por cima do campo: texto corrido sobre malha de pontos
+   reprova no `TR-07`, que exige scrim, moldura ou tratamento por baixo. */
+.honesta {
+  margin: var(--space-7) 0 0;
+  padding: var(--space-5);
+  border: var(--hairline) solid var(--line-strong);
+  background: var(--surface-1);
+}
+
+.honesta > p + p { margin-top: var(--space-3); color: var(--silver); }
+
+/* ============================================================================
+   07 · Oferta: o recibo
+   ============================================================================ */
+.oferta__cabeca { margin-bottom: var(--space-6); }
+
+/* Serrilha nas bordas: dente de 4px, altura 6px, no tom do fio. E micro-
+   registro do §7 do mestre: faixa de serrilha. Um SVG de 8x6 repetido. */
+.recibo {
+  position: relative;
   padding: var(--space-5);
   background: var(--surface-1);
-  border: var(--hairline) solid var(--line-strong);
+  border-inline: var(--hairline) solid var(--line);
+  margin-block: 6px;
 }
 
-.oferta__preco {
+.recibo::before,
+.recibo::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 6px;
+  background-repeat: repeat-x;
+  background-size: 8px 6px;
+}
+
+.recibo::before {
+  top: -6px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 6 L4 0 L8 6 Z' fill='%23f6f4ef'/%3E%3C/svg%3E");
+}
+
+.recibo::after {
+  bottom: -6px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0 L4 6 L8 0 Z' fill='%23f6f4ef'/%3E%3C/svg%3E");
+}
+
+.recibo__cabeca {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  margin-block: var(--space-4);
-}
-
-.oferta__valor { color: var(--bone); }
-.oferta__moeda { color: var(--silver); }
-
-.inclui > li {
-  display: grid;
-  grid-template-columns: var(--space-5) 1fr;
-  gap: var(--space-3);
-  padding-block: var(--space-3);
-}
-
-.inclui > li + li { border-top: var(--hairline) solid var(--line); }
-.inclui__marca { color: var(--bone); }
-
-/* ---- Garantia ------------------------------------------------------------ */
-.garantia {
-  padding: var(--space-5);
-  border: var(--hairline) solid var(--line);
-  background: var(--surface-2);
-}
-
-/* ---- Objecoes ------------------------------------------------------------ */
-.objecao { border-bottom: var(--hairline) solid var(--line); }
-
-.objecao__botao {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  width: 100%;
-  min-height: 56px;
-  padding: var(--space-4) 0;
-  background: none;
-  border: 0;
-  color: var(--bone);
-  text-align: left;
-  cursor: pointer;
-  font-family: var(--font-secundaria);
-}
-
-.objecao__sinal {
-  flex: none;
   color: var(--silver);
-  transition: transform var(--motion-fast) var(--ease-default);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--hairline) dashed var(--line-strong);
 }
 
-.objecao__botao[aria-expanded="true"] .objecao__sinal { transform: rotate(45deg); }
-
-.objecao__corpo {
-  overflow: hidden;
+.recibo__itens > li {
+  display: grid;
+  grid-template-columns: var(--space-7) 1fr;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
   color: var(--silver);
 }
 
-.objecao__corpo > p { padding-bottom: var(--space-4); }
+.recibo__itens > li p { color: var(--bone); }
+.recibo__itens > li + li { border-top: var(--hairline) solid var(--line); }
 
-/* ---- Rodape -------------------------------------------------------------- */
-.rodape {
-  padding-block: var(--space-7);
-  border-top: var(--hairline) solid var(--line);
-  color: var(--silver);
+.recibo__total {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "rotulo preco"
+    "rotulo prazo";
+  align-items: end;
+  gap: var(--space-1) var(--space-4);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--hairline) dashed var(--line-strong);
 }
 
-.rodape__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  margin-block: var(--space-3);
-}
+.recibo__rotulo { grid-area: rotulo; align-self: start; color: var(--silver); }
 
-/* O link do rodape e alvo de toque como qualquer outro: 48px de altura e
-   8px de folga entre vizinhos. Texto de 13px nao dispensa a area. */
-.rodape__links a {
+/* O preco fatiado: moeda no alto, numero grande, prazo na base. O valor e
+   placar, e placar e o unico lugar de `--bone-pure`. */
+.recibo__preco {
+  grid-area: preco;
   display: inline-flex;
-  align-items: center;
-  min-height: 48px;
-  padding-inline: var(--space-2);
-  margin-inline: calc(var(--space-2) * -1);
+  align-items: flex-start;
+  gap: var(--space-1);
+  justify-self: end;
 }
 
-.rodape a { color: var(--silver); }
+.recibo__moeda { color: var(--silver); padding-top: 0.35em; }
+.recibo__valor { grid-area: preco; justify-self: end; color: var(--bone-pure); line-height: 1; }
+.recibo__prazo { grid-area: prazo; justify-self: end; color: var(--bone); }
 
-.rodape__aviso {
-  padding: var(--space-4);
-  border: var(--hairline) solid var(--line);
+.oferta__depois { margin-top: var(--space-7); }
+
+.passos > li {
+  display: grid;
+  grid-template-columns: var(--space-7) 1fr;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  border-top: var(--hairline) solid var(--line);
+}
+
+.passos__indice { color: var(--silver); line-height: 1.3; }
+
+/* ============================================================================
+   08 · Garantia: o selo
+   ============================================================================ */
+.garantia__grade { display: flex; flex-direction: column; }
+
+.selo {
+  position: relative;
+  padding: var(--space-6) var(--space-5);
+  border: 2px solid var(--bone);
+  outline: var(--hairline) solid var(--bone);
+  outline-offset: 5px;
+  background: var(--void);
+  transform: rotate(-2deg);
+  transform-origin: 50% 50%;
+  margin: var(--space-4) var(--space-2) var(--space-6);
+  will-change: transform, opacity;
+}
+
+.selo__titulo {
+  color: var(--bone);
+  margin-bottom: var(--space-4);
+}
+
+.selo__texto + .selo__texto { margin-top: var(--space-3); color: var(--silver); }
+.selo__texto strong { font-weight: var(--peso-semi); }
+
+.selo__registro {
+  display: block;
+  margin-top: var(--space-5);
+  color: var(--silver);
+}
+
+/* Cruz de registro nos vertices: fio de 1px, 12px de braco. */
+.selo__cruz {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  pointer-events: none;
+}
+.selo__cruz::before,
+.selo__cruz::after {
+  content: "";
+  position: absolute;
+  background: var(--bone);
+}
+.selo__cruz::before { left: 6px; top: 0; width: 1px; height: 13px; }
+.selo__cruz::after { top: 6px; left: 0; width: 13px; height: 1px; }
+.selo__cruz--se { top: -20px; left: -20px; }
+.selo__cruz--sd { top: -20px; right: -20px; }
+.selo__cruz--ie { bottom: -20px; left: -20px; }
+.selo__cruz--id { bottom: -20px; right: -20px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .selo { transform: none; }
+}
+
+/* ============================================================================
+   09 · Objecoes: o dialogo
+   ============================================================================ */
+/* O campo fica atras de tudo; a resposta tem superficie propria, entao o
+   unico texto sobre a nuvem e a objecao, em escala de titulo. */
+.objecoes > *:not(.campo) { position: relative; z-index: 1; }
+
+.objecoes__cabeca { margin-bottom: var(--space-6); }
+
+.dialogo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin: 0;
+}
+
+.fala { margin: 0; }
+
+/* A objecao, na voz do visitante: encostada a direita, com as aspas gigantes
+   por tras. A resposta, na voz do parceiro, encostada a esquerda. */
+.fala--deles {
+  position: relative;
+  align-self: flex-end;
+  max-width: 30ch;
+  padding: var(--space-6) var(--space-4) var(--space-4) var(--space-5);
+  text-align: right;
+  color: var(--silver);
+}
+
+.fala__aspas {
+  position: absolute;
+  top: -0.05em;
+  left: 0;
+  z-index: 0;
+  color: var(--surface-2);
+  line-height: 0.8;
+  font-size: clamp(96px, 30vw, 200px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.fala__texto { position: relative; z-index: 1; display: block; }
+
+.fala--nossa {
+  align-self: flex-start;
+  max-width: 44ch;
+  padding: var(--space-4) var(--space-5);
+  border-left: 2px solid var(--acento);
   background: var(--surface-1);
 }
 
-/* ---- Indice fixo ---------------------------------------------------------
-   `difference` resolve a legibilidade sobre os dois temas sem duplicar o
-   elemento por bloco - e o mesmo truque que a engenharia reversa aponta para
-   o header do site de origem. */
+.fala__quem {
+  display: block;
+  color: var(--silver);
+  margin-bottom: var(--space-2);
+}
+
+/* ---- Rodape: o rodape do Nakula ------------------------------------------
+   Fundo escuro; grade de quatro colunas no monitor, empilhada no celular com
+   secoes e documentos lado a lado; a linha do copyright; e a faixa inteira no
+   acento com o wordmark gigante e a tagline. E a unica inundacao de acento do
+   rodape, e a doca some quando ele entra. */
+.rodape {
+  position: relative;
+  background: var(--void);
+  color: var(--silver);
+  border-top: var(--hairline) solid var(--line);
+}
+
+.rodape__grade {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-7) var(--space-5);
+  padding-block: var(--space-8) var(--space-7);
+}
+
+.rodape__contato,
+.rodape__aviso { grid-column: 1 / -1; }
+
+.rodape__contato {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* `(e-mail) endereco` na mesma linha, o rotulo pequeno e o valor grande: e o
+   par tipografico do site de origem. */
+.rodape__par {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-4);
+}
+
+.rodape .rotulo { margin-bottom: 0; }
+
+.rodape__grande {
+  color: var(--bone);
+  text-decoration: none;
+  text-transform: none;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+/* O e-mail no acento, como no site de origem. Rubro sobre --void da 3,77:1,
+   e o h2 tem 24px: texto grande, dentro do minimo de 3:1. */
+.rodape__grande--acento { color: var(--acento); }
+
+.rodape__coluna .rotulo { margin-bottom: var(--space-3); }
+
+.rodape__lista {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Link e alvo de toque: 48px de altura, sem depender do tamanho da letra. */
+.rodape__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: var(--bone);
+  text-decoration: none;
+  transition: color var(--motion-fast) var(--ease-default);
+}
+
+.rodape__link:hover { color: var(--silver); }
+
+.rodape__aviso {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.rodape__aviso .botao { width: 100%; }
+
+.rodape__base {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  padding-block: var(--space-5);
+  border-top: var(--hairline) solid var(--line);
+}
+
+/* A faixa: acento inundando, tinta por cima. O wordmark e SVG em
+   currentColor; a tagline e display, texto grande, 3,77:1. */
+.rodape__faixa {
+  background: var(--acento);
+  color: var(--void);
+  padding-block: var(--space-8);
+  overflow: clip;
+}
+
+.rodape__faixa-grade {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.rodape__wordmark {
+  display: block;
+  width: 100%;
+  color: var(--void);
+}
+
+.rodape__tagline {
+  color: var(--void);
+  text-transform: none;
+  letter-spacing: -0.005em;
+  line-height: 1.02;
+  max-width: 14ch;
+  align-self: flex-end;
+  text-align: right;
+}
+
+/* ============================================================================
+   A introducao: a cortina do lenis.dev
+   ============================================================================
+   Valores lidos do CSS de producao do site de origem: letras em
+   `translateY(100% + indice * 5%)`, 1,5 s expo-out com 75 ms por indice; a
+   cortina sobe depois de 1,5 s, e o bloco sobe mais rapido que ela. So existe
+   com `.intro-pendente`, que o script inline do index.html escreve antes da
+   primeira pintura - sem JavaScript, e sob movimento reduzido, nao ha
+   cortina. `pointer-events: none`: e imagem, nao interface.
+
+   ATENCAO ao editar: este bloco mora entre o rodape e o indice fixo. Um
+   recorte de "Rodape" ate "Indice fixo" o apaga junto - foi o que aconteceu
+   em 07/09/2026, e a cortina ficou em `display: block` para sempre.
+   ========================================================================== */
+:root { --ease-expo: cubic-bezier(0.16, 1, 0.3, 1); }
+
+.intro {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--acento);
+  color: var(--void);
+  overflow: clip;
+  pointer-events: none;
+}
+
+.intro-pendente .intro {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: var(--space-6);
+}
+
+.intro-pendente body.intro-travada { overflow: hidden; }
+
+.intro--sair {
+  transition: transform 1.5s var(--ease-expo);
+  transform: translateY(-100%);
+}
+
+/* O bloco nasce no pe da tela, e na saida sobe quase duas vezes mais rapido
+   que a cortina: e a mesma relacao do site de origem, onde o conteudo parte de
+   850px abaixo e a cortina de zero. */
+.intro__bloco {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: transform 1.5s var(--ease-expo);
+}
+
+.intro--sair .intro__bloco { transform: translateY(-90vh); }
+
+.intro__rotulo { color: var(--void); }
+
+.intro__titulo {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Cada linha e um recorte; cada letra sobe de dentro dele. */
+.intro__linha {
+  display: block;
+  overflow: clip;
+  padding-bottom: 0.04em;
+  margin-bottom: -0.04em;
+  white-space: nowrap;
+}
+
+.intro__letra {
+  display: inline-block;
+  transform: translate3d(0, calc(var(--index) * 5% + 100%), 0);
+  will-change: transform;
+}
+
+.intro--mostrar .intro__letra {
+  transition: transform 1.5s var(--ease-expo);
+  transition-delay: calc(var(--index) * 75ms);
+  transform: translate3d(0, 0, 0);
+}
+
+@media (min-width: 1024px) {
+  .intro-pendente .intro { padding-bottom: var(--space-8); }
+}
+
+/* ---- Indice fixo --------------------------------------------------------- */
 .indice-fixo {
   position: fixed;
   left: var(--space-4);
@@ -677,13 +1445,52 @@
   mix-blend-mode: difference;
   pointer-events: none;
   letter-spacing: 0.08em;
+  transition: bottom var(--motion-base) var(--ease-corte-2);
 }
 
 body.com-consentimento .indice-fixo { display: none; }
+body.com-doca .indice-fixo { bottom: calc(72px + var(--space-3)); }
 
 @media (max-width: 380px) {
   .indice-fixo { display: none; }
 }
+
+/* ---- Doca de venda -------------------------------------------------------
+   Sem JavaScript ela nao existe (`display: none` fora de `.js`). Entra e sai
+   por corte, nunca por deslize. */
+.doca {
+  display: none;
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 15;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
+  background: var(--surface-1);
+  color: var(--bone);
+  border-top: var(--hairline) solid var(--line-strong);
+  transform: translateY(100%);
+  transition: transform var(--motion-base) var(--ease-corte-2);
+}
+
+.js .doca { display: flex; }
+.js .doca--ativa { transform: none; }
+
+body.com-consentimento .doca { display: none; }
+body.com-doca main { padding-bottom: 0; }
+
+.doca__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  color: var(--silver);
+}
+
+.doca__info .label { color: var(--bone); }
 
 /* ---- Consentimento ------------------------------------------------------- */
 body.com-consentimento { padding-bottom: 168px; }
@@ -711,11 +1518,7 @@ body.com-consentimento { padding-bottom: 168px; }
   margin-inline: auto;
 }
 
-.consentimento__acoes {
-  display: flex;
-  gap: var(--space-3);
-}
-
+.consentimento__acoes { display: flex; gap: var(--space-3); }
 .consentimento__acoes > * { flex: 1; }
 
 .botao-secundario {
@@ -744,668 +1547,199 @@ body.com-consentimento { padding-bottom: 168px; }
 }
 
 /* ============================================================================
-   Mapa das 12 semanas
+   Desktop: o envelope largo e as larguras alternadas
    ============================================================================
-   Duas colunas no celular tambem: a trilha e estreita de proposito, e tirar
-   ela do fluxo no telefone quebraria a leitura de "o tempo desce enquanto voce
-   rola", que e o argumento inteiro da peca.
+   De 1024px para cima o container abre para 1120px (1440 a partir de 1440).
+   A grade se aplica POR SECAO, em larguras alternadas, que e o terceiro
+   principio da engenharia reversa: a alternancia e o ritmo. A medida de
+   linha nao muda (65ch) e o respiro vertical tambem nao.
    ========================================================================== */
-.mapa__corpo {
-  display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: var(--space-4);
-  margin-top: var(--space-5);
-}
-
-@media (min-width: 768px) {
-  .mapa__corpo {
-    grid-template-columns: 72px 1fr;
-    gap: var(--space-6);
-  }
-}
-
-/* ---- A trilha ------------------------------------------------------------
-   Gruda no topo enquanto as fases passam por ela. E a unica coisa da secao
-   que o visitante deve ver o tempo todo. */
-.mapa__trilha {
-  position: sticky;
-  top: var(--space-6);
-  align-self: start;
-  height: 60vh;
-  max-height: 520px;
-}
-
-.trilha {
-  position: relative;
-  height: 100%;
-}
-
-/* O fio, e o fio vivo por cima dele. O vivo cresce por scaleY, ancorado no
-   topo: uma propriedade composta, sem reflow a cada quadro. */
-.trilha__fio {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 5px;
-  width: 2px;
-  background: var(--line-strong);
-}
-
-.trilha__fio--vivo {
-  background: var(--acento);
-  transform-origin: 50% 0;
-  transform: scaleY(0);
-  will-change: transform;
-}
-
-.trilha__semanas {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.trilha__semana {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  height: 12px;
-}
-
-/* Acende e apaga em CORTE SECO, na curva de degraus do sistema. O quadrado
-   nao esmaece: ele troca de estado, como um carimbo. */
-.trilha__ponto {
-  width: 12px;
-  height: 12px;
-  flex: none;
-  background: var(--void);
-  border: 2px solid var(--line-strong);
-  transition:
-    background var(--motion-fast) var(--ease-corte-2),
-    border-color var(--motion-fast) var(--ease-corte-2),
-    transform var(--motion-fast) var(--ease-corte-2);
-}
-
-.trilha__numero {
-  color: var(--silver);
-  transition: color var(--motion-fast) var(--ease-corte-2);
-}
-
-/* Cor nunca sozinha (RNF-L14): a semana acesa muda de PREENCHIMENTO, de vazado
-   para cheio, e o numero muda de peso junto. */
-.trilha__semana--acesa .trilha__ponto {
-  background: var(--acento);
-  border-color: var(--acento);
-}
-
-.trilha__semana--acesa .trilha__numero {
-  color: var(--bone);
-  font-weight: var(--peso-bold);
-}
-
-/* A semana corrente: um degrau de escala e o fio de foco em osso. */
-.trilha__semana--atual .trilha__ponto {
-  transform: scale(1.45);
-  border-color: var(--bone);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .trilha__ponto,
-  .trilha__numero { transition: none; }
-  .trilha__semana--atual .trilha__ponto { transform: none; }
-}
-
-/* ---- As fases, empilhadas -------------------------------------------------
-   Sticky stacking de verdade: os tres cartoes se ACUMULAM, cada um grudando
-   num topo mais baixo que o anterior, e no fim da secao os tres estao na tela.
-
-   A versao anterior dizia isso e fazia o contrario, e o defeito era estrutural:
-   quem grudava era uma camada DENTRO do <li>, e `sticky` so se move dentro do
-   proprio bloco de contencao. O curso acabava junto com o <li>, entao o cartao
-   grudava por 342px e ia embora - substituicao, nao acumulo. Passava batido
-   enquanto a secao rolava direto; com a pilha de secoes ela congela no fim, e o
-   visitante ficava parado numa tela com um cartao de tres.
-
-   Agora quem gruda e o proprio <li>, e o bloco de contencao passa a ser a LISTA
-   inteira. Cada cartao gruda quando chega e fica ate a lista acabar.
-
-   O curso e `margin-bottom`, e ele vale para TODOS os cartoes, inclusive o
-   ultimo: sem margem embaixo do ultimo, o curso dele e zero, ele nunca gruda, e
-   sai de cena deixando os dois primeiros sozinhos na tela. A margem nao colapsa
-   porque a lista e flex.
-
-   A conta `100svh - --cartao-alto` mantem um cartao por tela de rolagem, que e
-   o ritmo que a secao ja tinha. As duas medidas saem da mesma variavel de
-   proposito: separadas, elas divergem na primeira vez que alguem mexer em uma. */
-.mapa__fases {
-  display: flex;
-  flex-direction: column;
-  /* 34svh, e nao 62svh. O cartao mais cheio tem umas 200px de texto, e um
-     cartao de 558px para isso e dois tercos de caixa vazia. Num empilhamento
-     isso e pior do que feio: com o cartao alto, o degrau que sobra na tela nao
-     cabe, o de cima cobre o de baixo inteiro, e quem rola ve UM cartao onde
-     deveria ver tres. Foi exatamente o "dois blocos sumiram". */
-  --cartao-alto: 34svh;
-
-  /* O curso entra por `gap`, NUNCA por `margin-bottom` no cartao.
-     A trava do `sticky` e a caixa de MARGEM dentro do bloco de contencao, entao
-     594px de margem embaixo de cada cartao tiram 594px do curso de grude dele:
-     o cartao 2 parava 7px antes do degrau e o cartao 3 nao chegava a grudar,
-     ficando na posicao de fluxo. Os dois desciam juntos, colados, e era esse o
-     "dois blocos sumiram". `gap` produz o mesmo espaco e nao e margem de
-     ninguem. */
-  gap: calc(100svh - var(--cartao-alto));
-}
-
-/* O curso do ULTIMO cartao, e a trava que decide se a pilha inteira sobrevive
-   ate o fim da secao.
-
-   A trava do `sticky` e o CONTENT BOX do bloco de contencao, e padding nao
-   conta: com a lista terminando no rodape do ultimo cartao, o teto de grude dos
-   TRES vira a posicao de fluxo do terceiro. Medido: `offsetTop` dos tres
-   travando em 1920px, que e exatamente onde o cartao 3 nasce. Os tres desciam
-   juntos, colados, e sumiam da tela ainda dentro da secao.
-
-   Um `::after` e item de flex, entao ele estica o content box de verdade.
-   Espaco puro: sem conteudo, sem borda, invisivel para leitor de tela. */
-.mapa__fases::after {
-  content: "";
-  display: block;
-  flex: none;
-  height: calc(100svh - var(--cartao-alto));
-}
-
-.fase {
-  position: sticky;
-  /* O degrau. `--space-9` (96px) e o que deixa aparecer a borda, o respiro e o
-     marcador do cartao de baixo, mais a metade superior das letras do nome -
-     medido, nao o nome inteiro. Menos que isso mostra so uma faixa de fundo, e
-     uma faixa de fundo nao diz FASE 1 APRENDER a ninguem: o acumulo tem de ser
-     legivel, senao e sobreposicao. */
-  top: calc(var(--space-6) + var(--ordem) * var(--space-9));
-}
-
-.fase__cartao {
-  position: relative;
-  padding: var(--space-5);
-  background: var(--surface-1);
-  border: var(--hairline) solid var(--line-strong);
-  min-height: var(--cartao-alto);
-  transform-origin: 50% 0;
-  will-change: transform, opacity;
-}
-
-/* Prata, nao Rubro. O token de cor e literal: o Rubro sobre o fundo escuro da
-   3,78:1 e vale "so texto >=24px e componentes, nunca texto corrente". Um
-   overline de 12px em acento reprova duas vezes - por contraste e por ser a
-   segunda ocorrencia do acento numa superficie que ja tem a trilha. */
-.fase__marcador {
-  display: block;
-  color: var(--silver);
-  margin-bottom: var(--space-3);
-}
-
-.fase__nome {
-  color: var(--bone);
-  margin-bottom: var(--space-4);
-}
-
-.fase__resumo { color: var(--bone); margin-bottom: var(--space-3); }
-.fase__objetivo { color: var(--silver); }
-
-.fase__faixa {
-  position: absolute;
-  right: var(--space-4);
-  bottom: var(--space-4);
-  color: var(--line-strong);
-}
-
-.mapa__rodape {
-  margin-top: var(--space-6);
-  color: var(--silver);
-}
-
-/* ============================================================================
-   A pilha de secoes
-   ============================================================================
-   A pagina passa a ser um BARALHO: cada secao gruda, e a proxima sobe por cima
-   dela. Substitui o CSS Scroll Snap, que fazia o trabalho contrario - o snap
-   assenta a rolagem em limites, e a pilha nao tem limite para assentar porque
-   uma secao continua na tela enquanto a seguinte a cobre. Os dois na mesma
-   pagina brigam pelo polegar.
-
-   O problema dificil do efeito e SECAO MAIS ALTA QUE A TELA, e ele se resolve
-   no valor do `top`:
-
-     - `top: 0` gruda no instante em que o topo da secao alcanca o alto da
-       janela. Numa secao de 2600px isso congela os 1700px de baixo antes de
-       alguem ler qualquer um deles, e nao ha rolagem que os alcance.
-     - `top: 100svh - altura` (negativo) gruda quando o RODAPE dela alcanca a
-       base da janela, ou seja, depois de ter sido percorrida inteira. Ate la
-       ela esta em fluxo e se le normalmente.
-     - `min(0px, ...)` junta os dois casos: numa secao de exatamente uma tela a
-       conta da zero, e grudar pelo rodape e grudar pelo topo.
-
-   `bottom: 0` seria mais curto e esta ERRADO, e o defeito e silencioso: o
-   `bottom` prende nos DOIS sentidos, entao ele nao so segura a secao que ja
-   passou como PUXA para cima a que ainda nao chegou. Como todas dividem o mesmo
-   bloco de contencao, no carregamento as nove sobem de uma vez e a pagina abre
-   no fechamento. Medido: `#reconhecimento` em `0..900` com a dobra por baixo.
-
-   A altura de cada secao entra por `--altura`, escrita pelo `pilha.js` com um
-   `ResizeObserver`. So a altura: o `100svh` fica no CSS de proposito, porque
-   `window.innerHeight` encolhe e cresce com a barra do navegador do celular e o
-   ponto de grude ficaria pulando a cada rolagem.
-
-   Tudo isso depende de `.js`. Sem JavaScript nao ha `--altura`, e uma secao
-   alta grudada pelo topo esconde o proprio rodape - que e exatamente o que o
-   RNF-L16 proibe. Entao sem JavaScript nao ha pilha: a pagina volta a rolar
-   direto, inteira e legivel.
-
-   Duas travas mais:
-
-   - `isolation: isolate` em cada camada. Sem ela o `z-index: 3` de um cartao de
-     fase do mapa sobe para o contexto da raiz e passa por cima das secoes
-     SEGUINTES, que so tem `z-index: auto`. O sintoma seria o cartao Consolidar
-     aparecendo por cima da oferta.
-   - A ordem de pintura e a ordem do DOM, e e de graca: posicionado com
-     `z-index: auto` pinta em ordem de arvore, entao a secao seguinte cobre a
-     anterior sem que ninguem escreva um numero. Nao introduza `z-index` por
-     secao aqui - a primeira excecao obriga a numerar as onze.
-
-   A marquise NAO gruda: ela e a costura entre duas camadas e passa por cima da
-   que esta grudada. Isso ja funciona porque ela e `position: relative`; se
-   deixasse de ser, cairia para a camada de fluxo e sumiria atras da pilha.
-
-   A profundidade (o recuo do que esta sendo coberto) e do `empilharSecoes()`, e
-   e enfeite: com a pilha de pe e sem ele, a peca fica mais chapada e nada mais.
-   ========================================================================== */
-main { position: relative; }
-
-.js .secao,
-.js .painel {
-  position: sticky;
-  top: min(0px, calc(100svh - var(--altura, 100svh)));
-  min-height: 100svh;
-  isolation: isolate;
-  /* O fio de borda da camada. Entre temas o corte ja se ve sozinho, mas entre
-     duas camadas do MESMO tema (oferta cobrindo garantia, as duas em Cartaz) a
-     costura fica invisivel e o efeito le como texto truncado, nao como camada.
-     Elevacao aqui e fio de 1px, que e a regra literal do sistema - sombra
-     resolveria e esta proibida. */
-  border-top: var(--hairline) solid var(--line);
-}
-
-/* A dobra e a primeira camada: nao ha nada atras dela para separar, e o fio
-   viraria um risco solto embaixo da barra do navegador. */
-.js main > :first-child { border-top: 0; }
-
-@supports not (height: 100svh) {
-  .js .secao,
-  .js .painel {
-    top: min(0px, calc(100vh - var(--altura, 100vh)));
-    min-height: 100vh;
-  }
-}
-
-/* Secao curta agora tem uma tela inteira de altura, e conteudo encostado no
-   topo de uma tela vazia le como erro de carregamento. Centraliza no eixo.
-
-   `margin-block: auto`, e nao `justify-content: center`: quando o conteudo e
-   MAIOR que a tela, o centro do flex empurra o comeco para cima do limite do
-   recorte e a primeira linha fica inalcancavel. Margem automatica simplesmente
-   vira zero quando nao ha folga, e o caso alto continua rolando do topo. */
-.js .secao {
-  display: flex;
-  flex-direction: column;
-}
-
-.js .secao > .envelope { margin-block: auto; }
-
-/* O rodape legal vem depois da pilha e precisa passar por cima dela: sem
-   posicionamento ele cai na camada de fluxo, que pinta ABAIXO de qualquer
-   secao grudada. */
-.rodape { position: relative; }
-
-/* Sem movimento, sem pilha. O empilhamento E o movimento aqui, e uma pagina de
-   secoes de tela cheia sem ele e so uma pagina com buracos. Volta a ser a
-   pagina de rolagem continua, que e legivel e nao pede nada de ninguem. */
-@media (prefers-reduced-motion: reduce) {
-  .js .secao {
-    position: relative;
-    top: auto;
-    min-height: 0;
-    display: block;
-  }
-  .js .painel {
-    position: relative;
-    top: auto;
-  }
-}
-
-/* ---- O capitulo travado --------------------------------------------------
-   Uma pilha dentro da pilha. A conta e a mesma de `.mapa__fases`, e nao por
-   coincidencia: o `.fase` ja e este primitivo em escala menor, e generalizar o
-   que funciona custa menos que inventar mecanica nova.
-
-   `46svh` de painel da um piso de 300svh de trilho com tres paineis e 400svh
-   com quatro - piso, nao o curso real: `--painel-alto` e `min-height`, entao
-   ele garante o gap mas nao limita a altura verdadeira do painel, que cresce
-   com o conteudo. Medido, os trilhos somam 79% acima desta conta. As duas
-   medidas saem da mesma variavel de proposito: separadas, divergem na
-   primeira vez que alguem mexer em uma. */
-.capitulo__paineis {
-  --painel-alto: 46svh;
-  /* O degrau. `--space-8` (64px) e o que deixa aparecer o fio, o respiro e o
-     CONTADOR do painel coberto. Acumulo que nao se le e so sobreposicao. */
-  --degrau-painel: var(--space-8);
-
-  display: flex;
-  flex-direction: column;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  /* Sem `.js` isto e uma pilha comum: o capitulo colapsa para altura
-     automatica e vira leitura continua, sem vao (RNF-L16). O curso comprido
-     entra so sob `.js`, junto do `position: sticky` que ele serve. */
-  gap: var(--space-6);
-}
-
-.js .capitulo__paineis {
-  /* Curso por `gap`, NUNCA por `margin-bottom`: a trava do `sticky` e a caixa
-     de MARGEM dentro do bloco de contencao, entao margem embaixo do painel
-     tira exatamente esse tanto do curso de grude dele. */
-  gap: calc(100svh - var(--painel-alto));
-}
-
-/* O curso do ULTIMO painel, so sob `.js` pelo mesmo motivo do `gap` acima. A
-   trava do `sticky` e o CONTENT BOX, e padding nao conta: com a lista
-   terminando no rodape do ultimo painel, o teto de grude de todos vira a
-   posicao de fluxo do ultimo. Um `::after` e item de flex e estica o content
-   box de verdade. */
-.js .capitulo__paineis::after {
-  content: "";
-  display: block;
-  flex: none;
-  height: calc(100svh - var(--painel-alto));
-}
-
-.painel-cap {
-  top: calc(var(--space-6) + var(--ordem) * var(--degrau-painel));
-  /* Sem isto, um `z-index` declarado dentro de um painel sobe para o contexto
-     de empilhamento da raiz e passa por cima das SECOES seguintes, que so tem
-     `z-index: auto`. E a mesma trava que cada camada da pilha ja carrega. */
-  isolation: isolate;
-}
-
-/* `position: sticky` mora aqui, nao na regra base, pelo mesmo motivo do
-   `.js .secao`/`.js .painel` um nivel acima (comentario perto da declaracao
-   deles): sem `.js` nao ha `--altura-painel`, e um painel alto grudado pelo
-   TOPO (a unica opcao sem o `min` abaixo) esconderia o proprio rodape - o que
-   o RNF-L16 proibe. Sem JavaScript o painel fica em fluxo normal (`static`,
-   herdado por nao declarar `position` na base) e a leitura desce inteira.
-
-   Painel mais alto que a tela nao pode grudar pelo topo: ele congelaria o
-   proprio rodape antes de alguem ler. Com o `min`, ele rola inteiro e so gruda
-   quando o rodape dele alcanca a base da tela. E a mesma conta do `top` da
-   pilha de secoes, um nivel acima, pelo mesmo motivo. */
-.js .painel-cap {
-  position: sticky;
-  top: min(
-    calc(var(--space-6) + var(--ordem) * var(--degrau-painel)),
-    calc(100svh - var(--altura-painel, 100svh))
-  );
-}
-
-@supports not (height: 100svh) {
-  .js .painel-cap {
-    top: min(
-      calc(var(--space-6) + var(--ordem) * var(--degrau-painel)),
-      calc(100vh - var(--altura-painel, 100vh))
-    );
-  }
-}
-
-.painel-cap__caixa {
-  position: relative;
-  padding: var(--space-5);
-  background: var(--surface-1);
-  border: var(--hairline) solid var(--line-strong);
-  min-height: var(--painel-alto);
-  transform-origin: 50% 0;
-  will-change: transform, opacity;
-}
-
-.painel-cap__conta {
-  display: block;
-  /* `--silver`, que e o token de texto secundario e micro-registro, e o mesmo
-     que `.fase__marcador` usa. 6,15:1 sobre o fundo escuro. */
-  color: var(--silver);
-  margin-bottom: var(--space-3);
-}
-
-.painel-cap__titulo {
-  margin: 0 0 var(--space-4);
-}
-
-/* Degradacao. Sem trava e sem corte: leitura continua, do primeiro painel ao
-   ultimo. E a promessa da secao 2.4 da especificacao, e o que o RNF-L13 exige.
-   O caso sem JavaScript nao precisa de regra propria: `position: sticky` so
-   existe sob `.js`, entao sem JavaScript o painel ja e `static` por definicao.
-   As linhas `.js` aqui sao obrigatorias, nao redundantes: `.js .painel-cap` e
-   `.js .capitulo__paineis` tem mais especificidade que as formas base e
-   passariam por cima desta regra quando `.js` E `prefers-reduced-motion:
-   reduce` coincidem.
-
-   `.fase` entra no mesmo bloco pelo mesmo motivo do `.painel-cap`: sem isto o
-   painel 01 do mapa fica `static` mas os tres cartoes de fase dentro dele
-   continuam grudados, com curso interno de umas duas telas - trava onde a
-   regra promete leitura continua. `.fase` nao precisa de forma `.js`: o
-   `position: sticky` dela nunca foi condicionado a `.js`. */
-@media (prefers-reduced-motion: reduce) {
-  .painel-cap { position: static; }
-  .js .painel-cap { position: static; }
-  .capitulo__paineis { gap: var(--space-6); }
-  .js .capitulo__paineis { gap: var(--space-6); }
-  .capitulo__paineis::after { display: none; }
-  .js .capitulo__paineis::after { display: none; }
-  .fase { position: static; }
-  .mapa__fases { gap: var(--space-6); }
-}
-
-/* ============================================================================
-   Desktop: o envelope largo e a grade de 12 colunas
-   ============================================================================
-   Tudo daqui para baixo abre em `min-width: 1024px`. Abaixo disso NADA muda:
-   o celular continua sendo a peca que o trafego pago ve, e a coluna unica de
-   720px continua sendo o layout dele.
-
-   O que muda no monitor e o que a [[engenharia-reserva]] manda importar: um
-   container de 1120 a 1440px, grade de 12 colunas com gutter de 32px, e
-   LARGURAS ALTERNADAS entre os capitulos - alguns partidos em cabeca fixa mais
-   corpo, outros ocupando o container inteiro. A alternancia e o ritmo; coluna
-   unica esticada para 1440px nao e layout de monitor, e layout de celular com
-   margem grande.
-
-   A medida de linha nao muda: `.prosa` continua travada em 65ch (RF-G08). O
-   container cresce, o texto corrido nao - e a sobra e o respiro, nao erro.
-
-   O respiro vertical tambem nao muda: `--space-9` no desktop e o que o
-   `requisitos-landing.md` §3.1 fixa, e o documento vence.
-   ========================================================================== */
-
 @media (min-width: 1024px) {
   .envelope {
     max-width: 1120px;
     padding-inline: var(--space-7);
   }
 
-  /* ---- A grade de 12 colunas ---------------------------------------------
-     A cabeca de secao ocupa as 4 primeiras colunas e GRUDA; o corpo ocupa da
-     6a ao fim. A coluna 5 fica vazia de proposito: e a calha que separa o
-     rotulo do conteudo sem precisar de fio.
-
-     `row-gap: 0` porque os filhos ja trazem as proprias margens do fluxo
-     vertical (a regua, a pilha, a fonte citada). Gap por cima delas somaria
-     duas vezes o mesmo respiro. */
-  .secao > .envelope {
+  /* Cabeca grudada a esquerda (colunas 1 a 4), corpo a direita (6 a 12). A
+     coluna 5 e a calha, e dispensa fio. */
+  .espelho__grade,
+  .oferta__grade,
+  .objecoes > .envelope {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     column-gap: var(--space-6);
-    row-gap: 0;
     align-items: start;
   }
 
-  .secao > .envelope > * { grid-column: 6 / -1; }
-
-  /* A cabeca acompanha a leitura do capitulo inteiro. Gruda porque numa secao
-     de 12 semanas o visitante perde de vista de qual pergunta ela responde. */
-  .secao > .envelope > .secao__cabeca {
+  .espelho__cabeca,
+  .oferta__cabeca,
+  .objecoes__cabeca {
     grid-column: 1 / span 4;
     position: sticky;
     top: var(--space-7);
     margin-bottom: 0;
   }
 
-  /* O numero cru cresce junto com a coluna: no monitor ele e o que segura o
-     lado esquerdo enquanto o corpo rola. Continua ornamento, continua atras.
+  .baralho,
+  .dialogo { grid-column: 6 / -1; }
 
-     So nas secoes partidas. Na cabeca de largura cheia (o catalogo) a coluna
-     e baixa, e um ornamento de 132px transborda por baixo do cabecalho e cai
-     ATRAS dos cartoes, onde ele nao e textura, e sujeira. La ele fica no
-     tamanho do proprio token `stat`. */
-  .secao:not(#o-que-e) .secao__indice { font-size: clamp(72px, 7vw, 132px); }
-
-  /* ---- Largura alternada: o catalogo rompe o container --------------------
-     Os cartoes sao a unica grade de celulas desiguais da pagina, e espremer
-     seis deles em sete colunas devolve a coluna regular que a desigualdade
-     existe para evitar. Entao este capitulo ocupa as 12 colunas, e a quebra de
-     largura e o que cria o ritmo entre um capitulo e o proximo. */
-  #o-que-e > .envelope > * { grid-column: 1 / -1; }
-
-  /* `relative`, nao `static`: desliga o grude E mantem o bloco de contencao do
-     numero cru, que e `position: absolute; right: 0`. Com `static` o ornamento
-     sobe para a secao, encosta na borda da JANELA em vez da do envelope, e o
-     `overflow: clip` da secao corta ele pela metade. */
-  #o-que-e > .envelope > .secao__cabeca {
-    position: relative;
-    margin-bottom: var(--space-7);
+  /* ---- O ziguezague dos cards ------------------------------------------
+     O ritmo do site de origem: um PAR (esquerda, e a direita nascendo 15vh
+     mais baixa) e depois um card sozinho no centro, e de novo. Coluna em flex,
+     nao grade: a direita sobe para o lado da esquerda por margem negativa, e
+     para a conta fechar o card tem altura fixa no monitor. A cabeca grudada
+     aparece na calha entre o par, que e exatamente o efeito. */
+  .vozes {
+    --voz-alto: 460px;
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--space-8);
+    gap: 0;
   }
+  .voz {
+    width: calc((100% - 2 * var(--space-6)) / 3);
+    height: var(--voz-alto);
+    padding: var(--space-6);
+    overflow: clip;
+  }
+  .voz:nth-child(3n + 1) { align-self: flex-start; margin-top: var(--space-8); }
+  .voz:nth-child(3n + 2) { align-self: flex-end; margin-top: calc(15vh - var(--voz-alto)); }
+  .voz:nth-child(3n) { align-self: center; margin-top: var(--space-8); }
+  .voz:first-child { margin-top: 0; }
+  .leva__cabeca .titulo { max-width: 16ch; }
+  .leva__sub { max-width: 30ch; }
 
-  /* Seis cartoes de largura desigual num container de 1120px pedem o gutter
-     do container, nao o do celular. */
-  .cartoes { gap: var(--space-5); }
-  .cartao { padding: var(--space-6); }
+  /* 48px tambem no monitor: e padding mais a linha do indice. Um degrau maior
+     deixa aparecer o topo das letras do titulo coberto, e o site de origem
+     mostra so a faixa do indice. */
+  .baralho { gap: var(--space-5); }
+  .carta__titulo { font-size: clamp(40px, 4.5vw, 56px); line-height: 1; } /* `display` */
 
-  /* ---- Paineis de tela cheia --------------------------------------------
-     A composicao continua centrada: o painel e cartaz, nao pagina de revista.
-     O que o container largo entrega aqui e o alcance dos fios e da faixa de
-     numeros crus, que passam a atravessar a tela em vez de 720px no meio. */
+  /* A oferta parte em recibo a esquerda do corpo e "depois do Pix" a direita:
+     e a unica secao com tres colunas de conteudo. */
+  .recibo { grid-column: 6 / span 4; }
+  .oferta__depois { grid-column: 10 / -1; margin-top: 0; }
+
+  /* A garantia rompe a grade: o selo ocupa o centro, sozinho. */
+  .garantia__grade { align-items: center; }
+  .garantia__grade .rotulo { align-self: flex-start; }
+  .selo { max-width: 640px; padding: var(--space-8) var(--space-7); }
+
+  /* Os paineis e o manifesto continuam centrados na composicao: sao cartaz,
+     nao pagina de revista. */
   .painel { padding-block: var(--space-6); }
-  .painel__corpo { margin-inline: auto; }
+  /* Folga para o rodape absoluto do painel: no monitor a headline de cartaz
+     empurra o micro-registro do botao para cima do indicador de rolagem. */
+  .painel__centro { padding-bottom: var(--space-9); }
 
-  /* ---- Rodape em colunas -------------------------------------------------
-     Aviso, links e responsavel lado a lado. Empilhado, o aviso legal vira uma
-     faixa de 1120px de largura e quatro linhas de altura, que e a forma mais
-     eficiente conhecida de nao ser lido. */
-  .rodape > .envelope {
+  /* Manifesto e statements sobem um degrau a mais: no monitor 56px numa
+     tela de 900 le como subtitulo, e as duas secoes SAO a tela. */
+  .manifesto__fixo { top: 10svh; }
+  .manifesto__texto {
+    font-size: clamp(48px, 5.2vw, 76px);
+    line-height: 1.02;
+    max-width: 24ch;
+  }
+  .prova__statement {
+    font-size: clamp(48px, 5vw, 72px);
+    max-width: 22ch;
+  }
+  .prova__corpo { padding-top: var(--space-9); }
+
+  /* ---- Doze semanas: o manifesto assimetrico --------------------------
+     Titulo nas colunas 1 a 7, tese nas 8 a 12 e deslocada para BAIXO, que e a
+     composicao do site de origem: o paragrafo comeca onde o titulo termina. */
+  .semanas__manifesto {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     column-gap: var(--space-6);
-    align-items: start;
+    padding-left: var(--space-6);
+  }
+  .semanas__titulo {
+    grid-column: 1 / span 8;
+    font-size: clamp(72px, 8.5vw, 124px);
+  }
+  .semanas__tese {
+    grid-column: 8 / -1;
+    align-self: end;
+    margin-top: 0;
+    padding-bottom: var(--space-5);
   }
 
-  .rodape__aviso { grid-column: 1 / span 6; }
-
-  .rodape__links {
-    grid-column: 8 / span 2;
-    flex-direction: column;
-    gap: 0;
-    margin-block: 0;
+  /* ---- Os cards em ziguezague ------------------------------------------
+     Tres por linha, e o do meio desce meia capa: nenhum card alinha com o
+     vizinho, que e o que faz a grade ler como composicao. */
+  .slides {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: var(--space-6);
+    row-gap: var(--space-8);
+    margin-top: var(--space-9);
   }
+  .slide:nth-child(3n + 2) { margin-top: var(--space-9); }
+  .slide:nth-child(3n) { margin-top: calc(var(--space-9) * 2); }
+  .slide__numero { font-size: clamp(72px, 7vw, 120px); }
 
-  .rodape > .envelope > :last-child { grid-column: 11 / -1; }
-}
+  .semanas__mais {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+  }
+  .semanas__pergunta { max-width: 32ch; }
 
-/* ============================================================================
-   Desktop: a escala sobe um degrau
-   ============================================================================
-   O que servia num telefone de 390px le pequeno num monitor: titulo de secao em
-   32px ao lado de um ornamento de 132px, corpo de 16px numa coluna de 750px.
-   Entao no desktop cada papel sobe UM DEGRAU da escala canonica - nenhum
-   tamanho inventado, nenhum sexto tamanho.
+  .faixa__grade {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+  }
+  .faixa .chamada { margin-top: 0; align-items: flex-end; }
 
-     titulo de secao     h1 32px        ->  display   clamp(40, 4.5vw, 56)
-     titulo de cartao    h3 20px        ->  24px, a medida do h2
-     pergunta de objecao h3 20px        ->  24px, a medida do h2
-     corpo               body 16px      ->  18px, a medida do body-lg
-     marquise            label 15px     ->  24px, a medida do h2
+  /* ---- Rodape em quatro colunas ----------------------------------------
+     Contato em 1 a 4, secoes em 6 e 7, documentos em 8 e 9, aviso em 10 a 12.
+     A coluna 5 e a calha. */
+  .rodape__grade {
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: var(--space-6);
+    padding-block: var(--space-9) var(--space-8);
+  }
+  .rodape__contato { grid-column: 1 / span 4; }
+  .rodape__coluna:nth-of-type(1) { grid-column: 6 / span 2; }
+  .rodape__coluna:nth-of-type(2) { grid-column: 8 / span 2; }
+  .rodape__aviso { grid-column: 10 / -1; }
+  .rodape__par { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+  .rodape__grande { font-size: 32px; line-height: 1.05; } /* medida do `h1` */
 
-   POR QUE OS VALORES ESTAO ESCRITOS AQUI. A escala canonica vive em CLASSES no
-   `tokens/tipografia.css`, nao em custom properties: nao existe um
-   `--tamanho-display` para referenciar, e CSS puro nao tem como dizer "vira a
-   classe de cima" dentro de uma media query. Entao o degrau se reescreve, com o
-   nome do token ao lado de cada linha.
+  .rodape__faixa { padding-block: var(--space-9); }
+  .rodape__faixa-grade {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: var(--space-6);
+    align-items: end;
+  }
+  .rodape__wordmark { grid-column: 1 / span 7; }
+  .rodape__tagline { grid-column: 9 / -1; font-size: clamp(40px, 4.5vw, 56px); max-width: none; }
 
-   Isto e divida, e a correcao de verdade e no `00-fundacao/identidade-visual/`,
-   expondo a escala tambem como variaveis. E o mesmo padrao da correcao do
-   `--acento` no topo deste arquivo: a linha daqui sai quando a de la chegar.
-
-   `body` e `body-lg` passam a coincidir em 18px, e a perda e real: eram 2px de
-   hierarquia entre corpo e entrada. Fica assim ate a escala ter degrau proprio
-   de desktop; o paragrafo de entrada continua se distinguindo por posicao e
-   pelo `strong`.
-
-   A medida de linha nao muda de regra: `.prosa` continua em 65ch (RF-G08), e a
-   65ch de 18px da uns 700px, que e o que a coluna de conteudo comporta. */
-@media (min-width: 1024px) {
-  /* --- Tipografia: um degrau acima --------------------------------------- */
-  .secao__titulo {
+  /* ---- Tipografia: um degrau acima ---------------------------------------
+     A escala canonica vive em CLASSES, nao em custom properties, entao o
+     degrau se reescreve aqui com o nome do token ao lado. E divida, e a
+     correcao de verdade e no `00-fundacao/identidade-visual/`. */
+  .titulo {
     font-size: clamp(40px, 4.5vw, 56px);   /* token `display` */
     line-height: 1;
   }
-
-  .cartao__titulo,
-  .objecao__botao {
-    font-size: 24px;                        /* medida do token `h2` */
-    line-height: 1.15;
-  }
-
+  .voz__fala { font-size: 24px; line-height: 1.15; } /* medida do `h2` */
   .body { font-size: 18px; line-height: 1.65; }   /* medida do token `body-lg` */
-
-  .marquise__trilho {
-    font-size: 24px;                        /* medida do token `h2` */
-    line-height: 1.15;
-  }
-
-  /* --- Respiro: a caixa cresce junto com a letra -------------------------
-     Tipografia maior dentro da mesma caixa nao le maior, le apertada. */
-  .cartao { padding: var(--space-7); }
-  .oferta,
-  .garantia { padding: var(--space-7); }
-  .fase__cartao { padding: var(--space-6); }
-  .rodape__aviso { padding: var(--space-5); }
-  .marcas > li { padding-block: var(--space-5); }
-  .inclui > li { padding-block: var(--space-4); }
+  .marquise__trilho { font-size: 24px; line-height: 1.15; } /* medida do `h2` */
   .marquise { padding-block: var(--space-4); }
-  .objecao__botao { min-height: 72px; padding-block: var(--space-5); }
-
-  /* A trilha das 12 semanas acompanha: no monitor ela e uma regua de verdade,
-     nao um risco de 44px. */
-  .mapa__corpo { grid-template-columns: 96px 1fr; }
-  .mapa__trilha { height: 68vh; max-height: 640px; }
-
-  /* E o cartao cresce junto. Com 34svh a pilha dos tres terminava em 530px de
-     uma tela de 900 e sobrava um terco de vazio embaixo; 42svh leva o rodape da
-     pilha para perto de onde a trilha termina, e as duas colunas passam a
-     fechar na mesma linha. */
-  .mapa__fases { --cartao-alto: 42svh; }
+  .fala__texto { font-size: 24px; line-height: 1.15; } /* medida do `h2` */
+  .fala--deles { max-width: 36ch; }
+  .fala--nossa { max-width: 52ch; padding: var(--space-5) var(--space-6); }
+  .honesta { padding: var(--space-6); }
+  .recibo { padding: var(--space-6); }
 }
 
-/* Monitor grande: so o container cresce. A grade, as colunas e o ritmo sao os
-   mesmos - o teto de 1440px e o que impede a linha de rotulo do rodape de
-   ficar a meio metro do texto que ela rotula. */
 @media (min-width: 1440px) {
   .envelope {
     max-width: 1440px;

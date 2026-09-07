@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import "lenis/dist/lenis.css";
 import "./styles/tokens/cor.css";
 import "./styles/tokens/forma-espaco.css";
 import "./styles/tokens/movimento.css";
@@ -8,12 +9,15 @@ import "./styles/base.css";
 import "./styles/pagina.css";
 
 import { Consentimento } from "./components/Consentimento.jsx";
+import { Doca } from "./components/Doca.jsx";
+import { Intro } from "./components/Intro.jsx";
 import { IndiceFixo } from "./components/IndiceFixo.jsx";
 import { Marquise } from "./components/Marquise.jsx";
 import { Dobra } from "./sections/Dobra.jsx";
-import { Reconhecimento } from "./sections/Reconhecimento.jsx";
-import { OQueE } from "./sections/OQueE.jsx";
-import { MapaDoze } from "./sections/MapaDoze.jsx";
+import { Manifesto } from "./sections/Manifesto.jsx";
+import { Espelho } from "./sections/Espelho.jsx";
+import { Leva } from "./sections/Leva.jsx";
+import { Semanas } from "./sections/Semanas.jsx";
 import { Prova } from "./sections/Prova.jsx";
 import { Amostra } from "./sections/Amostra.jsx";
 import { Oferta } from "./sections/Oferta.jsx";
@@ -23,43 +27,39 @@ import { Fechamento } from "./sections/Fechamento.jsx";
 import { RodapeLegal } from "./sections/RodapeLegal.jsx";
 
 import { capturarParametros, observarProfundidade } from "./instrumentacao.js";
-import {
-  empilharSecoes,
-  garantirVisibilidade,
-  ligarInerciaDeRolagem,
-  medirPilha,
-} from "./motion/index.js";
+import { garantirVisibilidade, ligarLenis } from "./motion/index.js";
 import { config } from "./config.js";
 
 /**
  * A sequencia canonica do RF-L08, nesta ordem. Secao pode ser omitida com
  * justificativa; a ORDEM nao se reordena, porque a sequencia e o argumento.
  *
- * O que a versao 2 acrescentou por cima dessa ordem foi RITMO.
+ * O que a versao 6 mudou (06/09/2026) foi a FORMA de cada secao, nao a ordem.
+ * A v5 vestia todas com a mesma caixa - kicker, titulo, envelope - e tres
+ * delas com o mesmo capitulo travado; a pagina lia como um so componente
+ * repetido nove vezes. Agora cada secao e um desenho proprio, tirado das
+ * cinco engenharias reversas de `02-fluor/reversos/`:
  *
- * A pagina alterna blocos Sigilo e blocos Cartaz em vez de escolher um tema:
+ *     01 dobra          Sigilo   headline de duas linhas como arquitetura
+ *     02 reconhecimento Sigilo   manifesto palavra a palavra, ligado a rolagem
+ *     ---- marquise ----
+ *     03 espelho        Cartaz   hoje / com o protocolo, linha a linha
+ *     04 o que leva     Sigilo   cabeca grudada no centro, cards em ziguezague, temas alternando
+ *     05 doze semanas   Sigilo   painel travado com odometro de semana
+ *     06 prova          Sigilo   tres statements e a regua
+ *     07 oferta         Cartaz   recibo com preco fatiado
+ *     08 garantia       Cartaz   selo carimbado
+ *     09 objecoes       Sigilo   dialogo
+ *     10 fechamento     Sigilo   segunda capa, com a marquise do verbo
  *
- *     01 dobra          Sigilo    o problema comeca no escuro
- *     02 reconhecimento Sigilo
- *     ---- marquise ----
- *     03 o que e        Cartaz    o produto e o papel: catalogo, legivel
- *     ---- marquise ----
- *     04 prova          Sigilo    a medicao, onde a regua acende
- *     ---- marquise ----
- *     05 oferta         Cartaz    preco e garantia pedem luz
- *     06 garantia       Cartaz
- *     ---- marquise ----
- *     07 objecoes       Sigilo
- *     08 fechamento     Sigilo    fecha onde abriu
- *
- * O RNF-G18 exige que os dois temas sejam nativos e paritarios. Alternar e a
- * leitura mais literal disso, e resolve de brinde o problema que a versao 1
- * tinha: uma pagina inteira no escuro faz preco e garantia parecerem letra
- * miuda. As marquises sao a costura entre os blocos.
+ * Os temas continuam alternando, e a troca continua sendo no limite da
+ * secao, em corte (RNF-L19). O botao aparece seis vezes mais a doca, sempre
+ * com o mesmo verbo (RF-L10), nunca duas vezes na mesma tela.
  */
 const SECOES = [
   "inicio",
   "reconhecimento",
+  "espelho",
   "o-que-e",
   "mapa",
   "prova",
@@ -77,74 +77,45 @@ export function App() {
     definirParams(capturarParametros());
     const pararProfundidade = observarProfundidade();
     const pararRede = garantirVisibilidade();
-    const pararInercia = ligarInerciaDeRolagem();
-
-    // As marquises ficam de fora de proposito: elas nao sao camada, sao a
-    // costura entre duas, e passam por cima da que esta grudada.
-    const camadas = pilha.current?.querySelectorAll(":scope > .secao, :scope > .painel");
-
-    // Primeiro a altura (o ponto de grude), depois a profundidade. A segunda
-    // mede a secao SEGUINTE de cada camada, e a primeira nao mexe em layout, so
-    // no `top` - entao a ordem e por clareza, nao por dependencia.
-    const pararMedida = medirPilha(camadas);
-    empilharSecoes(camadas);
-
+    const pararLenis = ligarLenis();
     return () => {
       pararProfundidade();
       pararRede();
-      pararInercia();
-      pararMedida();
+      pararLenis();
     };
   }, []);
 
   return (
     <>
-      <a className="pular label" href="#o-que-e">
+      <Intro />
+
+      <a className="pular label" href="#espelho">
         Pular para o conteúdo
       </a>
 
       <main ref={pilha}>
         <Dobra params={params} />
-        <Reconhecimento />
+        <Manifesto />
 
         <Marquise
-          palavras={["Regra do 12", "Portão da fase 3", "Semana verde", "O Kit"]}
+          palavras={["Natural cresce", "Regra do 12", "12 semanas", "3 sessões", "Pix à vista"]}
           sentido={-1}
         />
 
-        <OQueE />
-
-        <Marquise
-          palavras={["Semana 01", "Semana 06", "Semana 12", "Regra do 12"]}
-          sentido={1}
-          tempo={30000}
-        />
-
-        <MapaDoze />
-        <Prova />
+        <Espelho params={params} />
+        <Leva />
+        <Semanas params={params} />
+        <Prova params={params} />
         {config.mostrarAmostra && <Amostra />}
-
-        <Marquise
-          palavras={["Protocolo 01", "Hipertrofia", "Lithium"]}
-          sentido={-1}
-          tempo={22000}
-        />
-
         <Oferta params={params} />
         <Garantia />
-
-        <Marquise
-          palavras={["Natural cresce", "Regra do 12", "O Kit"]}
-          sentido={1}
-          tempo={28000}
-        />
-
         <Objecoes />
         <Fechamento params={params} />
       </main>
 
-      <RodapeLegal />
+      <RodapeLegal params={params} />
       <IndiceFixo ids={SECOES} />
+      <Doca params={params} />
       <Consentimento />
     </>
   );
