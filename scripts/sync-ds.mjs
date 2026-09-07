@@ -43,16 +43,26 @@ const FONTES = [
 const ASSINATURA = "big-shoulders-display-latin.woff2";
 
 async function main() {
+  const destinoTokens = join(raiz, "src", "styles", "tokens");
+  const destinoFontes = join(raiz, "public", "fonts");
+
   if (!existsSync(bundle)) {
+    // Builds fora da maquina de design (Vercel, CI) nao enxergam o
+    // ds-bundle local. Sem ele, seguimos com a ultima copia sincronizada
+    // e versionada no repo - so falha se nem essa copia existir.
+    if (existsSync(destinoTokens) && existsSync(destinoFontes)) {
+      console.warn(
+        `sync:ds  AVISO  ds-bundle nao encontrado em ${bundle}, usando copia ja versionada.`,
+      );
+      return;
+    }
     console.error(
-      `sync:ds  ds-bundle nao encontrado em ${bundle}\n` +
+      `sync:ds  ds-bundle nao encontrado em ${bundle}, e nao ha copia versionada.\n` +
         `         aponte com DS_BUNDLE=/caminho/para/.design-sync/ds-bundle`,
     );
     process.exit(1);
   }
 
-  const destinoTokens = join(raiz, "src", "styles", "tokens");
-  const destinoFontes = join(raiz, "public", "fonts");
   await mkdir(destinoTokens, { recursive: true });
   await mkdir(destinoFontes, { recursive: true });
 
