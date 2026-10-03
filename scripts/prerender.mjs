@@ -13,6 +13,34 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const raiz = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const molde = join(raiz, "dist", "index.html");
 
+/**
+ * Trava de publicacao. `src/config.js` promete que o que esta `[A DEFINIR]` trava a publicacao, e
+ * nada travava: o build saia com o checkout apontando para `.../DEFINIR`, o preco em branco e o
+ * e-mail do rodape `[A DEFINIR]`. Sem `PUBLICAR`, so avisa (rascunho e preview); com `PUBLICAR=1`
+ * no ambiente de producao, recusa o build.
+ */
+const { config } = await import(pathToFileURL(join(raiz, "src", "config.js")).href);
+const pendente = (valor) => valor == null || (typeof valor === "string" && /definir/i.test(valor));
+const faltam = Object.entries({
+  "oferta.preco": config.oferta.preco,
+  "oferta.garantiaDias": config.oferta.garantiaDias,
+  "checkout.url": config.checkout.url,
+  "pixel.id": config.pixel.id,
+  "legal.responsavel": config.legal.responsavel,
+  "legal.documento": config.legal.documento,
+  "legal.contato": config.legal.contato,
+})
+  .filter(([, valor]) => pendente(valor))
+  .map(([campo]) => campo);
+if (faltam.length) {
+  const aviso = `prerender  ${faltam.length} campo(s) [A DEFINIR] em src/config.js: ${faltam.join(", ")}`;
+  if (process.env.PUBLICAR) {
+    console.error(`${aviso}\n           PUBLICAR esta ligado: a pagina nao pode ir ao ar assim.`);
+    process.exit(1);
+  }
+  console.warn(`${aviso}\n           (aviso: com PUBLICAR=1 isto trava o build)`);
+}
+
 const { renderizar } = await import(
   pathToFileURL(join(raiz, "dist-ssr", "entry-server.js")).href
 );
@@ -24,7 +52,8 @@ if (!html.includes(marcador)) {
   process.exit(1);
 }
 
-let saida = html.replace(marcador, renderizar());
+// Funcao, e nao texto: `$&` ou `$$` na copia da pagina seriam lidos como padrao de substituicao.
+let saida = html.replace(marcador, () => renderizar());
 
 /**
  * Declara os pedacos preguicosos no <head>.
@@ -46,7 +75,7 @@ if (jsPreguicoso.length) {
   const linhas = jsPreguicoso
     .map((nome) => `    <link rel="modulepreload" crossorigin href="/assets/${nome}">`)
     .join("\n");
-  saida = saida.replace("</head>", `${linhas}\n  </head>`);
+  saida = saida.replace("</head>", () => `${linhas}\n  </head>`);
 }
 
 await writeFile(molde, saida, "utf8");

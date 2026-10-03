@@ -1,0 +1,125 @@
+/* ============================================================================
+   Tailwind v4 · tema
+   ============================================================================
+   O Tailwind aqui NAO traz paleta nem escala propria (spec §4.2, RNF-L17):
+   as cores sao os tokens do ds-bundle, por referencia, e o que sobra do tema
+   padrao e so aritmetica de px.
+
+   `@theme inline` e o que faz o tema Sigilo/Cartaz continuar funcionando. Sem o
+   `inline`, `bg-void` viraria `var(--color-void)`, resolvido uma vez em `:root`
+   e herdado ja resolvido pelas secoes Cartaz (o mesmo defeito do `--acento`,
+   RNF-L36). Com ele, `bg-void` vira `var(--void)` e resolve em cada elemento.
+   ========================================================================== */
+@import "tailwindcss" source(none);
+@source "../../index.html";
+@source "../**/*.{js,jsx}";
+
+@theme inline {
+  --color-*: initial;
+  --color-void: var(--void);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-silver: var(--silver);
+  --color-bone: var(--bone);
+  --color-bone-pure: var(--bone-pure);
+  --color-acento: var(--acento);
+}
+
+@theme {
+  /* px, e nao rem: o original e todo em px (tokens/forma-espaco.css), entao nem a
+     preferencia de fonte do navegador nem o zoom de texto do `verificar`
+     (RNF-L12, `html { font-size: 32px }`) mexem em espaco ou breakpoint.
+     A escala de 4px do Tailwind coincide com --space-1..9:
+     1=4 · 2=8 · 3=12 · 4=16 · 6=24 · 8=32 · 12=48 · 16=64 · 24=96. */
+  --spacing: 4px;
+  --radius-xs: 2px; /* --radius-touch: o unico raio do sistema */
+
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-wide: 1440px;
+
+  /* ---- Tipografia · espelha tokens/tipografia.css §3.8 -------------------- */
+  --font-secundaria: "Big Shoulders Display", "Oswald", "Arial Narrow", sans-serif;
+  --font-terciaria: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --text-display-xxl: clamp(72px, 27vw, 240px);
+  --text-display-xxl--line-height: 0.86;
+  --text-display-xxl--letter-spacing: 0.01em;
+  --text-display-xxl--font-weight: 800;
+
+  --text-display: clamp(40px, 4.5vw, 56px);
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: 0.02em;
+  --text-display--font-weight: 800;
+
+  --text-h1: 32px;
+  --text-h1--line-height: 1.05;
+  --text-h1--letter-spacing: 0.02em;
+  --text-h1--font-weight: 800;
+
+  --text-h2: 24px;
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: 0.03em;
+  --text-h2--font-weight: 700;
+
+  --text-h3: 20px;
+  --text-h3--line-height: 1.25;
+  --text-h3--font-weight: 600;
+
+  --text-stat: clamp(40px, 5vw, 72px);
+  --text-stat--line-height: 1;
+  --text-stat--font-weight: 800;
+
+  --text-body: 16px;
+  --text-body--line-height: 1.55;
+  --text-body--font-weight: 400;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 1.65;
+  --text-body-lg--font-weight: 400;
+
+  --text-label: 15px;
+  --text-label--line-height: 1;
+  --text-label--letter-spacing: 0.04em;
+  --text-label--font-weight: 600;
+
+  --text-caption: 13px;
+  --text-caption--line-height: 1.4;
+  --text-caption--font-weight: 400;
+
+  --text-overline: 12px;
+  --text-overline--line-height: 1.3;
+  --text-overline--letter-spacing: 0.08em;
+  --text-overline--font-weight: 600;
+
+  --text-mono-reg: 11px;
+  --text-mono-reg--line-height: 1.2;
+  --text-mono-reg--font-weight: 500;
+}
+
+/* O `:hover` do Tailwind v4 so vale em `@media (hover: hover)`. O original
+   responde ao toque (hover "grudado" apos o toque), entao volta ao `:hover` puro. */
+@custom-variant hover (&:hover);
+
+/* O Tailwind so tem breakpoint de LARGURA minima. Estes tres vem do original: a dobra e o
+   fechamento cedem a headline em tela baixa e escondem o micro-registro em tela rasa, e o
+   indice fixo some em tela estreita (<= 380px, e nao `max-*`, que no v4 e `<`). */
+@custom-variant tela-baixa (@media (max-height: 700px));
+@custom-variant tela-rasa (@media (max-height: 620px));
+@custom-variant tela-estreita (@media (max-width: 380px));
+
+/* Estado de JavaScript (RNF-L16): sem a classe `js`, a pagina abre inteira. */
+@custom-variant js (:where(.js) &);
+
+/* Enquanto a cortina de introducao esta pendente (classe escrita no <html> pelo
+   script inline do index.html, antes da primeira pintura). */
+@custom-variant pendente (:where(.intro-pendente) &);
+
+/* Dentro de um bloco Cartaz (o botao troca de tinta; RNF-L36). */
+@custom-variant cartaz (&:where([data-theme="cartaz"], [data-theme="cartaz"] *));
+
+@import "./residual.css";

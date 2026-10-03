@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { envelope } from "../ui.js";
 
 /**
  * A introducao: a cortina do lenis.dev, no idioma desta pagina.
@@ -15,7 +15,7 @@ import { useEffect } from "react";
  * escala `display-xxl`, o envelope e o rotulo entre parenteses sao os do
  * heroi, e e isso que faz a passagem de bastao ler como uma coisa so.
  *
- * Tres travas:
+ * Quatro travas:
  *
  *   1. Em toda carga, inclusive recarga no meio da pagina (decisao do gerente
  *      do projeto, 06/09/2026). A cortina e fixa, entao cobre a tela em
@@ -23,52 +23,31 @@ import { useEffect } from "react";
  *   2. Sem JavaScript nao existe, e com movimento reduzido tambem nao: a
  *      classe `intro-pendente` e escrita pelo script inline do index.html
  *      ANTES da primeira pintura, para a cortina nao piscar por cima do heroi
- *      ja renderizado. Este componente so toca a coreografia.
- *   3. `pointer-events: none` e `aria-hidden`: a cortina e imagem, nao
+ *      ja renderizado.
+ *   3. A coreografia e CSS puro (keyframes em styles/residual.css), e o mesmo
+ *      script inline recolhe a cortina e destrava a rolagem aos 3,2 s. Nada
+ *      aqui espera o pacote de JavaScript: se ele atrasar ou falhar, a cortina
+ *      sobe e some do mesmo jeito.
+ *   4. `pointer-events: none` e `aria-hidden`: a cortina e imagem, nao
  *      interface. O leitor de tela nao a ouve e nada fica inclicavel por
- *      tras dela alem do que a rolagem travada ja impede.
+ *      tras dela.
  */
 const LINHAS = ["Natural", "Cresce."];
-const MOSTRAR_EM = 60;
-const SAIR_EM = 1500;
-const FIM_EM = 3100;
-
-export function introPendente() {
-  return typeof document !== "undefined" && document.documentElement.classList.contains("intro-pendente");
-}
 
 export function Intro() {
-  useEffect(() => {
-    const raiz = document.documentElement;
-    if (!raiz.classList.contains("intro-pendente")) return;
-    const no = document.querySelector(".intro");
-    if (!no) return;
-
-    document.body.classList.add("intro-travada");
-    const t1 = setTimeout(() => no.classList.add("intro--mostrar"), MOSTRAR_EM);
-    const t2 = setTimeout(() => no.classList.add("intro--sair"), SAIR_EM);
-    const t3 = setTimeout(() => {
-      raiz.classList.remove("intro-pendente");
-      document.body.classList.remove("intro-travada");
-    }, FIM_EM);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      document.body.classList.remove("intro-travada");
-    };
-  }, []);
-
   let indice = 0;
   return (
-    <div className="intro" aria-hidden="true">
-      <div className="intro__bloco envelope">
-        <span className="intro__rotulo overline">(protocolo 01 · hipertrofia)</span>
-        <p className="intro__titulo display-xxl">
+    <div
+      className="intro hidden fixed inset-0 z-100 bg-acento text-void overflow-clip pointer-events-none pendente:flex pendente:flex-col pendente:justify-end pendente:pb-8 lg:pendente:pb-16 animate-intro-sair"
+      aria-hidden="true"
+    >
+      <div className={`${envelope} flex flex-col gap-3 animate-intro-bloco`}>
+        <span className="font-secundaria text-overline uppercase text-void">(protocolo 01 · hipertrofia)</span>
+        <p className="flex flex-col w-full font-secundaria text-display-xxl uppercase tabular-nums">
           {LINHAS.map((linha) => (
-            <span className="intro__linha" key={linha}>
+            <span className="block overflow-clip pb-[0.04em] -mb-[0.04em] whitespace-nowrap" key={linha}>
               {[...linha].map((letra, i) => (
-                <span className="intro__letra" style={{ "--index": indice++ }} key={`${linha}-${i}`}>
+                <span className="inline-block will-change-transform animate-intro-letra" style={{ "--index": indice++ }} key={`${linha}-${i}`}>
                   {letra}
                 </span>
               ))}

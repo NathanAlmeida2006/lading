@@ -15,6 +15,12 @@ import {
  * Renderiza `null` no primeiro passe para nao divergir do HTML pre-renderizado
  * (o servidor nao sabe o que este visitante ja respondeu).
  */
+const BOTAO =
+  "flex-1 inline-flex items-center justify-center min-h-12 px-4 py-3 border rounded-xs cursor-pointer " +
+  "font-secundaria text-label uppercase";
+const RECUSAR = "bg-transparent text-bone border-line-strong";
+const ACEITAR = "bg-bone text-void border-bone";
+
 export function Consentimento() {
   const [decidido, definirDecidido] = useState(true);
 
@@ -40,25 +46,20 @@ export function Consentimento() {
   }
 
   return (
-    <aside className="consentimento" aria-label="Aviso de cookies">
-      <div className="consentimento__corpo">
-        <p className="caption prosa">
+    <aside
+      className="fixed inset-x-0 bottom-0 z-20 p-4 pb-[max(--spacing(4),env(safe-area-inset-bottom))] bg-surface-1 border-t border-line-strong"
+      aria-label="Aviso de cookies"
+    >
+      <div className="flex flex-col gap-3 max-w-180 mx-auto sm:flex-row sm:items-center">
+        <p className="font-terciaria text-caption max-w-prose">
           Usamos cookies para saber de qual anúncio você veio. Sem o aceite, a
           página funciona igual e nada é enviado.
         </p>
-        <div className="consentimento__acoes">
-          <button
-            type="button"
-            className="botao-secundario label"
-            onClick={() => responder(false)}
-          >
+        <div className="flex gap-3 sm:flex-none">
+          <button type="button" className={`${BOTAO} ${RECUSAR}`} onClick={() => responder(false)}>
             Recusar
           </button>
-          <button
-            type="button"
-            className="botao-secundario botao-secundario--forte label"
-            onClick={() => responder(true)}
-          >
+          <button type="button" className={`${BOTAO} ${ACEITAR}`} onClick={() => responder(true)}>
             Aceitar
           </button>
         </div>

@@ -2,12 +2,13 @@
  * Traz tokens e fontes de `.design-sync/ds-bundle/` para dentro do build.
  *
  * O ds-bundle e traducao do mestre visual, e em divergencia o mestre vence
- * (RNF-L18). Por isso nada aqui e editado a mao: o que chega e copia, e o
- * destino esta no .gitignore. Divergiu? Corrige la e roda de novo.
+ * (RNF-L18). Por isso nada aqui e editado a mao: o que chega e copia, versionada
+ * no repo (o build fora desta maquina nao enxerga o ds-bundle). Divergiu? Corrige la e
+ * roda de novo, e commita o resultado.
  *
  * Caminho da base sobrescrevivel por DS_BUNDLE, para quem clonar em outro lugar.
  */
-import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { execFile } from "node:child_process";
 import { dirname, join, resolve } from "node:path";

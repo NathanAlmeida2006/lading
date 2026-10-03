@@ -1,17 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "lenis/dist/lenis.css";
 import "./styles/tokens/cor.css";
 import "./styles/tokens/forma-espaco.css";
 import "./styles/tokens/movimento.css";
-import "./styles/tokens/tipografia.css";
 import "./styles/fontes.css";
-import "./styles/base.css";
-import "./styles/pagina.css";
+import "./styles/tailwind.css";
 
 import { Consentimento } from "./components/Consentimento.jsx";
 import { Doca } from "./components/Doca.jsx";
 import { Intro } from "./components/Intro.jsx";
 import { IndiceFixo } from "./components/IndiceFixo.jsx";
+import { PausaMovimento } from "./components/PausaMovimento.jsx";
 import { Marquise } from "./components/Marquise.jsx";
 import { Dobra } from "./sections/Dobra.jsx";
 import { Manifesto } from "./sections/Manifesto.jsx";
@@ -27,7 +26,7 @@ import { Fechamento } from "./sections/Fechamento.jsx";
 import { RodapeLegal } from "./sections/RodapeLegal.jsx";
 
 import { capturarParametros, observarProfundidade } from "./instrumentacao.js";
-import { garantirVisibilidade, ligarLenis } from "./motion/index.js";
+import { garantirVisibilidade, ligarLenis, useMovimento } from "./motion/index.js";
 import { config } from "./config.js";
 
 /**
@@ -45,7 +44,7 @@ import { config } from "./config.js";
  *     ---- marquise ----
  *     03 espelho        Cartaz   hoje / com o protocolo, linha a linha
  *     04 o que leva     Sigilo   cabeca grudada no centro, cards em ziguezague, temas alternando
- *     05 doze semanas   Sigilo   painel travado com odometro de semana
+ *     05 doze semanas   Sigilo   titulo em tres linhas, regua que acende com a rolagem, cards em ziguezague
  *     06 prova          Sigilo   tres statements e a regua
  *     07 oferta         Cartaz   recibo com preco fatiado
  *     08 garantia       Cartaz   selo carimbado
@@ -53,8 +52,9 @@ import { config } from "./config.js";
  *     10 fechamento     Sigilo   segunda capa, com a marquise do verbo
  *
  * Os temas continuam alternando, e a troca continua sendo no limite da
- * secao, em corte (RNF-L19). O botao aparece seis vezes mais a doca, sempre
- * com o mesmo verbo (RF-L10), nunca duas vezes na mesma tela.
+ * secao, em corte (RNF-L19). O botao aparece onze vezes (dobra, cinco no espelho,
+ * mapa, prova, oferta, fechamento e rodape) mais a doca, sempre com o mesmo
+ * verbo (RF-L10).
  */
 const SECOES = [
   "inicio",
@@ -71,29 +71,44 @@ const SECOES = [
 
 export function App() {
   const [params, definirParams] = useState({});
-  const pilha = useRef(null);
 
+  // Medicao: roda sempre, com ou sem `js` (nao e movimento). Sem parametro de campanha o estado
+  // fica como esta: `capturarParametros` devolve um `{}` NOVO a cada chamada, e `definirParams` com
+  // ele refazia a arvore inteira da pagina (todas as secoes recebem `params`) para nada.
   useEffect(() => {
-    definirParams(capturarParametros());
-    const pararProfundidade = observarProfundidade();
-    const pararRede = garantirVisibilidade();
-    const pararLenis = ligarLenis();
-    return () => {
-      pararProfundidade();
-      pararRede();
-      pararLenis();
-    };
+    const capturados = capturarParametros();
+    if (Object.keys(capturados).length) definirParams(capturados);
+    return observarProfundidade();
+  }, []);
+  useMovimento(garantirVisibilidade);
+  useMovimento(ligarLenis);
+
+  // Por ultimo, depois de hidratar e de os efeitos acima rodarem: avisa o relogio do
+  // index.html que o pacote acordou. Sem este aviso, aos 8 s ele tira a classe `js` e a
+  // pagina abre inteira (RNF-L35).
+  useEffect(() => {
+    document.documentElement.classList.add("pronto");
   }, []);
 
   return (
     <>
       <Intro />
 
-      <a className="pular label" href="#espelho">
+      {/* Primeiro alvo do teclado: fora da tela ate receber foco. */}
+      <a
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-10 focus:inline-flex focus:items-center focus:min-h-12 focus:px-4 focus:py-3 focus:bg-bone focus:text-void underline font-secundaria text-label uppercase"
+        href="#conteudo"
+      >
         Pular para o conteúdo
       </a>
 
-      <main ref={pilha}>
+      <PausaMovimento />
+
+      {/* Logo depois do "pular": quem navega por teclado ou leitor encontra o aviso antes
+          de a pagina comecar. E fixo na base, entao a ordem do DOM nao mexe no desenho. */}
+      <Consentimento />
+
+      <main id="conteudo">
         <Dobra params={params} />
         <Manifesto />
 
@@ -116,7 +131,6 @@ export function App() {
       <RodapeLegal params={params} />
       <IndiceFixo ids={SECOES} />
       <Doca params={params} />
-      <Consentimento />
     </>
   );
 }

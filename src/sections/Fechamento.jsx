@@ -1,11 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { Fio } from "../components/Fio.jsx";
+import { FundoCapa } from "../components/FundoCapa.jsx";
 import { Botao } from "../components/Botao.jsx";
 import { Marquise } from "../components/Marquise.jsx";
 import { Moldura } from "../components/Moldura.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
-import { abrirPainel } from "../motion/index.js";
+import { abrirPainel, useMovimento } from "../motion/index.js";
 import { config, VERBO_ACAO } from "../config.js";
-import { Fio } from "./Dobra.jsx";
+import { camada, crus, envelope, grao, linha, painel, painelRodape, vazado } from "../ui.js";
 
 /**
  * Fechamento: a segunda capa.
@@ -22,7 +24,7 @@ import { Fio } from "./Dobra.jsx";
 export function Fechamento({ params }) {
   const raiz = useRef(null);
 
-  useEffect(() => {
+  useMovimento(() => {
     const no = raiz.current;
     if (!no) return;
     return abrirPainel({
@@ -34,55 +36,63 @@ export function Fechamento({ params }) {
       corpo: no.querySelector(".painel__corpo"),
       acao: no.querySelector(".painel__acao"),
       rodape: no.querySelector(".painel__rodape"),
-      naRolagem: true,
     });
   }, []);
 
   return (
-    <section id="fechamento" className="painel painel--fechamento grao" ref={raiz}>
+    <section id="fechamento" className={`${painel} ${grao}`} ref={raiz}>
+      <FundoCapa />
       <Moldura />
 
-      <div className="painel__centro envelope">
-        <Rotulo className="painel__kicker">o caminho começa aqui</Rotulo>
+      <div className={`${envelope} flex-auto flex flex-col justify-center items-start gap-2 pt-3 pb-2 min-h-0 relative z-1`}>
+        <Rotulo className="painel__kicker" margem="mb-2">o caminho começa aqui</Rotulo>
 
         <Fio />
-        <h2 className="painel__titulo display-xxl" data-revelar>
-          <span className="linha">
-            <span className="linha__texto vazado">Natural</span>
-          </span>
-          <span className="linha">
-            <span className="linha__texto">Cresce.</span>
+        <h2
+          className="painel__titulo flex flex-col w-full my-2 text-bone font-secundaria text-display-xxl uppercase tabular-nums tela-baixa:text-[length:clamp(56px,20vw,120px)]"
+          data-revelar
+        >
+          <span className={linha}>
+            <span className={`linha__texto block ${camada} ${vazado}`}>Natural</span>
+          </span>{" "}
+          <span className={linha}>
+            <span className={`linha__texto block ${camada}`}>Cresce.</span>
           </span>
         </h2>
         <Fio />
 
-        <p className="painel__corpo body-lg" data-revelar>
+        <p className="painel__corpo max-w-prose mt-3 text-silver font-terciaria text-body-lg" data-revelar>
           O que não cresce é a comparação com quem não é natural.
         </p>
       </div>
 
-      <div className="painel__acao painel__acao--fechamento" data-revelar>
-        <Marquise palavras={[VERBO_ACAO, "Natural cresce", VERBO_ACAO, "Regra do 12"]} sentido={-1} tempo={20000} />
-        <div className="envelope painel__acao-centro">
+      <div className="painel__acao w-full mt-0 mb-24 relative z-1" data-revelar>
+        <Marquise
+          palavras={[VERBO_ACAO, "Natural cresce", VERBO_ACAO, "Regra do 12"]}
+          sentido={-1}
+          tempo={20000}
+          className="mb-6"
+        />
+        <div className={`${envelope} flex flex-col items-center text-center`}>
           <Botao params={params} posicao="fechamento" />
-          <span className="microregistro mono-reg">
+          <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
             {config.oferta.garantiaDias
               ? `Garantia de ${config.oferta.garantiaDias} dias · reembolso por e-mail`
               : "Garantia em texto, na seção acima · reembolso por e-mail"}
-          </span>
+          </p>
         </div>
       </div>
 
-      <div className="painel__rodape envelope" data-revelar>
-        <ul className="crus mono-reg" data-num>
+      <div className={`${envelope} ${painelRodape}`} data-revelar>
+        <ul className={crus} role="list">
           <li>
-            <b>PDF</b> no e-mail
+            <b className="text-bone font-bold">Link</b> no e-mail
           </li>
           <li>
-            <b>7</b> anexos no Kit
+            <b className="text-bone font-bold">7</b> anexos no Kit
           </li>
           <li>
-            <b>Pix</b> à vista
+            <b className="text-bone font-bold">Pix</b> à vista
           </li>
         </ul>
       </div>

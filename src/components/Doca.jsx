@@ -13,8 +13,12 @@ import { config } from "../config.js";
  * entram, as tres
  * por corte. Tres coisas que ela NAO faz, cada uma uma trava: nenhuma barra
  * de progresso (o §3.5 proibe), o rotulo nao troca com a secao (RF-L10), e sem
- * JavaScript ela nao existe. Uma doca em CSS puro comeria 56px da primeira
- * tela e derrubaria o RF-L09 justamente em quem chega pelo anuncio.
+ * JavaScript ela nao existe (`hidden js:flex`). Uma doca em CSS puro comeria
+ * 56px da primeira tela e derrubaria o RF-L09 justamente em quem chega pelo
+ * anuncio.
+ *
+ * Inativa, ela e `inert`: so sai da tela por `translate`, e sem isso o Tab cairia
+ * num botao que ninguem ve.
  */
 export function Doca({ params }) {
   const [ativa, definirAtiva] = useState(false);
@@ -43,8 +47,8 @@ export function Doca({ params }) {
     return () => obs.disconnect();
   }, []);
 
-  // O <main> ganha a folga da doca enquanto ela esta ativa, senao ela cobre
-  // o fim do texto.
+  // A classe `com-doca` no <body> e o que o resto da pagina le: o indice fixo sobe e o
+  // <html> ganha `scroll-pb-20` (index.html), para ancora nao parar atras da doca.
   useEffect(() => {
     document.body.classList.toggle("com-doca", ativa);
     return () => document.body.classList.remove("com-doca");
@@ -53,10 +57,16 @@ export function Doca({ params }) {
   const { preco, moeda } = config.oferta;
 
   return (
-    <aside className={`doca${ativa ? " doca--ativa" : ""}`} aria-label="Oferta" aria-hidden={!ativa}>
-      <div className="doca__info">
-        <span className="label">Protocolo 01</span>
-        <span className="mono-reg" data-num>
+    <aside
+      className="doca hidden js:flex fixed inset-x-0 bottom-0 z-15 items-center justify-between gap-4 px-4 pt-3 pb-[max(--spacing(3),env(safe-area-inset-bottom))] bg-surface-1 text-bone border-t border-line-strong translate-y-full transition-[translate] duration-(--motion-base) ease-(--ease-corte-2) [.com-consentimento_&]:hidden data-ativa:translate-y-0"
+      data-ativa={ativa ? "" : undefined}
+      aria-label="Oferta"
+      aria-hidden={!ativa}
+      inert={!ativa}
+    >
+      <div className="flex flex-col gap-1 min-w-0 text-silver">
+        <span className="font-secundaria text-label uppercase text-bone">Protocolo 01</span>
+        <span className="font-terciaria text-mono-reg tabular-nums">
           {preco ? `${moeda} ${preco} · Pix à vista` : "Pix à vista · preço a definir"}
         </span>
       </div>

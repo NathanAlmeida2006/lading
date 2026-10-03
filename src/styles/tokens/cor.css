@@ -8,7 +8,7 @@
    ========================================================================== */
 
 :root {
-  /* ---- Modo Sigilo (tema escuro · padrão) — §4.2 ------------------------- */
+  /* ---- Modo Sigilo (tema escuro · padrão) - §4.2 ------------------------- */
   --void: #09090b;         /* fundo global */
   --surface-1: #121215;    /* painéis e blocos */
   --surface-2: #1b1b20;    /* inputs, chips, zebrado */
@@ -18,16 +18,16 @@
   --bone: #ededf0;         /* texto primário, traço do sigilo · 17,0:1 */
   --bone-pure: #ffffff;    /* SÓ número de placar */
 
-  /* ---- Acentos de protocolo — §4.4 ---------------------------------------
+  /* ---- Acentos de protocolo - §4.4 ---------------------------------------
      Extraídos dos três cartazes aprovados em 03-referencia/estilos/acid-graphics/.
      Um acento por superfície. Nunca dois na mesma. */
   --rubro: #d2202c;    /* 01 Hipertrofia · ac3 Azrael  · 3,78:1 sobre --void:
                           só texto ≥24px e componentes, nunca texto corrente */
   --praga: #12a150;    /* 02 Dieta Básica · ac2 Peccatum · esmeralda chapado,
-                          NÃO é lima — o verde-lima está proibido */
+                          NÃO é lima - o verde-lima está proibido */
   --vigilia: #8b5cf6;  /* 03 Cuidado com o Sono · ac1 Gothic Art */
 
-  /* ---- Semânticas de estado — §4.5 ---------------------------------------
+  /* ---- Semânticas de estado - §4.5 ---------------------------------------
      Nunca coincidem com acentos de protocolo. Nunca comunicam sozinhas. */
   --success: #35c46a;
   --warning: #e8a317;
@@ -38,7 +38,7 @@
   --acento: var(--rubro);
 }
 
-/* ---- Modo Cartaz (tema claro) — §4.3 ---------------------------------------
+/* ---- Modo Cartaz (tema claro) - §4.3 ---------------------------------------
    Não é inversão de conveniência: é a versão impressa da mesma identidade,
    o cartaz ácido no papel-jornal. Os mesmos nomes de token são remapeados.
    Na §4.3 esses valores aparecem com os nomes --paper, --surface-1-lt,
@@ -55,11 +55,11 @@
   --bone: #0b0b0c;         /* --ink · 16,4:1 */
   --bone-pure: #000000;
 
-  --rubro: #a8101c;        /* 6,34:1 — sem restrição de tamanho no Cartaz */
+  --rubro: #a8101c;        /* 6,34:1 - sem restrição de tamanho no Cartaz */
   --praga: #0a6e34;
   --vigilia: #5b2bc4;
 
-  --success: #157a3f;
-  --warning: #8a5a00;
+  --success: #116835;
+  --warning: #7d5100;
   --danger: #b3151f;
 }

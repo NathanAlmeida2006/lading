@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { CampoDePontos } from "../components/CampoDePontos.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
-import { mascaraDeLinha, revelar, revelarEmCascata } from "../motion/index.js";
+import { mascaraDeLinha, revelar, revelarEmCascata, useMovimento } from "../motion/index.js";
+import { bloco, envelope, grao, mascara } from "../ui.js";
 
 /**
  * O que voce leva, na forma da secao "Members' Words" do Rep Republic.
@@ -32,6 +33,9 @@ import { mascaraDeLinha, revelar, revelarEmCascata } from "../motion/index.js";
  * malha - o que sobra por cima dela e a cabeca, em escala de titulo, e a
  * propria malha e tratamento de 1 bit, que e o que o `TR-07` pede por baixo
  * de texto.
+ *
+ * O `transform` de centralizacao fica na PROPRIA cabeca, que nao e ancestral
+ * de nada grudado: a trava e sobre ancestrais.
  */
 const VOZES = [
   {
@@ -72,10 +76,24 @@ const VOZES = [
   },
 ];
 
+/**
+ * O ziguezague do monitor: um PAR (esquerda, e a direita nascendo 15vh mais
+ * baixa) e depois um card sozinho no centro, e de novo. Coluna em flex, nao
+ * grade: a direita sobe para o lado da esquerda por margem negativa, e para a
+ * conta fechar o card tem altura fixa (460px). A posicao sai do indice, e nao
+ * de `nth-child`, porque duas utilitarias do mesmo variante nao tem ordem
+ * garantida.
+ */
+const ZIGUEZAGUE = [
+  "lg:self-start lg:mt-16",
+  "lg:self-end lg:mt-[calc(15vh_-_--spacing(115))]",
+  "lg:self-center lg:mt-16",
+];
+
 export function Leva() {
   const raiz = useRef(null);
 
-  useEffect(() => {
+  useMovimento(() => {
     const no = raiz.current;
     if (!no) return;
     revelar(no.querySelector(".rotulo"));
@@ -85,40 +103,52 @@ export function Leva() {
   }, []);
 
   return (
-    <section id="o-que-e" className="bloco leva" ref={raiz}>
+    <section id="o-que-e" className={`${bloco} py-16 md:py-24`} ref={raiz}>
       <CampoDePontos />
 
-      <div className="envelope leva__palco">
-        <header className="leva__cabeca">
+      <div className={`${envelope} relative z-1`}>
+        <header className="sticky top-[max(--spacing(12),calc(50svh-140px))] z-0 flex flex-col items-center py-8 text-center motion-reduce:static">
           <Rotulo>o que você leva pra academia</Rotulo>
-          <h2 className="titulo display" data-revelar>
+          <h2
+            className={`titulo text-bone font-secundaria text-display normal-case tracking-[-0.005em] leading-[1.02] max-w-[14ch] lg:max-w-[16ch] ${mascara}`}
+            data-revelar
+          >
             Seis coisas. Nenhuma depende de motivação.
           </h2>
-          <p className="leva__sub body prosa" data-revelar>
+          <p
+            className="leva__sub max-w-prose lg:max-w-[30ch] mt-4 text-silver text-center font-terciaria text-body lg:text-body-lg"
+            data-revelar
+          >
             Cada uma tem nome, e o nome é o que você procura dentro do protocolo quando a semana
             aperta.
           </p>
         </header>
 
-        <ol className="vozes">
+        <ol className="relative z-1 flex flex-col gap-6 mt-12 lg:mt-16 lg:gap-0" role="list">
           {VOZES.map((voz, indice) => {
             const claro = indice % 2 === 1;
+            const posicao = indice === 0 ? "lg:self-start lg:mt-0" : ZIGUEZAGUE[indice % 3];
             return (
               <li
-                className={`voz${claro ? "" : " grao"}`}
+                className={`voz relative flex flex-col gap-3 min-h-95 p-6 bg-surface-1 text-bone border border-line-strong *:relative *:z-1 lg:w-[calc((100%-2*--spacing(8))/3)] lg:min-h-115 lg:p-8 ${posicao}${claro ? "" : ` ${grao} before:z-0`}`}
                 key={voz.nome}
                 data-theme={claro ? "cartaz" : undefined}
                 data-revelar
               >
-                <span className="voz__aspas h1" aria-hidden="true">
+                <span
+                  className="font-secundaria font-extrabold uppercase tracking-[0.02em] text-acento text-[48px] leading-[0.6]"
+                  aria-hidden="true"
+                >
                   &ldquo;
                 </span>
-                <p className="voz__fala h3">{voz.fala}</p>
-                <p className="voz__quem">
-                  <span className="voz__nome label">{voz.nome}</span>
-                  <span className="voz__governa caption">{voz.governa}</span>
+                <p className="flex-auto text-bone font-secundaria text-h3 lg:text-[24px] lg:leading-[1.15]">
+                  {voz.fala}
                 </p>
-                <span className="voz__onde mono-reg" data-num>
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-bone font-secundaria text-label uppercase">{voz.nome}</h3>
+                  <p className="text-silver font-terciaria text-caption">{voz.governa}</p>
+                </div>
+                <span className="block pt-4 border-t border-line text-silver font-terciaria text-mono-reg tabular-nums">
                   [{String(indice + 1).padStart(2, "0")} · {voz.onde}]
                 </span>
               </li>

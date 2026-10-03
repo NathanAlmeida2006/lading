@@ -9,7 +9,7 @@
    ========================================================================== */
 
 :root {
-  /* ---- Famílias — §11 -----------------------------------------------------
+  /* ---- Famílias - §11 -----------------------------------------------------
      A Marca cai na Suporte quando o glifo não existe: o fallback é o plano B
      declarado do sistema, não um acidente. */
   --font-marca:      "ArtDystopia II", "Grenze Gotisch", "UnifrakturCook", Georgia, serif;
@@ -24,24 +24,24 @@
   --peso-bold: 700;
   --peso-black: 800;
 
-  /* ---- Travas de tamanho mínimo — §3.1.1, §3.2, §3.4 ---------------------
+  /* ---- Travas de tamanho mínimo - §3.1.1, §3.2, §3.4 ---------------------
      Abaixo destes valores a peça reprova: o traço da Marca colapsa e o corpo
      deixa de ser legível. */
   --min-marca: 32px;
   --min-principal: 28px;
   --min-corpo: 16px;
 
-  /* ---- Medida de linha — §3.4 -------------------------------------------- */
+  /* ---- Medida de linha - §3.4 -------------------------------------------- */
   --medida-max: 65ch;
 }
 
 /* ============================================================================
-   Escala canônica — §3.8
+   Escala canônica - §3.8
    Os nomes de classe abaixo são os nomes de token da tabela §3.8, sem tradução
    e sem prefixo inventado. Use-os; não crie um sexto tamanho.
    ========================================================================== */
 
-/* A Marca não tem peso nem caixa alternativos — proibido o navegador inventar.
+/* A Marca não tem peso nem caixa alternativos - proibido o navegador inventar.
    Regra literal de §11. */
 .marca,
 [class*="marca-"] {
@@ -53,13 +53,13 @@
 }
 
 .marca-xl {
-  font-size: clamp(64px, 8vw, 120px);  /* 64–120px */
+  font-size: clamp(64px, 8vw, 120px);  /* 64 a 120px */
   line-height: 0.92;
   letter-spacing: 0.03em;
 }
 
 .marca {
-  font-size: clamp(36px, 4vw, 56px);   /* 36–56px */
+  font-size: clamp(36px, 4vw, 56px);   /* 36 a 56px */
   line-height: 1;
   letter-spacing: 0.04em;
 }
@@ -67,14 +67,14 @@
 .display-xl {
   font-family: var(--font-principal);
   font-weight: var(--peso-bold);
-  font-size: clamp(64px, 7vw, 96px);   /* 64–96px */
+  font-size: clamp(64px, 7vw, 96px);   /* 64 a 96px */
   line-height: 0.95;
 }
 
 .display {
   font-family: var(--font-principal);
   font-weight: var(--peso-semi);
-  font-size: clamp(40px, 4.5vw, 56px); /* 40–56px */
+  font-size: clamp(40px, 4.5vw, 56px); /* 40 a 56px */
   line-height: 1;
 }
 
@@ -106,7 +106,7 @@
 .stat {
   font-family: var(--font-secundaria);
   font-weight: var(--peso-black);
-  font-size: clamp(40px, 5vw, 72px);   /* 40–72px */
+  font-size: clamp(40px, 5vw, 72px);   /* 40 a 72px */
   line-height: 1;
   font-variant-numeric: tabular-nums;  /* tnum obrigatório */
 }
@@ -158,7 +158,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Dado numérico sempre tabular — §3.4 */
+/* Dado numérico sempre tabular - §3.4 */
 [data-num],
 table td,
 table th {

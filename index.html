@@ -1,15 +1,24 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="has-[.com-doca]:scroll-pb-20 has-[.com-consentimento]:scroll-pb-42 sm:has-[.com-consentimento]:scroll-pb-24">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Natural cresce · Protocolo de Hipertrofia</title>
     <meta
       name="description"
-      content="O que nao cresce e a comparacao com quem nao e natural. O teto natural foi medido, e existe um protocolo para chegar perto dele."
+      content="O que não cresce é a comparação com quem não é natural. O teto natural foi medido, e existe um protocolo para chegar perto dele."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content="Natural cresce · Protocolo de Hipertrofia" />
+    <meta
+      property="og:description"
+      content="O que não cresce é a comparação com quem não é natural. O teto natural foi medido, e existe um protocolo para chegar perto dele."
     />
     <meta name="theme-color" content="#09090b" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/big-shoulders-display-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/ibm-plex-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
 
 
     <!-- O tema NAO segue a preferencia do sistema, e isso e deliberado.
@@ -24,14 +33,28 @@
       // para nao piscar por cima do heroi ja pre-renderizado. Em TODA carga,
       // inclusive recarga no meio da pagina (decisao do gerente do projeto,
       // 06/09/2026); nunca sob movimento reduzido. Ver components/Intro.jsx.
-      try {
-        if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          document.documentElement.classList.add("intro-pendente");
-        }
-      } catch (e) {}
+      //
+      // Os dois relogios abaixo NAO dependem do pacote de JavaScript, e e esse o
+      // ponto: a cortina e CSS e este script a recolhe (display e trava de
+      // rolagem) aos 3,2 s; e se o pacote nao acordar em 8 s, a classe `js`
+      // sai e todo [data-revelar] e toda palavra apagada voltam a aparecer
+      // (RNF-L35). App.jsx escreve `pronto` depois de hidratar. Se o pacote chegar
+      // depois da hora, a classe NAO volta: a pagina fica aberta, sem movimento.
+      (function () {
+        try {
+          var raiz = document.documentElement;
+          if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            raiz.classList.add("intro-pendente");
+            setTimeout(function () { raiz.classList.remove("intro-pendente"); }, 3200);
+          }
+          setTimeout(function () {
+            if (!raiz.classList.contains("pronto")) raiz.classList.remove("js");
+          }, 8000);
+        } catch (e) {}
+      })();
     </script>
   </head>
-  <body>
+  <body class="overflow-x-hidden pendente:overflow-hidden bg-void text-bone font-terciaria text-body [-webkit-font-smoothing:antialiased] [&.com-consentimento]:pb-42 sm:[&.com-consentimento]:pb-24">
     <div id="raiz"><!--app-html--></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

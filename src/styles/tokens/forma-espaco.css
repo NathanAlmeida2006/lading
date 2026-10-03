@@ -6,7 +6,7 @@
    ========================================================================== */
 
 :root {
-  /* ---- Espaçamento · base 4px — §5 --------------------------------------- */
+  /* ---- Espaçamento · base 4px - §5 --------------------------------------- */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -17,18 +17,18 @@
   --space-8: 64px;
   --space-9: 96px;
 
-  /* ---- Forma — §5 e §11 --------------------------------------------------
+  /* ---- Forma - §5 e §11 --------------------------------------------------
      Raio 0 sem exceção. O único 2px permitido é alvo de toque. */
   --radius: 0;
   --radius-touch: 2px;
   --hairline: 1px;
 
-  /* ---- Textura — §5 e §8.1 ----------------------------------------------
-     Grão de 8–15% em superfície de marca. NUNCA sobre texto corrido. */
+  /* ---- Textura - §5 e §8.1 ----------------------------------------------
+     Grão de 8 a 15% em superfície de marca. NUNCA sobre texto corrido. */
   --grain-opacity: 0.10;
 }
 
-/* Zero sombra em todo o sistema — regra literal de §11.
+/* Zero sombra em todo o sistema - regra literal de §11.
    Elevação se faz com cor de superfície + fio de 1px. */
 * {
   box-shadow: none;

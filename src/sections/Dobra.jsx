@@ -1,11 +1,11 @@
-import { useEffect, useRef } from "react";
 import { Botao } from "../components/Botao.jsx";
+import { Fio } from "../components/Fio.jsx";
+import { FundoCapa } from "../components/FundoCapa.jsx";
 import { Moldura } from "../components/Moldura.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { Wordmark } from "../components/Wordmark.jsx";
-import { abrirPainel } from "../motion/index.js";
-import { introPendente } from "../components/Intro.jsx";
 import { config } from "../config.js";
+import { camada, crus, envelope, grao, linha, painel, painelRodape, vazado } from "../ui.js";
 
 /**
  * A dobra, em painel de tela cheia.
@@ -19,102 +19,81 @@ import { config } from "../config.js";
  * fios de 1px como grade, grao, e numeros crus como ornamento honesto. Nenhum
  * sigilo, porque os tres do RF-G03 ainda nao existem na base.
  *
- * `100svh` e nao `100vh`: no celular a barra do navegador entra e sai, e `vh`
+ * `min-h-svh` e nao `vh`: no celular a barra do navegador entra e sai, e `vh`
  * mede a viewport grande - o botao cairia para fora da tela justamente em quem
  * chega pelo anuncio (RF-L09).
  */
+/**
+ * A entrada e toda CSS (styles/residual.css, secao 7): kicker, corpo, acao e rodape
+ * entram em `steps(2)`, as linhas da headline sobem em expo-out, os fios e os cantos se
+ * desenham, e a seta pulsa. O heroi compoe DEBAIXO da cortina e ja esta parado quando ela
+ * levanta, como no site de origem; `pendente:[--base:300ms]` empurra tudo 300 ms enquanto
+ * a cortina cobre a tela. Nada aqui espera o pacote de JavaScript, e e por isso que o LCP
+ * (RNF-L01) nao depende da hidratacao.
+ */
+const ENTRA = "animate-revelar motion-reduce:animate-surgir";
+
 export function Dobra({ params }) {
-  const raiz = useRef(null);
-
-  useEffect(() => {
-    const no = raiz.current;
-    if (!no) return;
-    return abrirPainel({
-      moldura: no.querySelectorAll(".moldura path"),
-      fios: no.querySelectorAll(".painel__fio line"),
-      kicker: no.querySelector(".painel__kicker"),
-      titulo: no.querySelector(".painel__titulo"),
-      linhas: no.querySelectorAll(".linha__texto"),
-      corpo: no.querySelector(".painel__corpo"),
-      acao: no.querySelector(".painel__acao"),
-      rodape: no.querySelector(".painel__rodape"),
-      seta: no.querySelector(".painel__seta"),
-      // O heroi compoe DEBAIXO da cortina e ja esta parado quando ela
-      // levanta, como no site de origem. Comecar depois do fim da cortina
-      // empurraria o LCP (RNF-L01) para perto do teto: o que esta coberto
-      // continua contando como pintado.
-      atrasoBase: introPendente() ? 300 : 0,
-    });
-  }, []);
-
   return (
-    <header className="painel painel--dobra grao" id="inicio" ref={raiz}>
-      <Moldura />
+    <section className={`${painel} ${grao} pendente:[--base:300ms]`} id="inicio">
+      <FundoCapa />
+      <Moldura entrada="css" />
 
-      <div className="painel__cabecalho envelope">
+      <div className={`${envelope} flex-none flex items-center justify-between gap-4 text-silver relative z-1`}>
         <Wordmark />
-        <span className="mono-reg" data-num>
-          Protocolo 01
-        </span>
+        <span className="font-terciaria text-mono-reg tabular-nums">Protocolo 01</span>
       </div>
 
-      <div className="painel__centro envelope">
-        <Rotulo className="painel__kicker">hipertrofia · natural</Rotulo>
+      <div className={`${envelope} flex-auto flex flex-col justify-center items-start gap-2 py-3 lg:pb-24 min-h-0 relative z-1`}>
+        <Rotulo className={`painel__kicker ${ENTRA} [--atraso:120ms]`} margem="mb-2">hipertrofia · natural</Rotulo>
 
-        <Fio />
-        <h1 className="painel__titulo display-xxl" data-revelar>
-          <span className="linha">
-            <span className="linha__texto">Natural</span>
-          </span>
-          <span className="linha">
-            <span className="linha__texto vazado">Cresce.</span>
+        <Fio atraso={260} />
+        <h1
+          className="painel__titulo flex flex-col w-full my-2 text-bone font-secundaria text-display-xxl uppercase tabular-nums tela-baixa:text-[length:clamp(56px,20vw,120px)]"
+        >
+          <span className={linha}>
+            <span className={`linha__texto block ${camada} animate-subir motion-reduce:animate-surgir [--atraso:380ms]`}>Natural</span>
+          </span>{" "}
+          <span className={linha}>
+            <span className={`linha__texto block ${camada} ${vazado} animate-subir motion-reduce:animate-surgir [--atraso:490ms]`}>Cresce.</span>
           </span>
         </h1>
-        <Fio />
+        <Fio atraso={320} />
 
-        <p className="painel__corpo body-lg" data-revelar>
+        <p className={`painel__corpo max-w-prose mt-3 text-silver font-terciaria text-body-lg ${ENTRA} [--atraso:780ms]`}>
           O que não cresce é a comparação com quem não é natural. O teto de
-          quem não usa nada <strong>foi medido</strong>, e ele fica muito
+          quem não usa nada <strong className="text-bone font-semibold">foi medido</strong>, e ele fica muito
           acima de onde a onda de motivação para.
         </p>
 
-        <div className="painel__acao" data-revelar>
+        <div className={`painel__acao w-full mt-4 ${ENTRA} [--atraso:900ms]`}>
           <Botao params={params} posicao="dobra" />
-          <span className="microregistro mono-reg">
+          <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
             {config.oferta.preco
               ? `${config.oferta.moeda} ${config.oferta.preco} · Pix · garantia de ${config.oferta.garantiaDias} dias`
               : "12 semanas · Pix à vista · garantia em texto, mais abaixo"}
-          </span>
+          </p>
         </div>
       </div>
 
-      <div className="painel__rodape envelope" data-revelar>
-        <span className="rolar overline" aria-hidden="true">
+      <div className={`${envelope} ${painelRodape} ${ENTRA} [--atraso:1020ms]`}>
+        <span className="flex flex-col gap-0.5 text-silver font-secundaria text-overline uppercase" aria-hidden="true">
           <span>rolar</span>
           <span>pra ver</span>
-          <span className="painel__seta">&#8595;</span>
+          <span className="block mt-1 text-silver font-terciaria text-[18px] leading-none animate-seta motion-reduce:animate-none">&#8595;</span>
         </span>
-        <ul className="crus mono-reg" data-num>
+        <ul className={crus} role="list">
           <li>
-            <b>12</b> semanas
+            <b className="text-bone font-bold">12</b> semanas
           </li>
           <li>
-            <b>3</b> sessões por semana
+            <b className="text-bone font-bold">3</b> sessões por semana
           </li>
           <li>
-            <b>4 a 5</b> horas
+            <b className="text-bone font-bold">4 a 5</b> horas
           </li>
         </ul>
       </div>
-    </header>
-  );
-}
-
-/** Fio de 1px como grade de painel. Entra desenhado, da esquerda. */
-export function Fio() {
-  return (
-    <svg className="painel__fio" viewBox="0 0 100 1" preserveAspectRatio="none" aria-hidden="true">
-      <line x1="0" y1="0.5" x2="100" y2="0.5" stroke="currentColor" strokeWidth="1" />
-    </svg>
+    </section>
   );
 }

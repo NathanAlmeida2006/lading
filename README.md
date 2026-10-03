@@ -33,8 +33,12 @@ DS_BUNDLE=/caminho/para/.design-sync/ds-bundle npm run sync:ds
 | --- | --- |
 | `npm run sync:ds` | copia tokens e fontes do `ds-bundle` e gera o wordmark em SVG |
 | `npm run dev` | servidor de desenvolvimento |
-| `npm run build` | sync, build do cliente, build SSR, pré-renderização e conferência de orçamento |
-| `npm run verificar` | contraste, foco, zoom, movimento reduzido, CLS, leitura sem JS, manifesto, odômetro, prova, doca e introdução, nos dois temas |
+| `npm run build` | build do cliente, build SSR, pré-renderização e conferência de orçamento. **Não** roda o `sync:ds`: ele reescreve tokens e wordmark versionados, e sincronizar é um passo à parte (rode, confira o diff, commite) |
+| `npm run verificar` | contraste, foco, reflow (320, 360, 1024 e 1280px), movimento reduzido, CLS, leitura sem JS, manifesto, régua das semanas, prova, pilha do espelho, marquise, doca e introdução |
+
+Os `[A DEFINIR]` de `src/config.js` (preço, garantia, checkout, pixel e dados legais) são listados a
+cada build. Com `PUBLICAR=1` no ambiente, o `prerender` recusa o build enquanto sobrar algum: é o que
+deve ficar ligado na produção, para a página não ir ao ar com o checkout apontando para `DEFINIR`.
 
 O `verificar` precisa de um Chromium. Sem um no cache do Playwright:
 `npx playwright-core install chromium`, ou `CHROMIUM=/caminho npm run verificar`.
@@ -81,8 +85,9 @@ de JavaScript, com React, anime.js, Lenis e a página inteira dentro; 79,2 KB de
 
 ## Rolagem
 
-**Lenis**, com os defaults do estúdio que o escreveu: `lerp 0.1`, `anchors: true`,
-`autoRaf: true`. Não invente valores; foram calibrados em milhões de sessões.
+**Lenis**, com os defaults do estúdio que o escreveu: `lerp 0.1`, `anchors: true`. Não invente
+valores; foram calibrados em milhões de sessões. Só o laço é nosso (`autoRaf: false`): ver
+"O laço dorme", abaixo.
 
 Três coisas que importam sobre como ele foi ligado:
 
@@ -100,7 +105,27 @@ suavizar por cima do lerp. E toda conferência manual passa `behavior: "instant"
 `scrollTo`, porque leitura imediata depois de um scroll suavizado devolve a posição velha.
 
 Ele expõe a velocidade em `--scroll-velocity`, que a marquise consome em CSS para
-inclinar com a rolagem.
+inclinar com a rolagem. A propriedade é **registrada, sem herança** (`@property`, em
+`residual.css`), e só se escreve na faixa que está a até uma tela da janela, e só quando o valor
+muda: uma propriedade herdável invalidava o estilo dos 78 nós de dentro de cada faixa a cada
+quadro de rolagem.
+
+### O laço dorme
+
+Com `autoRaf: true` o Lenis pede um `requestAnimationFrame` por quadro **para sempre**, e cada
+quadro pedido é um quadro inteiro da thread principal, inclusive com a página parada. Pior: com
+qualquer laço de rAF ativo o Chrome reavalia o estilo das animações de CSS a cada quadro, mesmo
+as que ele roda no compositor (medido numa página mínima: 0 recálculos por segundo sem laço, 60
+com um laço vazio). Por isso o laço (`ligarLenis`, em `motion/index.js`) só existe enquanto há
+rolagem suave: a roda e o clique numa âncora o acordam, e ele volta a dormir quando a animação
+termina. Ao acordar, o relógio do Lenis é posto **um quadro atrás**, senão o primeiro passo seria
+um salto direto ao destino.
+
+O anime.js tem o mesmo defeito: o `onScroll` liga um temporizador de 30 quadros por segundo
+(`dataTimer`) que não desliga quando a rolagem para, e o motor ficava pedindo quadro para sempre.
+`dormirComARolagem` (em `motion/index.js`) o pausa junto com o `wakeTicker` e o retoma a cada
+rolagem. Mexe em dois campos de instância da biblioteca (testados contra a 4.5.0): se uma versão
+futura os mudar, a guarda não faz nada e a página só deixa de dormir.
 
 ## A introdução
 
@@ -118,6 +143,10 @@ Três decisões, e cada uma tem um motivo medido:
 - **Decidida antes da primeira pintura.** O script inline do `index.html` escreve
   `intro-pendente` no `html` antes de qualquer CSS aplicar, senão a cortina pisca por
   cima do herói pré-renderizado. Sem JavaScript e sob movimento reduzido ela não existe.
+- **É CSS, e não espera o pacote.** A coreografia é keyframes (`styles/residual.css`), e o
+  mesmo script inline a recolhe e destrava a rolagem aos 3,2 s. Se o JavaScript atrasar ou
+  falhar, a cortina sobe e some do mesmo jeito; aos 8 s sem o pacote, o script tira a
+  classe `js` e a página abre inteira (`RNF-L35`).
 - **O herói compõe debaixo da cortina**, e já está parado quando ela levanta, como no
   site de origem. Compor depois empurrava o LCP local de 1,1 s para 2,4 s: o que está
   coberto continua contando como pintado, e o que está em `opacity: 0` não.
@@ -182,7 +211,7 @@ revelação pendente, e é o que o `verificar` sabe descontar.
 ## O campo de pontos
 
 Ao fundo da **prova**, do **que se leva** e das **três perguntas** (`CampoDePontos.jsx`).
-Nunca dois animando ao mesmo tempo: cada um para o laço quando a sua seção sai da tela.
+Cada um para o laço quando a sua seção sai da tela.
 
 Duas variantes:
 
@@ -201,12 +230,23 @@ sistema (ponto de 1 bit, fio de grade, zero brilho, zero gradiente, zero cor pr�
 isolado: reprovado o teste, troque o componente por `null` em `Prova.jsx` e o layout continua
 de pé, só o fundo fica liso.
 
-Três travas de custo, e nenhuma é opcional:
+Quatro travas de custo, e nenhuma é opcional:
 
 - **Só anima na tela.** `IntersectionObserver` para o laço quando a seção sai.
 - **Movimento reduzido desenha um quadro e para.** É ornamento: não informa nada.
 - **Densidade por área, com teto de pontos por quadro.** Num monitor grande a malha não pode
   multiplicar o trabalho de cada quadro.
+- **O canvas é fatiado em ladrilhos de 320 px** (`motion/campo.js`), e a cada quadro só os que
+  estão na tela são atualizados. A prova tem 1905 × 3482 px: um canvas desse tamanho (26 MB)
+  reenviado ao compositor a cada quadro derrubava a página a 20-30 quadros por segundo, e o
+  problema era o **tamanho do buffer**, não o desenho (com o buffer em um quarto da área ele some;
+  escondendo o canvas com `visibility` ele continua). Cada ladrilho roda a mesma conta nas
+  coordenadas da seção, e os ladrilhos juntos são o canvas inteiro de antes (conferido byte a
+  byte; as únicas diferenças são ≤ 2/255 em meio-tom nas emendas e os entalhes do rasterizador
+  nos fios verticais longos do original). 320 é de propósito: 320 × DPR é inteiro para todo DPR em
+  passos de 0,05, e só assim a emenda é invisível. Um **Worker com OffscreenCanvas** foi tentado e
+  descartado: tirava o desenho da main thread, mas piorava o ritmo de quadros com canvas grande e
+  só poupava ~0,5 ms por quadro.
 
 E uma trava de leitura: a nota honesta tem superfície opaca por cima do campo, porque o
 `TR-07` proíbe texto corrido sobre imagem sem scrim ou moldura por baixo.
@@ -217,26 +257,63 @@ A página **compõe** os dois modos em vez de escolher um: blocos Sigilo e bloco
 alternados, com a troca no limite da seção, em corte. Não segue `prefers-color-scheme`,
 e isso é deliberado (`RNF-L19`).
 
-Há uma correção de token no topo de `pagina.css`: o `ds-bundle` declara
+Há uma correção de token em `styles/residual.css`: o `ds-bundle` declara
 `--acento: var(--rubro)` em `:root` e não re-aliasa no bloco Cartaz. A correção de
-verdade é na fundação; a linha daqui sai quando ela chegar.
+verdade é na fundação; a regra daqui sai quando ela chegar.
 
 ## Escala
 
 Uma família assina, anuncia e rotula (Secundária); a Terciária explica. A escala
-canônica vive em classes, e no desktop cada papel sobe um degrau (`titulo` para
-`display`, corpo para 18px, marquise e diálogo para a medida do `h2`).
+canônica vive no `@theme` de `styles/tailwind.css`, com o nome do token: `text-h1`,
+`text-display`, `text-body-lg`, `text-mono-reg`. No desktop cada papel sobe um degrau
+(`lg:text-display` no título, `lg:text-body-lg` no corpo, 24px na marquise e no diálogo).
 
-`display-xxl` é a exceção declarada: `clamp(72px, 27vw, 200px)`, em **três** lugares
+`display-xxl` é a exceção declarada: `clamp(72px, 27vw, 240px)`, em **três** lugares
 só (as duas headlines de painel e o número da semana). Não é tamanho de texto, é
 tipografia como arquitetura, e aparecer pouco é o que mantém a escala como assinatura.
 
+## Estilo
+
+**Tailwind v4**, só no build (`@tailwindcss/vite`). Ele entrou depois de o contrato
+(§4.2) e o `RNF-L17` o recusarem porque "traz escala e paleta próprias". A objeção
+morre assim:
+
+- **Paleta = tokens.** `styles/tailwind.css` zera a paleta padrão (`--color-*: initial`)
+  e liga cada cor ao token do `ds-bundle` com `@theme inline`: `bg-void` vira
+  `var(--void)`. O `inline` é o que mantém os temas Sigilo e Cartaz: sem ele a cor
+  resolveria uma vez em `:root` e as seções Cartaz herdariam o valor já resolvido, o
+  mesmo defeito do `--acento`.
+- **Escala = px.** Espaço, breakpoints e raio são px, e não rem: o original nunca foi
+  rem, e a preferência de tamanho de fonte do navegador não pode mexer em espaço nem em
+  breakpoint (por isso o `verificar` mede reflow por LARGURA de janela, e não por `font-size`). A escala de 4px coincide com `--space-1..9`
+  (4, 8, 12, 16, 24, 32, 48, 64, 96 = `1, 2, 3, 4, 6, 8, 12, 16, 24`). Breakpoints: `xs`
+  480, `sm` 640, `md` 768, `lg` 1024, `wide` 1440.
+- **Os tokens continuam sendo CSS.** `tokens/cor.css`, `forma-espaco.css` e `movimento.css`
+  são importados como estão (o `sync:ds` os sobrescreve), porque o tema muda em tempo de
+  execução e o JS lê `--motion-*`. `tokens/tipografia.css` não é importado: a escala está
+  no `@theme`.
+- **Resíduo** em `styles/residual.css`: o grão (SVG como token), a serrilha do recibo,
+  as regras de base (foco, seleção, `[data-revelar]`, a correção do `--acento`), a pausa
+  e os keyframes (as pontas soltas e a cortina).
+
+Três armadilhas pagas com defeito medido:
+
+- **Duas utilitárias do mesmo grupo, na mesma variante, não têm ordem garantida.**
+  `text-h1` e `text-[48px]` brigam pelo `font-size`. Nunca some: monte com as peças
+  (`font-secundaria font-extrabold text-[48px]`) ou passe a margem/tamanho por prop
+  (`Rotulo margem="mb-2"`).
+- **`hover:` do Tailwind v4 só vale com `@media (hover: hover)`.** O original responde ao
+  toque, então `styles/tailwind.css` redefine a variante para `:hover` puro.
+- **Os `will-change` originais não são enfeite.** O grão tem `mix-blend-mode`; sem as
+  camadas que eles criam (linhas das headlines, trilho da marquise, selo) o navegador
+  mistura o grão à página inteira que o precede e o texto perde o antialiasing por
+  subpixel. Medido por comparação de pixels (`ui.js`, `camada`).
+
 ## O que não entra aqui
 
-Roteador (uma página só), framework de CSS utilitário (traz escala e paleta próprias),
-biblioteca de componentes (raio 0 e zero sombra não são o padrão de nenhuma),
-gerenciador de estado, backend, segunda biblioteca de animação ou de rolagem, e CDN em
-tempo de execução.
+Roteador (uma página só), biblioteca de componentes (raio 0 e zero sombra não são o
+padrão de nenhuma), gerenciador de estado, backend, segunda biblioteca de animação ou
+de rolagem, e CDN em tempo de execução.
 
 ## Antes de publicar
 

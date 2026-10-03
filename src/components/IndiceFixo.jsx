@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 
 /**
- * Paginacao fixa "03 / 09", no canto.
+ * Paginacao fixa "03 / 10", no canto.
  *
  * Vem direto da engenharia reversa, onde o carrossel do Burocratik trata o
  * numero da pagina como elemento de design. Aqui ele diz onde o
  * visitante esta numa pagina longa, e e micro-registro tecnico: o token
  * `mono-reg` existe exatamente para isso.
  *
- * `mix-blend-mode: difference` no CSS resolve a legibilidade sobre os dois
+ * `mix-blend-mode: difference` resolve a legibilidade sobre os dois
  * temas sem duplicar o elemento por bloco.
  *
  * NAO usa IntersectionObserver, e a razao e a pilha de secoes. Numa pagina de
  * rolagem comum "que secao esta na tela" e uma pergunta que o observador
  * responde bem. Numa pilha, toda secao ja alcancada continua GRUDADA e
- * intersecta a faixa do meio para sempre: as nove respondem sim ao mesmo tempo
- * e o contador trava em `09 / 09` na primeira rolagem. Foi o que aconteceu, e o
+ * intersecta a faixa do meio para sempre: as dez respondem sim ao mesmo tempo
+ * e o contador trava em `10 / 10` na primeira rolagem. Foi o que aconteceu, e o
  * defeito e silencioso porque o numero continua plausivel.
  *
  * A pergunta certa na pilha nao e quem intersecta, e QUEM ESTA POR CIMA - que e
@@ -31,39 +31,59 @@ export function IndiceFixo({ ids }) {
     const secoes = ids.map((id) => document.getElementById(id)).filter(Boolean);
     if (!secoes.length) return;
 
-    let agendado = 0;
+    // Nenhuma leitura de layout no caminho da rolagem. A posicao de cada secao NO DOCUMENTO so muda
+    // quando a pagina muda de tamanho, e quem avisa e o `ResizeObserver` (que entrega depois do
+    // layout, com ele limpo). Antes eram dez `getBoundingClientRect` por quadro, lidos DEPOIS de
+    // o Lenis e o anime.js escreverem estilo no mesmo quadro: cada rodada forcava um recalculo
+    // de estilo sincrono dentro do `requestAnimationFrame`. Agora a conta e `topo - scrollY`, e o
+    // `scrollY` se le dentro do evento de rolagem, que roda antes de qualquer escrita do quadro.
+    let topos = [];
+    let meio = 0;
+    let atual = -1;
 
-    const medir = () => {
-      agendado = 0;
-      const meio = window.innerHeight / 2;
+    const escolher = () => {
+      const y = window.scrollY;
       let topo = 0;
-      for (const [indice, secao] of secoes.entries()) {
-        if (secao.getBoundingClientRect().top <= meio) topo = indice;
+      for (const [indice, posicao] of topos.entries()) {
+        if (posicao - y <= meio) topo = indice;
       }
+      if (topo === atual) return;
+      atual = topo;
       definirAtual(topo + 1);
     };
 
-    // Um quadro por rolagem, nunca uma medida por evento: sao nove retangulos,
-    // e le-los a cada evento forca recalculo de layout no meio da animacao da
-    // pilha.
-    const aoRolar = () => {
-      if (!agendado) agendado = requestAnimationFrame(medir);
+    const medir = () => {
+      const y = window.scrollY;
+      topos = secoes.map((secao) => secao.getBoundingClientRect().top + y);
+      meio = window.innerHeight / 2;
+      escolher();
     };
 
-    medir();
-    window.addEventListener("scroll", aoRolar, { passive: true });
-    window.addEventListener("resize", aoRolar, { passive: true });
+    const aoRedimensionar = () => {
+      meio = window.innerHeight / 2;
+      escolher();
+    };
+
+    const tamanho = new ResizeObserver(medir);
+    for (const secao of secoes) tamanho.observe(secao);
+    window.addEventListener("scroll", escolher, { passive: true });
+    window.addEventListener("resize", aoRedimensionar, { passive: true });
     return () => {
-      cancelAnimationFrame(agendado);
-      window.removeEventListener("scroll", aoRolar);
-      window.removeEventListener("resize", aoRolar);
+      tamanho.disconnect();
+      window.removeEventListener("scroll", escolher);
+      window.removeEventListener("resize", aoRedimensionar);
     };
   }, [ids]);
 
   const doisDigitos = (n) => String(n).padStart(2, "0");
 
+  // Some com o aviso de cookies, sobe com a doca (60px de botao e fios mais o respiro dela, que
+  // cresce com a area segura do iPhone, mais 12px de folga), e some em tela de 380px ou menos.
   return (
-    <div className="indice-fixo mono-reg" aria-hidden="true" data-num>
+    <div
+      className="fixed bottom-4 left-4 z-5 font-terciaria text-mono-reg tabular-nums tracking-[0.08em] text-bone-pure mix-blend-difference pointer-events-none transition-[bottom] duration-(--motion-base) ease-(--ease-corte-2) [.com-doca_&]:bottom-[calc(60px+max(--spacing(3),env(safe-area-inset-bottom))+--spacing(3))] [.com-consentimento_&]:hidden tela-estreita:hidden"
+      aria-hidden="true"
+    >
       {doisDigitos(atual)} / {doisDigitos(ids.length)}
     </div>
   );

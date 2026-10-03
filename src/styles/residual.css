@@ -1,0 +1,197 @@
+/* ============================================================================
+   CSS residual · o que o Tailwind nao expressa em classe
+   ============================================================================
+   Tudo o mais vive em classes utilitarias nos .jsx. Aqui ficam so tres tipos de
+   coisa, que o Tailwind nao expressa em classe:
+
+     1. Custom properties com um SVG ou uma curva dentro (serrilha, grao, expo).
+     2. Regras globais de base: a correcao do acento no Cartaz, o foco, a selecao, o
+        estado de JavaScript (`[data-revelar]`) e a pausa.
+     3. Keyframes: as pontas soltas, a cortina de introducao e a entrada do heroi.
+   ========================================================================== */
+
+/* ---- 0. Custom properties -------------------------------------------------
+   --ease-expo: a curva de movimento de layout (a mesma do Lenis).
+   --serrilha-*: os dentes do recibo.
+   --grao: a textura. */
+:root {
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---- 0a. A inclinacao da marquise (`--scroll-velocity`) --------------------------
+   O Lenis escreve a velocidade da rolagem nas faixas (px por quadro), e a faixa a consome em
+   `skewX(calc(var(--scroll-velocity, 0) * -0.35deg))`. Registrada, e SEM heranca: uma custom
+   property comum e herdavel, entao cada escrita invalidava o estilo dos 78 nos de dentro de cada
+   faixa, a cada quadro de rolagem, para inclinar duas faixas. Sem heranca, a mudanca invalida so a
+   propria faixa. O valor inicial (0) e o `var(..., 0)` de antes: o desenho e o mesmo. */
+@property --scroll-velocity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+/* ---- 0b. Serrilha do recibo ------------------------------------------------
+   Dente de 4px, altura 6px (micro-registro do §7). E `background-image`, e NAO
+   `mask`: a mascara promove o recibo a camada composta, o texto de tudo o que vem
+   depois perde o antialiasing por subpixel e fica cinza. A cor do papel (o
+   `--surface-1` do Cartaz, #f6f4ef) vai escrita dentro do SVG porque um SVG
+   embutido nao enxerga custom property. */
+:root {
+  --serrilha-sup: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 6 L4 0 L8 6 Z' fill='%23f6f4ef'/%3E%3C/svg%3E");
+  --serrilha-inf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0 L4 6 L8 0 Z' fill='%23f6f4ef'/%3E%3C/svg%3E");
+}
+
+/* ---- 1. Textura de grao -------------------------------------------------
+   Camada unica reutilizavel (RNF-G14), consumida por
+   `before:bg-(image:--grao)`. NUNCA sobre texto corrido (RNF-G08). */
+:root {
+  --grao: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23g)' opacity='0.55'/%3E%3C/svg%3E");
+}
+
+@layer base {
+  /* ---- 2. Correcao de token (RNF-L36) -------------------------------------
+     `tokens/cor.css` declara `--acento: var(--rubro)` em `:root` e o bloco
+     Cartaz redefine `--rubro` sem re-aliasar `--acento`. Substituicao de
+     custom property resolve onde foi declarada, entao o acento descia preso no
+     Rubro do Sigilo. A correcao de verdade e na fundacao; a regra sai quando
+     ela chegar. */
+  [data-theme="cartaz"] {
+    --acento: var(--rubro);
+  }
+
+  /* ---- 3. Foco visivel em 100% dos interativos (RNF-L11 / RNF-G04) ------- */
+  :focus-visible {
+    outline: 2px solid var(--bone);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--acento);
+    color: var(--void);
+  }
+
+  /* ---- 4. Estado inicial das revelacoes (RNF-L16, RNF-L35) ----------------
+     So existe com JS: sem ele a pagina abre inteira e legivel. */
+  .js [data-revelar] {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .js [data-revelar] {
+      opacity: 1;
+    }
+  }
+}
+
+/* ---- 4b. Pausa pedida pelo visitante (WCAG 2.2.2) -------------------------
+   `motion/pausa.js` escreve `data-pausado` no <html>; as animacoes de CSS (as pontas
+   soltas) congelam aqui, e as de JavaScript (marquise, seta, campos) escutam o mesmo
+   estado. */
+@layer base {
+  [data-pausado] *,
+  [data-pausado] *::before,
+  [data-pausado] *::after {
+    animation-play-state: paused !important;
+  }
+}
+
+/* ---- 4c. Fora da tela, as animacoes infinitas param ----------------------------
+   `components/FundoCapa.jsx` poe `data-fora` na capa (dobra ou fechamento) quando ela sai da tela, e
+   as pontas soltas e a seta da dobra congelam onde estao: o Chrome reavalia o estilo de cada animacao
+   de CSS a cada quadro em que a thread principal desenha qualquer coisa, e quem ninguem ve nao precisa
+   disso. `!important` pelo mesmo motivo da pausa acima: `animation` e atalho, e `animate-*` mora numa
+   camada mais forte que a de base. */
+@layer base {
+  [data-fora] :is(.ponta, .animate-seta) {
+    animation-play-state: paused !important;
+  }
+}
+
+/* ---- 5. As pontas soltas do fechamento -------------------------------------
+   Dez triangulos vagando pela secao (vem da Hoje do app), cada um com duracao e
+   atraso proprios: o desalinho de fase le como aleatorio, sem laco de JS.
+   Ornamento: somem sob movimento reduzido (`motion-reduce:hidden`). */
+@theme {
+  --animate-vagar-1: vagar-1 19s ease-in-out infinite;
+  --animate-vagar-2: vagar-2 24s -8s ease-in-out infinite;
+  --animate-vagar-3: vagar-3 27s -16s ease-in-out infinite;
+  --animate-vagar-4: vagar-4 21s -4s ease-in-out infinite;
+  --animate-vagar-5: vagar-5 25s -12s ease-in-out infinite;
+  --animate-vagar-6: vagar-6 30s -20s ease-in-out infinite;
+  --animate-vagar-7: vagar-7 17s -6s ease-in-out infinite;
+  --animate-vagar-8: vagar-8 23s -14s ease-in-out infinite;
+  --animate-vagar-9: vagar-9 26s -2s ease-in-out infinite;
+  --animate-vagar-10: vagar-10 29s -18s ease-in-out infinite;
+
+  @keyframes vagar-1 { 0%, 100% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 12% { opacity: .55; } 50% { opacity: .7; transform: translate(9vw, -6vh) rotate(70deg); } 88% { opacity: .4; } }
+  @keyframes vagar-2 { 0%, 100% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 15% { opacity: .6; } 50% { opacity: .75; transform: translate(-11vw, 8vh) rotate(-95deg); } 85% { opacity: .35; } }
+  @keyframes vagar-3 { 0%, 100% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 18% { opacity: .5; } 50% { opacity: .65; transform: translate(6vw, 10vh) rotate(50deg); } 82% { opacity: .3; } }
+  @keyframes vagar-4 { 0%, 100% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 14% { opacity: .5; } 50% { opacity: .68; transform: translate(-8vw, 7vh) rotate(-60deg); } 86% { opacity: .32; } }
+  @keyframes vagar-5 { 0%, 100% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 16% { opacity: .6; } 50% { opacity: .72; transform: translate(10vw, 5vh) rotate(85deg); } 84% { opacity: .38; } }
+  @keyframes vagar-6 { 0%, 100% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 20% { opacity: .45; } 50% { opacity: .6; transform: translate(-7vw, -8vh) rotate(-40deg); } 80% { opacity: .28; } }
+  @keyframes vagar-7 { 0%, 100% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 13% { opacity: .5; } 50% { opacity: .65; transform: translate(8vw, 9vh) rotate(55deg); } 87% { opacity: .3; } }
+  @keyframes vagar-8 { 0%, 100% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 17% { opacity: .55; } 50% { opacity: .7; transform: translate(-9vw, -7vh) rotate(-75deg); } 83% { opacity: .34; } }
+  @keyframes vagar-9 { 0%, 100% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 19% { opacity: .5; } 50% { opacity: .62; transform: translate(7vw, -8vh) rotate(65deg); } 81% { opacity: .3; } }
+  @keyframes vagar-10 { 0%, 100% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 11% { opacity: .5; } 50% { opacity: .68; transform: translate(-10vw, 6vh) rotate(-50deg); } 89% { opacity: .32; } }
+}
+
+/* ---- 6. A cortina de introducao -------------------------------------------
+   Valores lidos do CSS de producao do lenis.dev: letras em
+   `translateY(100% + indice * 5%)`, 1,5 s expo-out com 75 ms por indice; a
+   cortina sobe aos 1,5 s, e o bloco sobe mais rapido que ela. Tudo em
+   keyframes, para nao depender do pacote de JavaScript (o `inline` deixa o
+   `var(--index)` resolver na letra, e nao em `:root`). */
+@theme inline {
+  --animate-intro-letra: intro-letra 1.5s var(--ease-expo) calc(60ms + var(--index) * 75ms) both;
+  --animate-intro-sair: intro-sair 1.5s var(--ease-expo) 1.5s both;
+  --animate-intro-bloco: intro-bloco 1.5s var(--ease-expo) 1.5s both;
+}
+
+@keyframes intro-letra {
+  from { transform: translate3d(0, calc(var(--index) * 5% + 100%), 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes intro-sair {
+  from { visibility: visible; }
+  to { transform: translateY(-100%); visibility: hidden; }
+}
+@keyframes intro-bloco {
+  to { transform: translateY(-90vh); }
+}
+
+/* ---- 7. A entrada do heroi ---------------------------------------------------
+   Era `abrirPainel` (JavaScript), e o `h1` ficava em `opacity: 0` ate o pacote
+   hidratar: o LCP esperava o JS. Agora e CSS, com as mesmas duracoes, atrasos e curvas
+   (revelacao de marca em `steps(2)`; linhas em expo-out; riscos em out-quad), e nao
+   depende de nada para acontecer.
+
+   `--atraso` e o atraso de cada peca e `--base` empurra tudo 300 ms enquanto a cortina
+   cobre a tela (o heroi compoe DEBAIXO dela). `backwards`, e nao `both`: antes de
+   comecar vale o `from`, depois volta ao estilo natural do elemento. Com `both` o
+   navegador deixaria cada peca como camada composta para sempre, e o texto perderia o
+   antialiasing por subpixel. */
+@theme inline {
+  --animate-revelar: revelar var(--motion-base) var(--ease-corte-2) calc(var(--atraso, 0ms) + var(--base, 0ms)) backwards;
+  --animate-subir: subir 820ms var(--ease-expo) calc(var(--atraso, 0ms) + var(--base, 0ms)) backwards;
+  --animate-tracar: tracar 560ms cubic-bezier(0.5, 1, 0.89, 1) calc(var(--atraso, 0ms) + var(--base, 0ms)) backwards;
+  --animate-tracar-fio: tracar 620ms cubic-bezier(0.5, 1, 0.89, 1) calc(var(--atraso, 0ms) + var(--base, 0ms)) backwards;
+  --animate-surgir: surgir var(--motion-fast) linear backwards;
+  --animate-seta: seta 1800ms cubic-bezier(0.45, 0, 0.55, 1) calc(1400ms + var(--base, 0ms)) infinite backwards;
+}
+
+@keyframes revelar {
+  from { opacity: 0; transform: translateY(12px); }
+}
+@keyframes surgir {
+  from { opacity: 0; }
+}
+@keyframes subir {
+  from { transform: translateY(110%); }
+}
+@keyframes tracar {
+  from { stroke-dashoffset: 1; }
+}
+@keyframes seta {
+  0% { opacity: 0; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(6px); }
+  100% { opacity: 0.35; transform: translateY(0); }
+}

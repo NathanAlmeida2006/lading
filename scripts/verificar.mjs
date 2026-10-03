@@ -1,10 +1,11 @@
 /**
  * Verificacao automatizada dos requisitos nao funcionais que dao para medir.
  *
- * Cobre RNF-L09 (contraste), RNF-L11 (foco), RNF-L12 (zoom a 200%),
- * RNF-L13 (movimento reduzido), RNF-L16 (legivel sem JavaScript), RNF-L35
- * (nada preso invisivel), o manifesto, o odometro e a doca, nos DOIS temas,
- * porque o RNF-L18 nao admite componente que so existe no escuro.
+ * Cobre RNF-L09 (contraste), RNF-L11 (foco), RNF-L12 (reflow em 320, 360,
+ * 1024 e 1280px), RNF-L13 (movimento reduzido), RNF-L16 (legivel sem
+ * JavaScript), RNF-L35 (nada preso invisivel), o manifesto, a regua das
+ * semanas, a pilha do espelho, a marquise e a doca. Os dois temas (Sigilo e
+ * Cartaz) estao na mesma pagina, e uma leitura cobre os dois.
  *
  * O que ele NAO cobre continua sendo trabalho de olho: os 16 testes de
  * rejeicao de `extracao-pontos-negativos.md` §8 e a prova visual em tamanho
@@ -28,7 +29,7 @@ try {
   process.exit(2);
 }
 const EXEC = process.env.CHROMIUM ?? null;
-const URL = process.argv[2] ?? "http://localhost:4173/";
+const ALVO = process.argv[2] ?? "http://localhost:4173/";
 const nav = await chromium.launch(EXEC ? { executablePath: EXEC, headless: true } : { headless: true });
 let falhou = false;
 const linha = (id, ok, nota) => {
@@ -40,7 +41,7 @@ const linha = (id, ok, nota) => {
 {
   const ctx = await nav.newContext({ javaScriptEnabled: false, viewport: { width: 360, height: 640 } });
   const p = await ctx.newPage();
-  await p.goto(URL, { waitUntil: "load" });
+  await p.goto(ALVO, { waitUntil: "load" });
   const r = await p.evaluate(() => ({
     texto: document.body.innerText.replace(/\s+/g, " ").trim().length,
     h1: document.querySelectorAll("h1").length,
@@ -52,15 +53,21 @@ const linha = (id, ok, nota) => {
   await ctx.close();
 }
 
-// --- Contraste (RNF-L09) e zoom (RNF-L12) ----------------------------------
-for (const tema of ["dark", "light"]) {
-  const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, colorScheme: tema, isMobile: true, hasTouch: true });
+// --- Contraste (RNF-L09) ---------------------------------------------------
+// Uma passada so: a pagina NAO segue o tema do sistema (ver o comentario do index.html), e os dois
+// modos, Sigilo e Cartaz, estao na mesma pagina, entao uma leitura cobre os dois.
+//
+// ACEITOS: o acento (3,77:1) em dois termos de 18px da tese das semanas. Decisao do usuario
+// (02/10/2026): trocar a cor mudaria o desenho. Sai da lista no dia em que a cor mudar.
+const ACEITOS = ["Regra do 12", "portão da fase 3"];
+{
+  const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
   const p = await ctx.newPage();
-  await p.goto(URL, { waitUntil: "networkidle" });
+  await p.goto(ALVO, { waitUntil: "networkidle" });
   await p.click("text=Aceitar").catch(() => {});
   await p.waitForTimeout(400);
 
-  const contraste = await p.evaluate(() => {
+  const { ruins: contraste, aceitos } = await p.evaluate((liberados) => {
     const lum = (c) => {
       const [r, g, b] = c.match(/\d+(\.\d+)?/g).slice(0, 3).map((v) => {
         const s = v / 255;
@@ -76,7 +83,8 @@ for (const tema of ["dark", "light"]) {
       return getComputedStyle(document.body).backgroundColor;
     };
     const ruins = [];
-    for (const el of document.querySelectorAll("p,li,h1,h2,h3,span,a,button,figcaption")) {
+    const aceitos = [];
+    for (const el of document.querySelectorAll("p,li,h1,h2,h3,span,a,button,figcaption,strong,b,s,dt,dd")) {
       const proprio = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim();
       if (!proprio) continue;
       const e = getComputedStyle(el);
@@ -92,32 +100,63 @@ for (const tema of ["dark", "light"]) {
       const razao = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
       const exigido = grande ? 3 : 4.5;
       if (razao < exigido) {
+        if (el.tagName === "STRONG" && liberados.includes(proprio)) {
+          aceitos.push(proprio);
+          continue;
+        }
         ruins.push(`${proprio.slice(0, 26)} ${razao.toFixed(2)}:1 < ${exigido} · ${cor} sobre ${fundoDe(el)} · ${tam}px/${peso} · <${el.tagName.toLowerCase()} class="${el.className}">`);
       }
     }
-    return ruins;
-  });
-  linha("RNF-L09", contraste.length === 0, `tema ${tema}: ${contraste.length} pares abaixo do minimo`);
+    return { ruins, aceitos };
+  }, ACEITOS);
+  linha("RNF-L09", contraste.length === 0,
+    `${contraste.length} pares abaixo do minimo` + (aceitos.length ? ` (mais ${aceitos.length} aceitos: ${aceitos.join(", ")})` : ""));
   contraste.slice(0, 4).forEach((c) => console.log("            " + c));
-
-  // Zoom de texto a 200% sem quebra de layout.
-  await p.evaluate(() => { document.documentElement.style.fontSize = "32px"; });
-  await p.waitForTimeout(300);
-  const zoom = await p.evaluate(() => ({
-    estouro: document.documentElement.scrollWidth - window.innerWidth,
-    cortados: [...document.querySelectorAll(".botao, .objecao__botao")]
-      .filter((e) => e.scrollWidth > e.clientWidth + 2).length,
-  }));
-  linha("RNF-L12", zoom.estouro <= 1 && zoom.cortados === 0,
-    `tema ${tema}: estouro horizontal ${zoom.estouro}px, ${zoom.cortados} controles cortados`);
   await ctx.close();
+}
+
+// --- RNF-L12: reflow, sem quebra de layout ---------------------------------
+// A pagina e toda em px, entao mudar o `font-size` do <html> nao mexe em nada (era o que este teste
+// fazia, e ele passava sempre). O que mexe e a LARGURA da janela: 320px e o piso do WCAG 1.4.10
+// (400% de zoom em 1280px), e 1024 e 1280 sao onde as colunas da oferta e do rodape mais estreitam.
+{
+  const quebras = [];
+  for (const [w, h] of [[320, 568], [360, 640], [1024, 768], [1280, 720]]) {
+    const ctx = await nav.newContext({ viewport: { width: w, height: h }, isMobile: w < 640, hasTouch: w < 640 });
+    const p = await ctx.newPage();
+    await p.goto(ALVO, { waitUntil: "networkidle" });
+    await p.click("text=Aceitar").catch(() => {});
+    await p.waitForTimeout(400);
+    const r = await p.evaluate(() => {
+      const botoes = [...document.querySelectorAll(".botao")];
+      const dono = (b) => b.dataset.posicao;
+      return {
+        estouro: document.documentElement.scrollWidth - window.innerWidth,
+        // O botao sangra para fora da coluna em que mora.
+        sangrando: botoes.filter((b) => b.getBoundingClientRect().right > b.parentElement.getBoundingClientRect().right + 1).map(dono),
+        // O rotulo quebra de linha e o recorte de 1em corta a segunda.
+        cortados: botoes
+          .filter((b) => {
+            const rolo = b.querySelector(".botao__rolo");
+            return rolo.firstElementChild.getBoundingClientRect().height > rolo.getBoundingClientRect().height * 1.5;
+          })
+          .map(dono),
+      };
+    });
+    if (r.estouro > 1) quebras.push(`${w}px: estouro horizontal de ${r.estouro}px`);
+    if (r.sangrando.length) quebras.push(`${w}px: botao fora da coluna (${r.sangrando.join(", ")})`);
+    if (r.cortados.length) quebras.push(`${w}px: rotulo cortado (${r.cortados.join(", ")})`);
+    await ctx.close();
+  }
+  linha("RNF-L12", quebras.length === 0,
+    quebras.length ? quebras.join("; ") : "320, 360, 1024 e 1280px: sem estouro, sem botao fora da coluna, sem rotulo cortado");
 }
 
 // --- RNF-L13: prefers-reduced-motion ---------------------------------------
 {
   const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, reducedMotion: "reduce", isMobile: true, hasTouch: true });
   const p = await ctx.newPage();
-  await p.goto(URL, { waitUntil: "networkidle" });
+  await p.goto(ALVO, { waitUntil: "networkidle" });
   await p.click("text=Aceitar").catch(() => {});
   const h = await p.evaluate(() => document.body.scrollHeight);
   for (let y = 0; y < h; y += 300) { await p.evaluate((v) => window.scrollTo({ top: v, behavior: "instant" }), y); await p.waitForTimeout(70); }
@@ -150,7 +189,7 @@ for (const tema of ["dark", "light"]) {
       for (const e of l.getEntries()) window.__lcp = e.startTime;
     }).observe({ type: "largest-contentful-paint", buffered: true });
   });
-  await p.goto(URL, { waitUntil: "networkidle" });
+  await p.goto(ALVO, { waitUntil: "networkidle" });
   await p.waitForTimeout(2200);
   const r = await p.evaluate(() => ({ cls: window.__cls, lcp: Math.round(window.__lcp) }));
   linha("RNF-L02", r.cls <= 0.1, `CLS ${r.cls.toFixed(4)} (teto 0,1)`);
@@ -168,7 +207,7 @@ for (const tema of ["dark", "light"]) {
 {
   const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
   const p = await ctx.newPage();
-  await p.goto(URL, { waitUntil: "networkidle" });
+  await p.goto(ALVO, { waitUntil: "networkidle" });
   await p.click("text=Aceitar").catch(() => {});
   const altura = await p.evaluate(() => document.body.scrollHeight);
   for (let y = 0; y < altura; y += 300) {
@@ -200,7 +239,7 @@ for (const tema of ["dark", "light"]) {
 {
   const ctx = await nav.newContext({ viewport: { width: 1024, height: 800 } });
   const p = await ctx.newPage();
-  await p.goto(URL, { waitUntil: "networkidle" });
+  await p.goto(ALVO, { waitUntil: "networkidle" });
   const semAnel = await p.evaluate(async () => {
     // So o que esta na tela: a doca fora de cena e `display: none` e nao
     // recebe foco, entao medir o anel dela e medir o nada.
@@ -225,7 +264,7 @@ for (const tema of ["dark", "light"]) {
 {
   const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
   const p = await ctx.newPage();
-  await p.goto(URL, { waitUntil: "networkidle" });
+  await p.goto(ALVO, { waitUntil: "networkidle" });
   await p.click("text=Aceitar").catch(() => {});
 
   // Rolar ate o FIM da secao do mapa, em passos, para o `onScroll` acompanhar
@@ -246,14 +285,14 @@ for (const tema of ["dark", "light"]) {
   await p.waitForTimeout(1500);
 
   const r = await p.evaluate(() => ({
-    acesas: document.querySelectorAll(".regua12__semana--acesa").length,
+    acesas: document.querySelectorAll(".regua12__semana[data-acesa]").length,
     semanas: document.querySelectorAll(".regua12__semana").length,
     slides: document.querySelectorAll(".slide").length,
     linhas: [...document.querySelectorAll(".semanas__titulo .linha__texto")].filter((e) => {
       const t = getComputedStyle(e).transform;
       return t && t !== "none" && !t.endsWith(", 0)");
     }).length,
-    apagadas: [...document.querySelectorAll("#reconhecimento .palavra")].filter((e) => !e.classList.contains("palavra--acesa")).length,
+    apagadas: [...document.querySelectorAll("#reconhecimento .palavra")].filter((e) => !e.hasAttribute("data-acesa")).length,
   }));
 
   linha("MAN-01", r.apagadas === 0, `${r.apagadas} palavras do manifesto ainda apagadas depois de passar por ele`);
@@ -269,7 +308,7 @@ for (const tema of ["dark", "light"]) {
 {
   const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
   const p = await ctx.newPage();
-  await p.goto(URL, { waitUntil: "networkidle" });
+  await p.goto(ALVO, { waitUntil: "networkidle" });
   await p.click("text=Aceitar").catch(() => {});
   const alvo = await p.evaluate(() => {
     const s = document.getElementById("prova");
@@ -282,20 +321,23 @@ for (const tema of ["dark", "light"]) {
   await p.evaluate((v) => window.scrollTo({ top: v, behavior: "instant" }), alvo);
   await p.waitForTimeout(1200);
   const r = await p.evaluate(() => {
-    const campo = document.querySelector(".prova .campo");
+    // O campo e fatiado em ladrilhos (`canvas.campo`, dentro de `.campos`); so os que estao a ate uma
+    // tela da janela tem buffer, entao "pintou" e: algum ladrilho com area. A cobertura se mede na raiz.
+    const campo = document.querySelector("#prova .campo");
     const secao = document.getElementById("prova");
-    const cr = campo?.getBoundingClientRect();
+    const cr = document.querySelector("#prova .campos")?.getBoundingClientRect();
     const sr = secao.getBoundingClientRect();
     return {
-      apagadas: [...document.querySelectorAll(".prova .palavra")].filter((e) => !e.classList.contains("palavra--acesa")).length,
+      palavras: document.querySelectorAll("#prova .palavra").length,
+      apagadas: [...document.querySelectorAll("#prova .palavra")].filter((e) => !e.hasAttribute("data-acesa")).length,
       campo: !!campo,
       cobre: cr && Math.abs(cr.width - sr.width) < 2,
       inerte: campo ? getComputedStyle(campo).pointerEvents === "none" : false,
-      pintou: campo ? campo.width > 0 && campo.height > 0 : false,
+      pintou: [...document.querySelectorAll("#prova .campo")].some((c) => c.width > 0 && c.height > 0),
     };
   });
-  linha("PRV-01", r.apagadas === 0 && r.campo && r.cobre && r.inerte && r.pintou,
-    `${r.apagadas} palavras apagadas; campo presente: ${r.campo}, cobrindo: ${r.cobre}, inerte: ${r.inerte}, com area: ${r.pintou}`);
+  linha("PRV-01", r.palavras > 0 && r.apagadas === 0 && r.campo && r.cobre && r.inerte && r.pintou,
+    `${r.apagadas} de ${r.palavras} palavras apagadas; campo presente: ${r.campo}, cobrindo: ${r.cobre}, inerte: ${r.inerte}, com area: ${r.pintou}`);
   await ctx.close();
 }
 
@@ -303,17 +345,52 @@ for (const tema of ["dark", "light"]) {
 {
   const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
   const p = await ctx.newPage();
-  await p.goto(URL, { waitUntil: "networkidle" });
+  await p.goto(ALVO, { waitUntil: "networkidle" });
   await p.click("text=Aceitar").catch(() => {});
-  const noTopo = await p.evaluate(() => document.querySelector(".doca")?.classList.contains("doca--ativa"));
+  const noTopo = await p.evaluate(() => document.querySelector(".doca")?.hasAttribute("data-ativa"));
   await p.evaluate(() => window.scrollTo({ top: document.getElementById("oferta").offsetTop, behavior: "instant" }));
   await p.waitForTimeout(400);
-  const noMeio = await p.evaluate(() => document.querySelector(".doca")?.classList.contains("doca--ativa"));
+  const noMeio = await p.evaluate(() => document.querySelector(".doca")?.hasAttribute("data-ativa"));
   await p.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "instant" }));
   await p.waitForTimeout(400);
-  const noFim = await p.evaluate(() => document.querySelector(".doca")?.classList.contains("doca--ativa"));
+  const noFim = await p.evaluate(() => document.querySelector(".doca")?.hasAttribute("data-ativa"));
   linha("DOC-01", noTopo === false && noMeio === true && noFim === false,
     `doca no topo: ${noTopo}, na oferta: ${noMeio}, no fechamento: ${noFim}`);
+  await ctx.close();
+}
+
+// --- ESP-01: a pilha de cards do espelho solta quando o pe de um card coberto nao cabe ---------
+// Um card coberto nunca mais mostra o que fica abaixo da dobra; se o botao dele ja nasce fora da
+// janela, a pilha vira fila (`data-solta` na lista). Em 360x640 e 1024x768 ela fecha.
+{
+  const quebras = [];
+  for (const [w, h, solta] of [[360, 640, false], [1024, 768, false], [320, 568, true], [740, 360, true]]) {
+    const ctx = await nav.newContext({ viewport: { width: w, height: h }, isMobile: w < 640, hasTouch: w < 640 });
+    const p = await ctx.newPage();
+    await p.goto(ALVO, { waitUntil: "networkidle" });
+    await p.waitForTimeout(300);
+    const real = await p.evaluate(() => document.querySelector("#espelho ol").hasAttribute("data-solta"));
+    if (real !== solta) quebras.push(`${w}x${h}: solta=${real}, esperado ${solta}`);
+    await ctx.close();
+  }
+  linha("ESP-01", quebras.length === 0,
+    quebras.length ? quebras.join("; ") : "pilha fecha em 360x640 e 1024x768, solta em 320x568 e 740x360");
+}
+
+// --- MAR-01: a marquise cobre a janela depois de alargar -----------------------------------------
+// Medida uma vez, em 360px, ela abria um vao ao girar o aparelho ou alargar a janela. A tela de 1440
+// existe desde o inicio (`screen`), e e ela que o laco usa para saber quanto repetir.
+{
+  const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, screen: { width: 1440, height: 900 } });
+  const p = await ctx.newPage();
+  await p.goto(ALVO, { waitUntil: "networkidle" });
+  await p.setViewportSize({ width: 1440, height: 900 });
+  await p.waitForTimeout(600);
+  const faixas = await p.evaluate(() =>
+    [...document.querySelectorAll(".marquise")].map((m) => ({ janela: m.clientWidth, metade: m.firstElementChild.children[0].scrollWidth })),
+  );
+  linha("MAR-01", faixas.length > 0 && faixas.every((f) => f.metade >= f.janela),
+    faixas.map((f) => `metade ${f.metade}px para janela ${f.janela}px`).join(" · "));
   await ctx.close();
 }
 
@@ -324,7 +401,7 @@ for (const tema of ["dark", "light"]) {
 {
   const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
   const p = await ctx.newPage();
-  await p.goto(URL, { waitUntil: "commit" });
+  await p.goto(ALVO, { waitUntil: "commit" });
   await p.waitForTimeout(150);
   const naEntrada = await p.evaluate(() => getComputedStyle(document.querySelector(".intro")).display !== "none");
   await p.waitForTimeout(3800);
@@ -335,7 +412,7 @@ for (const tema of ["dark", "light"]) {
   await ctx.close();
   const ctx2 = await nav.newContext({ viewport: { width: 360, height: 640 }, reducedMotion: "reduce" });
   const p2 = await ctx2.newPage();
-  await p2.goto(URL, { waitUntil: "commit" });
+  await p2.goto(ALVO, { waitUntil: "commit" });
   await p2.waitForTimeout(150);
   const reduzido = await p2.evaluate(() => getComputedStyle(document.querySelector(".intro")).display === "none");
   await ctx2.close();

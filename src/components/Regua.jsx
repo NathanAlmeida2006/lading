@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { carimbar, desenhar, revelar } from "../motion/index.js";
+import { useRef } from "react";
+import { carimbar, desenhar, revelar, useMovimento } from "../motion/index.js";
 
 /**
  * A regua: o argumento inteiro deste angulo em uma imagem.
@@ -23,29 +23,27 @@ const LARGURA = 300;
 const posicao = (valor) =>
   ESQUERDA + ((valor - MINIMO) / (MAXIMO - MINIMO)) * LARGURA;
 
-export function Regua() {
+const CHAVE = "inline-flex items-center gap-2";
+const AMOSTRA = "size-3.5 border border-current flex-none";
+
+export function Regua({ children }) {
   const raiz = useRef(null);
 
-  useEffect(() => {
+  useMovimento(() => {
     const svg = raiz.current?.querySelector("svg");
     if (svg) {
       desenhar(svg.querySelectorAll("[data-tracar]"), { tempo: 720 });
       desenhar(svg.querySelectorAll("[data-fronteira]"), { atraso: 420 });
     }
-    carimbar(raiz.current?.querySelector(".regua__numero"), {
-      naRolagem: true,
-      atraso: 520,
-    });
+    carimbar(raiz.current?.querySelector(".regua__numero"), { atraso: 520 });
     revelar(raiz.current?.querySelector(".regua__legenda"), { atraso: 200 });
   }, []);
 
   return (
-    <figure className="regua" ref={raiz}>
-      <p className="regua__numero stat" data-num>
-        25
-      </p>
+    <figure className="mt-8 mb-12" ref={raiz}>
+      <p className="regua__numero mb-3 text-bone font-secundaria text-stat tabular-nums">25</p>
       <svg
-        className="regua__svg"
+        className="w-full h-auto text-line-strong"
         viewBox="0 0 320 76"
         aria-hidden="true"
         fill="none"
@@ -105,15 +103,20 @@ export function Regua() {
         ))}
       </svg>
 
-      <figcaption className="regua__legenda caption">
-        <span className="regua__chave">
-          <span className="regua__amostra regua__amostra--natural" />
-          Livres de drogas, média <span data-num>21,8</span>
-        </span>
-        <span className="regua__chave">
-          <span className="regua__amostra regua__amostra--acima" />
-          Faixa de <span data-num>25</span> a <span data-num>35</span>
-        </span>
+      <figcaption>
+        <div className="regua__legenda flex flex-wrap gap-x-6 gap-y-2 mt-4 text-silver font-terciaria text-caption">
+          <span className={CHAVE}>
+            <span className={`${AMOSTRA} bg-bone`} />
+            Livres de drogas, média <span className="tabular-nums">21,8</span>
+          </span>
+          <span className={CHAVE}>
+            <span
+              className={`${AMOSTRA} bg-[repeating-linear-gradient(45deg,transparent,transparent_3px,var(--silver)_3px,var(--silver)_4px)]`}
+            />
+            Faixa de <span className="tabular-nums">25</span> a <span className="tabular-nums">35</span>
+          </span>
+        </div>
+        {children}
       </figcaption>
     </figure>
   );

@@ -14,8 +14,11 @@ const arvore = (
   </StrictMode>
 );
 
-if (raiz.hasChildNodes()) {
+// `firstElementChild`, e nao `hasChildNodes`: em dev a raiz so tem o comentario do marcador,
+// que conta como no e fazia o React tentar hidratar uma raiz vazia.
+if (raiz.firstElementChild) {
   hydrateRoot(raiz, arvore);
 } else {
   createRoot(raiz).render(arvore);
 }
+

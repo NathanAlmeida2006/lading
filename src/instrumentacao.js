@@ -82,7 +82,6 @@ export function carregarPixel() {
   if (typeof window === "undefined" || !config.pixel.id) return;
   if (window.fbq) return;
 
-  /* eslint-disable */
   !(function (f, b, e, v, n, t, s) {
     if (f.fbq) return; n = f.fbq = function () {
       n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
@@ -92,16 +91,19 @@ export function carregarPixel() {
     t = b.createElement(e); t.async = !0; t.src = v;
     s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
   })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
-  /* eslint-enable */
 
   window.fbq("init", config.pixel.id);
   evento("PageView");
 }
 
+// Os unicos eventos PADRAO do Meta que a pagina dispara. Qualquer outro nome e evento
+// personalizado, e o Meta so o aceita por `trackCustom`.
+const PADRAO = new Set(["PageView", "ViewContent", "InitiateCheckout"]);
+
 /** Evento nomeado (RF-L28). Sem pixel carregado, no-op silencioso. */
 export function evento(nome, dados) {
   if (typeof window === "undefined" || !window.fbq) return;
-  window.fbq("track", nome, dados);
+  window.fbq(PADRAO.has(nome) ? "track" : "trackCustom", nome, dados);
 }
 
 /* -------------------------------------------------------------------------
@@ -132,7 +134,10 @@ export function observarProfundidade() {
         observador.unobserve(entrada.target);
       }
     },
-    { threshold: 0.4 },
+    // 40% DA JANELA, e nao 40% da secao: a prova tem 2500 a 3100 px, nunca mostra 40% de si de
+    // uma vez, e o evento dela nao disparava. A secao conta como alcancada quando o topo dela
+    // cruza a marca de 60% da altura da tela, que e o que 40% significava numa secao de uma tela.
+    { rootMargin: "0px 0px -40% 0px", threshold: 0 },
   );
   for (const id of ["prova", "oferta", "fechamento"]) {
     const alvo = document.getElementById(id);
