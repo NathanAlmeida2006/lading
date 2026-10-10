@@ -38,11 +38,13 @@ export function Manifesto() {
       quadro = 0;
       if (!ativo) return;
       const topo = parseFloat(getComputedStyle(texto).top);
-      const altura = sonda.offsetHeight;
+      // `offsetHeight` arredonda e o palco (`min-h-svh`) nao: em aparelho real o svh e fracionario
+      // (ex.: 780,57) e o palco media 0,5 px a mais que a sonda, desligando o trilho inteiro.
+      const altura = sonda.getBoundingClientRect().height;
       const movimentoDisponivel = documento.classList.contains("movimento-pronto") &&
         !documento.classList.contains("movimento-falhou");
       const cabe = movimentoDisponivel && !reduzido.matches && Number.isFinite(topo) &&
-        texto.getBoundingClientRect().height + topo * 2 <= altura;
+        texto.getBoundingClientRect().height + topo * 2 <= altura + 1;
       if (no.hasAttribute("data-cabe") !== cabe) no.toggleAttribute("data-cabe", cabe);
     };
     const agendar = () => {

@@ -15,6 +15,7 @@ import { Dobra } from "./sections/Dobra.jsx";
 import { Manifesto } from "./sections/Manifesto.jsx";
 import { Espelho } from "./sections/Espelho.jsx";
 import { Leva } from "./sections/Leva.jsx";
+import { Halteres } from "./sections/Halteres.jsx";
 import { Semanas } from "./sections/Semanas.jsx";
 import { Amostra } from "./sections/Amostra.jsx";
 import { Oferta } from "./sections/Oferta.jsx";
@@ -76,6 +77,7 @@ export function App() {
           <Espelho params={params} />
         </div>
         <Leva />
+        <Halteres />
         {secoesPorId.mapa.presente && <Semanas params={params} />}
         <div>
           {secoesPorId.amostra.presente && <Amostra />}

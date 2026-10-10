@@ -42,12 +42,14 @@ export function Doca({ params }) {
 
   useEffect(() => {
     const inicio = document.getElementById("inicio");
-    // A doca fica sempre visivel, menos na dobra, na regua do treino (manifesto) e no rodape.
+    // A doca fica sempre visivel, menos na dobra, na regua do treino (manifesto), nos halteres e no rodape.
     const regua = document.getElementById("reconhecimento");
     // O rodape tem o proprio botao e a faixa de acento: a doca por cima dele
     // seria o segundo acento na mesma tela.
     const rodape = document.getElementById("rodape-legal");
-    if (!inicio || !regua || !rodape || !("IntersectionObserver" in window)) return;
+    // Os halteres caem sobre a tela inteira: a doca nao aparece nessa secao.
+    const halteres = document.getElementById("halteres");
+    if (!inicio || !regua || !rodape || !halteres || !("IntersectionObserver" in window)) return;
     const naTela = new Set();
     const obs = new IntersectionObserver(
       (entradas) => {
@@ -59,7 +61,7 @@ export function Doca({ params }) {
       },
       { threshold: 0 }, // qualquer pixel do alvo na tela esconde a doca; a regua e alta, 12% dela ainda cobria a janela
     );
-    for (const alvo of [inicio, regua, rodape]) obs.observe(alvo);
+    for (const alvo of [inicio, regua, rodape, halteres]) obs.observe(alvo);
     return () => {
       obs.disconnect();
       definirLivre(false);

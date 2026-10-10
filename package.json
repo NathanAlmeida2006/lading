@@ -10,7 +10,8 @@
     "build": "vite build && vite build --ssr src/entry-server.jsx --outDir dist-ssr && node scripts/prerender.mjs && node scripts/check-size.mjs",
     "preview": "vite preview",
     "size": "node scripts/check-size.mjs",
-    "verificar": "node scripts/verificar.mjs"
+    "verificar": "node scripts/verificar.mjs",
+    "teste:halteres": "node scripts/teste-halteres.mjs"
   },
   "dependencies": {
     "animejs": "^4.0.2",
