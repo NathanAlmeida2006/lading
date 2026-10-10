@@ -37,7 +37,7 @@ const SECOES = [
   ["#espelho", "A troca de régua"],
   ["#prova", "A prova"],
   ["#oferta", "A oferta"],
-  ["#objecoes", "As três perguntas"],
+  ["#objecoes", "Perguntas frequentes"],
 ];
 
 // O rodape grande: o valor ao lado do rotulo, na medida do h2 (32px no monitor, a do h1).

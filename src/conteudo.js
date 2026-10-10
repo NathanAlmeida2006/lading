@@ -86,6 +86,10 @@ export const conteudo = {
     { pergunta: "E o teto natural?", resposta: "A referência citada descreve uma amostra de atletas livres de drogas e não define um limite individual.", origem: `${ANGULO} · Objeção principal · ${DOSSIE} §5.3` },
     { pergunta: "É mais um curso raso de guru?", resposta: "O protocolo reúne explicações de treino e referências com autor e ano.", origem: `persona-kaua-santos.md §13 · ${DRAFT}/17-fontes.md` },
     { pergunta: "É uma promessa milagrosa?", resposta: "Os dados citados descrevem grupos estudados e não garantem resultados individuais com o protocolo.", origem: `persona-kaua-santos.md §13 · ${DOSSIE} §10` },
+    { pergunta: "Quanto tempo por semana?", resposta: `${MECANISMO.sessoesObrigatorias} sessões obrigatórias e ${MECANISMO.sessoesOpcionais} opcional, de 60 a 75 minutos cada.`, origem: MECANISMO.origem },
+    { pergunta: "E se eu faltar uma semana?", resposta: "O protocolo tem um capítulo para voltar ao treino quando a rotina falha. A quebra está prevista, não punida.", origem: `${DRAFT}/13-cap-07-plano-de-retorno.md` },
+    { pergunta: "A quarta sessão é obrigatória?", resposta: `Não. Ela entra a partir da semana cinco, se as ${MECANISMO.sessoesObrigatorias} obrigatórias estiverem acontecendo com folga, e não substitui sessão perdida.`, origem: `${DRAFT}/09-cap-03-o-programa.md §3.2` },
+    { pergunta: "Quando eu aumento o peso?", resposta: `${MECANISMO.nome} decide: bateu 12 repetições boas em todas as séries, o peso sobe.`, origem: `${DRAFT}/11-cap-05-progressao.md` },
   ],
   marquise: {
     palavras: ["Natural cresce", MECANISMO.nome, `${MECANISMO.semanas} semanas`, `${MECANISMO.sessoesObrigatorias} sessões`],

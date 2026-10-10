@@ -3,8 +3,12 @@ import { duracao, semMovimento } from "./tokens.js";
 import { aoMudarPausa, estaPausado } from "./pausa.js";
 import { abrirLeitura } from "./carregador.js";
 
-const MARGEM = "0px 0px -80px 0px";
+// Dispara na borda da tela, e nao 80px dentro: com rolagem rapida o elemento ja estaria no meio
+// da tela quando a animacao comecasse, e apareceria "de repente".
+const MARGEM = "0px 0px 0px 0px";
 const EXPO = "cubicBezier(0.16, 1, 0.3, 1)";
+// Aparicao fluida: curva expo-out em ~0,65 s, no lugar dos degraus `steps(2)` de 180 ms.
+const APARICAO = 650;
 
 /* Um IntersectionObserver nativo dispara cada revelação. */
 let observador = null;
@@ -118,9 +122,9 @@ export function revelar(alvo, { atraso = 0, deslocamento = 12 } = {}) {
     animate(alvo, {
       opacity: [0, 1],
       y: reduzido ? 0 : [deslocamento, 0],
-      duration: reduzido ? duracao("--motion-fast") : duracao("--motion-base"),
+      duration: reduzido ? duracao("--motion-fast") : APARICAO,
       delay: atraso,
-      ease: reduzido ? "linear" : steps(2),
+      ease: reduzido ? "linear" : EXPO,
     }),
   );
   return () => { limpar?.(); utils.set(alvo, { opacity: 1, y: 0 }); };
@@ -142,9 +146,9 @@ export function revelarEmCascata(alvos, { intervalo = 70 } = {}) {
       animate(item, {
         opacity: [0, 1],
         y: reduzido ? 0 : [10, 0],
-        duration: reduzido ? duracao("--motion-fast") : duracao("--motion-base"),
+        duration: reduzido ? duracao("--motion-fast") : APARICAO,
         delay: reduzido ? 0 : Math.min(indice, 3) * intervalo,
-        ease: reduzido ? "linear" : steps(2),
+        ease: reduzido ? "linear" : EXPO,
       }),
     ));
   }
@@ -231,9 +235,9 @@ export function carimbar(alvo, { atraso = 0 } = {}) {
     animate(alvo, {
       opacity: [0, 1],
       scale: reduzido ? 1 : [1.14, 1],
-      duration: reduzido ? duracao("--motion-fast") : duracao("--motion-celebracao"),
+      duration: reduzido ? duracao("--motion-fast") : APARICAO,
       delay: atraso,
-      ease: reduzido ? "linear" : steps(3),
+      ease: reduzido ? "linear" : EXPO,
     }),
   );
   return () => { limpar?.(); utils.set(alvo, { opacity: 1, scale: 1 }); };
@@ -319,7 +323,7 @@ export function marquise(trilho, { tempo = 26000, sentido = -1 } = {}) {
 }
 
 /** Estado da trilha medido pela seção, nunca pelo filho sticky. */
-export function acenderEmSequencia(alvos, contexto, { atributo = "data-acesa", atributoAtual = null, fixo = false } = {}) {
+export function acenderEmSequencia(alvos, contexto, { atributo = "data-acesa", atributoAtual = null, fixo = false, ritmo = 1.02 } = {}) {
   const lista = Array.from(alvos ?? []);
   if (!lista.length || !contexto) return () => {};
   let quadro = 0;
@@ -334,7 +338,7 @@ export function acenderEmSequencia(alvos, contexto, { atributo = "data-acesa", a
     const trilho = caixa.height - innerHeight;
     const porTrilho = fixo && trilho > 1 ? Math.max(0, Math.min(1, -caixa.top / trilho)) : null;
     const acesas = reduzido ? lista.length
-      : porTrilho !== null ? Math.min(lista.length, Math.floor(porTrilho * lista.length * 1.02))
+      : porTrilho !== null ? Math.min(lista.length, Math.floor(porTrilho * lista.length * ritmo))
       : Math.min(lista.length, Math.floor(progresso * lista.length * 1.35));
     if (acesas === ultimo) return;
     ultimo = acesas;

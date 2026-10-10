@@ -96,6 +96,71 @@ function semanaNoTrilho(posicao, marcos) {
   return SEMANAS;
 }
 
+/**
+ * Chegou na semana 12: o retangulo vermelho da ultima semana cresce ate engolir a propria regua
+ * (so ela, o elemento de 1 a 12), o texto sobe em tinta no meio e, passada a leitura, a cortina se
+ * ergue e devolve os numeros. E imagem, nao interface: a regua ja e `aria-hidden`. Devolve a
+ * limpeza (cancela e remove, se a secao sair antes do fim).
+ */
+const FRASE = "Apenas faça";
+const EXPO_IN_OUT = "cubic-bezier(0.76, 0, 0.24, 1)";
+const EXPO_OUT = "cubic-bezier(0.16, 1, 0.3, 1)";
+
+function engolirRegua(semana) {
+  const regua = semana.parentElement;
+  const o = regua.getBoundingClientRect();
+  const r = semana.getBoundingClientRect();
+  // A origem e a marca de 6px da ultima semana, em coordenadas da propria regua.
+  const esq = r.left - o.left;
+  const dir = o.right - r.right;
+  const topo = r.top - o.top;
+  const base = o.height - topo - 6;
+  const cobertura = document.createElement("div");
+  cobertura.className = "absolute inset-0 z-1 flex items-center justify-center bg-acento text-void pointer-events-none overflow-clip";
+  cobertura.setAttribute("aria-hidden", "true");
+  const texto = document.createElement("p");
+  // O corpo da frase cabe na regua: pela altura dela e, no celular, pela largura.
+  const corpo = Math.min(o.height * 0.5, o.width / (FRASE.length * 0.62));
+  texto.className = "flex justify-center gap-[0.3em] font-secundaria font-extrabold uppercase leading-none tracking-[0.02em] whitespace-nowrap";
+  texto.style.fontSize = `${corpo}px`;
+  const letras = [];
+  for (const palavra of FRASE.split(" ")) {
+    const bloco = document.createElement("span");
+    bloco.className = "inline-flex overflow-clip pb-[0.2em] -mb-[0.2em]";
+    for (const letra of palavra) {
+      const el = document.createElement("span");
+      el.className = "inline-block";
+      el.textContent = letra;
+      bloco.append(el);
+      letras.push(el);
+    }
+    texto.append(bloco);
+  }
+  cobertura.append(texto);
+  regua.append(cobertura);
+
+  const fill = "both";
+  const entra = cobertura.animate(
+    [{ clipPath: `inset(${topo}px ${dir}px ${base}px ${esq}px)` }, { clipPath: "inset(0px 0px 0px 0px)" }],
+    { duration: 800, easing: EXPO_IN_OUT, fill },
+  );
+  const anims = [entra];
+  letras.forEach((el, i) => {
+    anims.push(el.animate(
+      [{ transform: "translateY(120%)" }, { transform: "translateY(0)" }],
+      { duration: 650, delay: 550 + i * 40, easing: EXPO_OUT, fill },
+    ));
+  });
+  const sai = 550 + letras.length * 40 + 650 + 1100; // a ultima letra assenta e a frase fica lida
+  const fim = cobertura.animate(
+    [{ clipPath: "inset(0px 0px 0px 0px)" }, { clipPath: "inset(0px 0px 100% 0px)" }],
+    { duration: 700, delay: sai, easing: EXPO_IN_OUT, fill: "forwards" },
+  );
+  anims.push(fim);
+  fim.onfinish = () => cobertura.remove();
+  return () => { anims.forEach((a) => a.cancel()); cobertura.remove(); };
+}
+
 /** Estado local de leitura, medido no trilho que permanece no fluxo. */
 function useSemanasDoTrilho(raiz, trilho) {
   useEffect(() => {
@@ -108,6 +173,10 @@ function useSemanasDoTrilho(raiz, trilho) {
     let ativo = true;
     let quadro = 0;
     let ultimo = null;
+    // Semana lida na medicao anterior; o engolir so dispara ao CHEGAR na 12 rolando, nunca ao
+    // carregar a pagina ja depois dela, e so uma vez por visita.
+    let anterior = null;
+    let limparEngolir = null;
     const escrever = (acesas, atual) => {
       const estado = `${acesas}:${atual}`;
       if (estado === ultimo) return;
@@ -126,6 +195,7 @@ function useSemanasDoTrilho(raiz, trilho) {
       const caixa = no.getBoundingClientRect();
       if (leituraCompleta || caixa.height <= 0) {
         escrever(semanas.length, -1);
+        anterior = SEMANAS;
         return;
       }
       const altura = Math.min(window.innerHeight, viewport?.height ?? window.innerHeight);
@@ -134,6 +204,10 @@ function useSemanasDoTrilho(raiz, trilho) {
       // portão e F3 em 9. A posição acompanha a leitura, nunca o calendário.
       const acesas = semanaNoTrilho(linhaDeLeitura - caixa.top, marcosDasSemanas(no, altura));
       escrever(acesas, acesas - 1);
+      if (anterior !== null && anterior < SEMANAS && acesas >= SEMANAS && !limparEngolir) {
+        limparEngolir = engolirRegua(semanas.at(-1));
+      }
+      anterior = acesas;
     };
     const agendar = () => {
       if (ativo && !quadro) quadro = requestAnimationFrame(atualizar);
@@ -163,6 +237,7 @@ function useSemanasDoTrilho(raiz, trilho) {
       viewport?.removeEventListener("resize", agendar);
       viewport?.removeEventListener("scroll", agendar);
       reduzido.removeEventListener("change", agendar);
+      limparEngolir?.();
       escrever(semanas.length, -1);
     };
   }, [raiz, trilho]);

@@ -9,6 +9,9 @@ import { abrirPainel, useMovimento } from "../motion/index.js";
 import { config } from "../config.js";
 import { camada, crus, envelope, grao, linha, painel, vazado } from "../ui.js";
 
+// So o fechamento: a headline da dobra e da intro segue "Natural / Cresce.".
+const HEADLINE = ["Apenas", "Faça."];
+
 /**
  * Fechamento: a segunda capa.
  *
@@ -59,10 +62,10 @@ export function Fechamento({ params }) {
             data-revelar
           >
             <span className={linha}>
-              <span className={`linha__texto block ${camada} ${vazado}`}>{conteudo.dobra.headline.linhas[0]}</span>
+              <span className={`linha__texto block ${camada} ${vazado}`}>{HEADLINE[0]}</span>
             </span>{" "}
             <span className={linha}>
-              <span className={`linha__texto block ${camada}`}>{conteudo.dobra.headline.linhas[1]}</span>
+              <span className={`linha__texto block ${camada}`}>{HEADLINE[1]}</span>
             </span>
           </h2>
           <Fio />

@@ -132,7 +132,7 @@ export function Leva() {
         <header className="sticky top-[max(--spacing(12),calc(50svh-140px))] z-0 flex flex-col items-center py-8 text-center motion-reduce:static">
           <Rotulo>o que você leva pra academia</Rotulo>
           <h2
-            className="titulo text-bone font-secundaria text-display normal-case tracking-[-0.005em] leading-[1.02] max-w-[14ch] lg:max-w-[16ch]"
+            className="titulo text-bone font-secundaria text-display [font-size:clamp(48px,5.4vw,67.2px)] normal-case tracking-[-0.005em] leading-[1.02] max-w-[14ch] lg:max-w-[16ch]"
           >
             {TITULO.split(" ").map((palavra, indice) => (
               <Fragment key={`${palavra}-${indice}`}>

@@ -16,7 +16,6 @@ import { Manifesto } from "./sections/Manifesto.jsx";
 import { Espelho } from "./sections/Espelho.jsx";
 import { Leva } from "./sections/Leva.jsx";
 import { Semanas } from "./sections/Semanas.jsx";
-import { Prova } from "./sections/Prova.jsx";
 import { Amostra } from "./sections/Amostra.jsx";
 import { Oferta } from "./sections/Oferta.jsx";
 import { Objecoes } from "./sections/Objecoes.jsx";
@@ -79,7 +78,6 @@ export function App() {
         <Leva />
         {secoesPorId.mapa.presente && <Semanas params={params} />}
         <div>
-          <Prova params={params} />
           {secoesPorId.amostra.presente && <Amostra />}
           <Oferta params={params} />
         </div>

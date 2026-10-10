@@ -59,6 +59,8 @@ export class Campo {
 
     this.largura = 0;
     this.altura = 0;
+    // A altura usada na GEOMETRIA dos pontos: so acompanha a secao quando ela muda de verdade (ver `tamanho`).
+    this.alturaGeo = 0;
     this.dpr = 1;
     this.espaco = ESPACO;
     this.colunas = 0;
@@ -135,8 +137,13 @@ export class Campo {
       // Densidade por area, com teto, pela mesma razao da malha: num monitor
       // grande a rede nao pode multiplicar o trabalho de cada quadro.
       const cols = Math.max(20, Math.min(64, Math.round(largura / 24)));
-      const rows = Math.max(14, Math.min(34, Math.round(Math.min(altura, 1100) / 36)));
+      let rows = Math.max(14, Math.min(34, Math.round(Math.min(altura, 1100) / 36)));
+      // Histerese: uma secao que cresce ou encolhe um pouco (o acordeao da FAQ) nao pode trocar a rede
+      // de lugar, senao o relevo salta e volta a cada abrir/fechar.
+      if (this.cols === cols && Math.abs(this.rows - rows) < 4) rows = this.rows;
       if (this.rede.length !== cols * rows) this.semear(cols, rows);
+      this.cols = cols;
+      this.rows = rows;
     }
   }
 
@@ -149,7 +156,7 @@ export class Campo {
       // Sem buffer ate ficar perto da tela (o padrao de um canvas e 300 x 150): 0 e o "sem buffer" de `perto(lad, false)`.
       canvas.width = 0;
       canvas.height = 0;
-      const lad = { canvas, ctx: null, y0: 0, h: 0, ativo: false, naTela: false };
+      const lad = { canvas, ctx: null, y0: 0, h: 0, ativo: false, naTela: false, novo: true };
       this.lad.push(lad);
       this.raiz.append(canvas);
       this.aoCriar?.(lad);
@@ -161,10 +168,11 @@ export class Campo {
     }
     for (const [i, lad] of this.lad.entries()) {
       lad.y0 = i * LADRILHO;
-      lad.h = Math.min(LADRILHO, this.altura - lad.y0);
+      // Todo ladrilho tem a altura cheia, o ultimo tambem: a secao recorta (`overflow-clip`). Assim
+      // uma secao que cresce ou encolhe (o acordeao da FAQ) nao realoca o buffer do ultimo a cada quadro.
+      lad.h = LADRILHO;
       lad.canvas.style.top = `${lad.y0}px`;
-      // O ultimo vai ate o fim da secao (a altura dela pode ser fracionaria); os outros tem 320 exatos.
-      lad.canvas.style.height = i === n - 1 ? `calc(100% - ${lad.y0}px)` : `${LADRILHO}px`;
+      lad.canvas.style.height = `${LADRILHO}px`;
     }
   }
 
@@ -172,8 +180,11 @@ export class Campo {
   medirLadrilho(lad) {
     const { dpr } = this;
     lad.ctx ??= lad.canvas.getContext("2d", { alpha: true });
-    lad.canvas.width = Math.round(this.largura * dpr);
-    lad.canvas.height = Math.round(lad.h * dpr);
+    // Atribuir width/height LIMPA o canvas, mesmo com o valor igual: so mexe se o tamanho mudou.
+    const largura = Math.round(this.largura * dpr);
+    const altura = Math.round(lad.h * dpr);
+    if (lad.canvas.width !== largura) lad.canvas.width = largura;
+    if (lad.canvas.height !== altura) lad.canvas.height = altura;
     lad.ctx.setTransform(dpr, 0, 0, dpr, 0, -lad.y0 * dpr);
   }
 
@@ -214,7 +225,7 @@ export class Campo {
       ctx.moveTo(Math.round(x) + 0.5, y0);
       ctx.lineTo(Math.round(x) + 0.5, y1);
     }
-    for (let y = GRADE / 2; y < altura; y += GRADE) {
+    for (let y = GRADE / 2; y < yMax; y += GRADE) {
       const yy = Math.round(y) + 0.5;
       if (yy + 0.5 <= y0 || yy - 0.5 >= yMax) continue;
       ctx.moveTo(0, yy);
@@ -267,7 +278,7 @@ export class Campo {
   preparar(t) {
     if (this.tPrep === t) return;
     this.tPrep = t;
-    const { largura, altura } = this;
+    const { largura, alturaGeo: altura } = this;
     const fonte = this.estelar ? this.estrelas : this.rede;
     const n = fonte.length;
     if (!this.prep || this.prep.x.length < n) {
@@ -393,18 +404,38 @@ export class Campo {
     const largura = Math.max(1, Math.round(l));
     const altura = Math.max(1, Math.round(a));
     if (largura === this.largura && altura === this.altura) return;
+    // Uma secao que cresce ou encolhe um pouco (o acordeao da FAQ, ao abrir) nao pode arrastar a onda
+    // junto: o centro dela e `altura / 2`, e a cada quadro da animacao todos os pontos andavam e o
+    // fundo cintilava. A geometria so muda com uma variacao grande ou com a largura.
+    const geoAntes = `${this.largura}:${this.alturaGeo}:${this.dpr}`;
+    if (!this.alturaGeo || largura !== this.largura || Math.abs(altura - this.alturaGeo) >= 240) this.alturaGeo = altura;
     this.largura = largura;
     this.altura = altura;
     this.dpr = dpr;
+    const mudouGeo = geoAntes !== `${largura}:${this.alturaGeo}:${dpr}`;
     this.tPrep = NaN;
     this.densidade();
     this.fatiar();
     // A secao mudou de tamanho: tudo o que depende dela (estrelas, rede, altura) e outro desenho, entao
     // todo ladrilho com buffer e medido e pintado de novo, como o canvas inteiro de antes.
+    // Um ladrilho que nasce porque a secao cresceu fica colado a um que ja esta perto da tela: acorda
+    // agora, e nao quando o IntersectionObserver avisar (alguns quadros depois, com o canto em branco).
+    for (const [i, lad] of this.lad.entries()) {
+      if (!lad.novo) continue;
+      lad.novo = false;
+      if (i > 0 && this.lad[i - 1].ativo) this.perto(lad, true);
+    }
+    // `estelar` e `fiel` desenham pela geometria, que so muda com `mudouGeo`: crescer um pouco (o
+    // acordeao) so recorta mais ou menos do mesmo desenho, e repintar tudo a cada quadro da animacao
+    // dobrava o trabalho do laco e engasgava a abertura de respostas grandes. A `malha` conta
+    // linhas pela altura, entao ela repinta.
+    if (!mudouGeo && (this.fiel || this.estelar)) return;
     for (const lad of this.lad) {
       if (!lad.ativo) continue;
       this.medirLadrilho(lad);
-      if (!this.vivo) this.pintarLadrilho(lad, this.agora());
+      // Pinta ja, no mesmo tick: com o laco vivo, esperar o proximo quadro deixava um quadro em branco
+      // (o buffer foi limpo) a cada mudanca de altura, e o fundo piscava enquanto a FAQ animava.
+      this.pintarLadrilho(lad, this.vivo ? this.ultimoT : this.agora());
     }
   }
 

@@ -8,7 +8,7 @@ export const secoes = [
   { id: "o-que-e", etapaCanonica: 3, rotulo: "O que é", presente: true },
   { id: "mapa", etapaCanonica: 4, rotulo: "Mapa do caminho", presente: config.secoes.mapa.ativo,
     justificativaAusencia: config.secoes.mapa.justificativaAusencia },
-  { id: "prova", etapaCanonica: 5, rotulo: "Prova", presente: true,
+  { id: "prova", etapaCanonica: 5, rotulo: "Prova", presente: false,
     complementos: [{ id: "prova-social", presente: config.depoimentos.length > 0 }] },
   { id: "amostra", etapaCanonica: 6, rotulo: "Amostra", presente: config.secoes.amostra.ativo,
     justificativaAusencia: config.secoes.amostra.justificativaAusencia },

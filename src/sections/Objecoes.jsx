@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { CampoDePontos } from "../components/CampoDePontos.jsx";
 import { PerguntasFrequentes } from "../components/PerguntasFrequentes.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
+import { Wordmark } from "../components/Wordmark.jsx";
 import { conteudo } from "../conteudo.js";
 import { mascaraDeLinha, revelar, revelarEmCascata, useMovimento } from "../motion/index.js";
 import { semMovimento } from "../motion/tokens.js";
@@ -21,18 +22,25 @@ export function Objecoes() {
   }, []);
 
   return (
-    <section id="objecoes" className={`${bloco} py-16 md:py-24`} ref={raiz}>
+    <section id="objecoes" className={`${bloco} py-8 md:py-24`} ref={raiz}>
       <CampoDePontos variante="fiel" />
-      {/* Esmaece o campo na base: as ondas nao chegam cortadas na secao de baixo. */}
-      <div className="absolute inset-x-0 bottom-0 h-56 pointer-events-none bg-linear-to-t from-void via-void/70 to-transparent" aria-hidden="true" />
-      <div className={`${envelope} relative z-1 lg:grid lg:grid-cols-[repeat(12,1fr)] lg:gap-x-8 lg:items-start`}>
-        <header className="mb-8 lg:mb-0 lg:col-[1/span_4] lg:sticky lg:top-12">
+      <div className={`${envelope} relative z-1 lg:grid lg:grid-cols-[repeat(12,1fr)] lg:gap-x-8`}>
+        <div className="min-w-0 lg:col-[1/span_6]">
           <Rotulo>{conteudo.objecoesRotulo}</Rotulo>
           <h2 className={`titulo text-bone font-secundaria text-h1 uppercase lg:text-display ${mascara}`} data-revelar>
-            As três perguntas
+            Perguntas frequentes
           </h2>
-        </header>
-        <PerguntasFrequentes itens={conteudo.objecoes} />
+          <div className="mt-6 lg:mt-10">
+            <PerguntasFrequentes itens={conteudo.objecoes} />
+          </div>
+        </div>
+        {/* O painel da direita (a "foto" do original): so no monitor, para o celular caber numa tela. */}
+        <div
+          className="hidden lg:flex lg:col-[7/-1] items-center justify-center min-h-120 bg-surface-1 border border-line-strong"
+          aria-hidden="true"
+        >
+          <Wordmark className="block w-3/5 text-bone" />
+        </div>
       </div>
     </section>
   );

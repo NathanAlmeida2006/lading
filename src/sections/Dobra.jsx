@@ -1,6 +1,7 @@
 import { Botao } from "../components/Botao.jsx";
 import { Fio } from "../components/Fio.jsx";
 import { FundoCapa } from "../components/FundoCapa.jsx";
+import { Menu } from "../components/Menu.jsx";
 import { Moldura } from "../components/Moldura.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { Wordmark } from "../components/Wordmark.jsx";
@@ -42,7 +43,7 @@ export function Dobra({ params }) {
 
       <div className={`${envelope} flex-none flex items-center justify-between gap-4 text-silver relative z-1`}>
         <Wordmark />
-        <span className="font-terciaria text-mono-reg tabular-nums">Protocolo 01</span>
+        <Menu />
       </div>
 
       <div className={`${envelope} flex-1 flex flex-col justify-center items-start gap-2 pt-3 pb-12 relative z-1`}>
