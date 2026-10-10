@@ -56,24 +56,6 @@ const VOZES = [
     governa: "Unidade de medida",
     onde: "em todo o protocolo",
   },
-  {
-    fala: "Você troca de exercício quando executa bem, não quando o mês virou. Quem libera é a ficha.",
-    nome: "Portão da fase 3",
-    governa: "Troca de exercício",
-    onde: "na passagem para a fase 3",
-  },
-  {
-    fala: "Sete anexos pra abrir no celular dentro da academia: ficha de treino, tabela de retorno e o resto que se usa de verdade.",
-    nome: "O Kit",
-    governa: "Ferramentas",
-    onde: "nos sete anexos",
-  },
-  {
-    fala: "Três sessões obrigatórias e uma opcional, de 60 a 75 minutos. Cabe numa rotina de estágio de seis horas por dia.",
-    nome: "Quatro a cinco horas por semana",
-    governa: "Rotina",
-    onde: "na semana de treino",
-  },
 ];
 
 /**
@@ -95,7 +77,7 @@ const PALAVRA =
   "palavra inline-block transition-[opacity,color] duration-(--motion-fast) ease-(--ease-corte-2) " +
   "js:opacity-[0.22] data-acesa:opacity-100 data-atual:text-acento " +
   "motion-reduce:js:opacity-100 motion-reduce:data-atual:text-inherit";
-const TITULO = "Seis coisas. Nenhuma depende de motivação.";
+const TITULO = "Três coisas. Nenhuma depende de motivação.";
 
 export function Leva() {
   const raiz = useRef(null);
@@ -166,14 +148,14 @@ export function Leva() {
                 >
                   &ldquo;
                 </span>
-                <p className="flex-auto text-bone font-secundaria text-h3 lg:text-[24px] lg:leading-[1.15]">
+                <p className="flex-auto text-bone font-secundaria text-h3 [font-size:24px] lg:text-[28.8px] lg:leading-[1.15]">
                   {voz.fala}
                 </p>
                 <div className="flex flex-col gap-1">
-                  <h3 className="text-bone font-secundaria text-label uppercase">{voz.nome}</h3>
-                  <p className="text-silver font-terciaria text-caption">{voz.governa}</p>
+                  <h3 className="text-bone font-secundaria text-label [font-size:18px] uppercase">{voz.nome}</h3>
+                  <p className="text-silver font-terciaria text-caption [font-size:15.6px]">{voz.governa}</p>
                 </div>
-                <span className="block pt-4 border-t border-line text-silver font-terciaria text-mono-reg tabular-nums">
+                <span className="block pt-4 border-t border-line text-silver font-terciaria text-mono-reg [font-size:13.2px] tabular-nums">
                   [{String(indice + 1).padStart(2, "0")} · {voz.onde}]
                 </span>
               </li>

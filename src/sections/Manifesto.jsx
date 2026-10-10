@@ -57,7 +57,7 @@ export function Manifesto() {
     window.addEventListener("resize", agendar);
     document.fonts?.ready.then(agendar);
     medir();
-    const anim = acenderEmSequencia(no.querySelectorAll(".palavra"), no, { fixo: true, atributoAtual: "data-atual" });
+    const anim = acenderEmSequencia(no.querySelectorAll(".palavra"), no, { fixo: true, atributoAtual: "data-atual", ritmo: 1.224 });
     return () => {
       ativo = false;
       cancelAnimationFrame(quadro);
@@ -71,7 +71,7 @@ export function Manifesto() {
   }, []);
 
   return (
-    <section id="reconhecimento" className={`${bloco} isolate group/manifesto data-cabe:min-h-[205svh] motion-reduce:min-h-0`} ref={raiz}>
+    <section id="reconhecimento" className={`${bloco} isolate group/manifesto data-cabe:min-h-[271svh] motion-reduce:min-h-0`} ref={raiz}>
       <CampoDePontos variante="estelar" />
       <div className={`${envelope} manifesto__texto relative z-1 top-0 min-h-svh flex flex-col items-center justify-center group-data-cabe/manifesto:sticky motion-reduce:static`}>
         <div>

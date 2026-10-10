@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { conteudo } from "../conteudo.js";
 import { Botao } from "../components/Botao.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
-import { mascaraDeLinha, revelar, revelarEmCascata, useMovimento } from "../motion/index.js";
+import { mascaraDeLinha, revelar, useMovimento } from "../motion/index.js";
 import { bloco, envelope, mascara } from "../ui.js";
 
 // Situação e comportamento do protocolo; não são relatos nem antes/depois corporal.
@@ -18,7 +18,6 @@ export function Espelho({ params }) {
     revelar(no.querySelector(".rotulo"));
     mascaraDeLinha(no.querySelector(".titulo"), { atraso: 60 });
     revelar(no.querySelector(".espelho__sub"), { atraso: 200 });
-    revelarEmCascata(no.querySelectorAll(".carta"), { intervalo: 80 });
 
     // A pilha so serve se cada card, grudado no seu degrau, cabe inteiro na janela: senao
     // ela SOLTA (`data-solta`) e os cards seguem em fila. So se mede com o grude ligado: sob
@@ -70,7 +69,6 @@ export function Espelho({ params }) {
               className="carta sticky top-[calc(--spacing(6)+var(--ordem)*--spacing(12))] isolate flex flex-col gap-3 p-6 md:p-8 bg-surface-1 even:bg-void border border-line-strong motion-reduce:static [[data-solta]_&]:static"
               key={carta.titulo}
               style={{ "--ordem": indice }}
-              data-revelar
             >
               <span className="text-silver font-terciaria text-mono-reg tabular-nums" aria-hidden="true">
                 {String(indice + 1).padStart(2, "0")}
