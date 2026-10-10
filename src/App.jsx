@@ -11,7 +11,6 @@ import { Doca } from "./components/Doca.jsx";
 import { Intro } from "./components/Intro.jsx";
 import { IndiceFixo } from "./components/IndiceFixo.jsx";
 import { PausaMovimento } from "./components/PausaMovimento.jsx";
-import { Marquise } from "./components/Marquise.jsx";
 import { Dobra } from "./sections/Dobra.jsx";
 import { Manifesto } from "./sections/Manifesto.jsx";
 import { Espelho } from "./sections/Espelho.jsx";
@@ -20,55 +19,16 @@ import { Semanas } from "./sections/Semanas.jsx";
 import { Prova } from "./sections/Prova.jsx";
 import { Amostra } from "./sections/Amostra.jsx";
 import { Oferta } from "./sections/Oferta.jsx";
-import { Garantia } from "./sections/Garantia.jsx";
 import { Objecoes } from "./sections/Objecoes.jsx";
 import { Fechamento } from "./sections/Fechamento.jsx";
 import { RodapeLegal } from "./sections/RodapeLegal.jsx";
 
-import { capturarParametros, observarProfundidade } from "./instrumentacao.js";
+import { capturarParametros, iniciarMensuracao } from "./instrumentacao.js";
 import { garantirVisibilidade, ligarLenis, useMovimento } from "./motion/index.js";
-import { config } from "./config.js";
+import { conteudo } from "./conteudo.js";
+import { alcancePorId, idsDoIndice, secoesPorId } from "./secoes.js";
 
-/**
- * A sequencia canonica do RF-L08, nesta ordem. Secao pode ser omitida com
- * justificativa; a ORDEM nao se reordena, porque a sequencia e o argumento.
- *
- * O que a versao 6 mudou (06/09/2026) foi a FORMA de cada secao, nao a ordem.
- * A v5 vestia todas com a mesma caixa - kicker, titulo, envelope - e tres
- * delas com o mesmo capitulo travado; a pagina lia como um so componente
- * repetido nove vezes. Agora cada secao e um desenho proprio, tirado das
- * cinco engenharias reversas de `02-fluor/reversos/`:
- *
- *     01 dobra          Sigilo   headline de duas linhas como arquitetura
- *     02 reconhecimento Sigilo   manifesto palavra a palavra, ligado a rolagem
- *     ---- marquise ----
- *     03 espelho        Cartaz   hoje / com o protocolo, linha a linha
- *     04 o que leva     Sigilo   cabeca grudada no centro, cards em ziguezague, temas alternando
- *     05 doze semanas   Sigilo   titulo em tres linhas, regua que acende com a rolagem, cards em ziguezague
- *     06 prova          Sigilo   tres statements e a regua
- *     07 oferta         Cartaz   recibo com preco fatiado
- *     08 garantia       Cartaz   selo carimbado
- *     09 objecoes       Sigilo   dialogo
- *     10 fechamento     Sigilo   segunda capa, com a marquise do verbo
- *
- * Os temas continuam alternando, e a troca continua sendo no limite da
- * secao, em corte (RNF-L19). O botao aparece onze vezes (dobra, cinco no espelho,
- * mapa, prova, oferta, fechamento e rodape) mais a doca, sempre com o mesmo
- * verbo (RF-L10).
- */
-const SECOES = [
-  "inicio",
-  "reconhecimento",
-  "espelho",
-  "o-que-e",
-  "mapa",
-  "prova",
-  "oferta",
-  "garantia",
-  "objecoes",
-  "fechamento",
-];
-
+/** O registro em secoes.js fixa ids, etapas e presença; a árvore preserva RF-L08. */
 export function App() {
   const [params, definirParams] = useState({});
 
@@ -78,7 +38,7 @@ export function App() {
   useEffect(() => {
     const capturados = capturarParametros();
     if (Object.keys(capturados).length) definirParams(capturados);
-    return observarProfundidade();
+    return iniciarMensuracao(alcancePorId);
   }, []);
   useMovimento(garantirVisibilidade);
   useMovimento(ligarLenis);
@@ -110,26 +70,25 @@ export function App() {
 
       <main id="conteudo">
         <Dobra params={params} />
-        <Manifesto />
-
-        <Marquise
-          palavras={["Natural cresce", "Regra do 12", "12 semanas", "3 sessões", "Pix à vista"]}
-          sentido={-1}
-        />
-
-        <Espelho params={params} />
+        {/* Cortinas (`useCortina`): a secao de cima fica pinada e a de baixo sobe por cima. Cada par
+            vive num conteiner proprio, onde o pino termina com a de cima toda coberta. */}
+        <div>
+          <Manifesto />
+          <Espelho params={params} />
+        </div>
         <Leva />
-        <Semanas params={params} />
-        <Prova params={params} />
-        {config.mostrarAmostra && <Amostra />}
-        <Oferta params={params} />
-        <Garantia />
+        {secoesPorId.mapa.presente && <Semanas params={params} />}
+        <div>
+          <Prova params={params} />
+          {secoesPorId.amostra.presente && <Amostra />}
+          <Oferta params={params} />
+        </div>
         <Objecoes />
         <Fechamento params={params} />
       </main>
 
       <RodapeLegal params={params} />
-      <IndiceFixo ids={SECOES} />
+      <IndiceFixo ids={idsDoIndice} />
       <Doca params={params} />
     </>
   );

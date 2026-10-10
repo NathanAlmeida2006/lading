@@ -57,9 +57,9 @@ export function Marquise({ palavras, sentido = -1, tempo = 26000, className = ""
   // `--scroll-velocity`. Na faixa, nao no trilho: o trilho ja carrega o
   // translateX do laco. Sem JS a var nunca e escrita e o fallback zera.
   return (
-    <div aria-hidden="true" className={`marquise relative overflow-clip py-3 lg:py-4 bg-void text-bone border-y border-line whitespace-nowrap js:[transform:skewX(calc(var(--scroll-velocity,0)*-0.35deg))] ${className}`.trim()}>
+    <div aria-hidden="true" className={`marquise relative overflow-clip py-3 lg:py-4 bg-void text-bone border-y border-line whitespace-nowrap js:[transform:skewX(calc(var(--scroll-velocity,0)*-0.35deg))] motion-reduce:transform-none ${className}`.trim()}>
       <div
-        className="will-change-transform flex w-max font-secundaria text-label uppercase lg:text-[24px] lg:leading-[1.15]"
+        className="will-change-transform motion-reduce:will-change-auto flex w-max font-secundaria text-label uppercase lg:text-[24px] lg:leading-[1.15]"
         ref={trilho}
       >
         <div className="flex">{conteudo}</div>

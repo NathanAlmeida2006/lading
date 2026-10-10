@@ -77,11 +77,11 @@ export function IndiceFixo({ ids }) {
 
   const doisDigitos = (n) => String(n).padStart(2, "0");
 
-  // Some com o aviso de cookies, sobe com a doca (60px de botao e fios mais o respiro dela, que
-  // cresce com a area segura do iPhone, mais 12px de folga), e some em tela de 380px ou menos.
+  // Some com o aviso de cookies e em tela de 380px ou menos. A altura medida da
+  // doca inclui quebra de linha e safe-area; o indice conserva um respiro acima dela.
   return (
     <div
-      className="fixed bottom-4 left-4 z-5 font-terciaria text-mono-reg tabular-nums tracking-[0.08em] text-bone-pure mix-blend-difference pointer-events-none transition-[bottom] duration-(--motion-base) ease-(--ease-corte-2) [.com-doca_&]:bottom-[calc(60px+max(--spacing(3),env(safe-area-inset-bottom))+--spacing(3))] [.com-consentimento_&]:hidden tela-estreita:hidden"
+      className="fixed bottom-4 left-4 z-5 font-terciaria text-mono-reg tabular-nums tracking-[0.08em] text-bone-pure mix-blend-difference pointer-events-none transition-[bottom] duration-(--motion-base) ease-(--ease-corte-2) motion-reduce:transition-none [.com-doca_&]:bottom-[calc(var(--doca-altura,--spacing(24))+--spacing(3))] [.com-consentimento_&]:hidden tela-estreita:hidden"
       aria-hidden="true"
     >
       {doisDigitos(atual)} / {doisDigitos(ids.length)}

@@ -1,7 +1,8 @@
 import { useRef } from "react";
 import { pulsar } from "../motion/index.js";
-import { evento, urlCheckout } from "../instrumentacao.js";
-import { VERBO_ACAO } from "../config.js";
+import { registrarInicioCheckout, urlCheckout } from "../instrumentacao.js";
+import { config, VERBO_ACAO } from "../config.js";
+import { useCondicaoOferta } from "../oferta.js";
 
 /**
  * O botao primario. Um verbo so na pagina inteira (RF-L10), e ele leva sempre
@@ -22,8 +23,9 @@ import { VERBO_ACAO } from "../config.js";
  * no papel quem contrasta com a inundacao de acento e o fundo, 6,33:1 (RNF-L36).
  */
 const BASE =
-  "botao group/botao relative inline-flex items-center justify-center gap-3 border rounded-xs " +
+  "botao group/botao relative inline-flex max-w-full min-w-0 items-center justify-center gap-3 border rounded-xs " +
   "cursor-pointer overflow-clip no-underline font-secundaria text-label uppercase " +
+  "focus-visible:outline-offset-(--space-1) " +
   "transition-[background,color] duration-(--motion-fast) ease-(--ease-default)";
 
 const CHEIO =
@@ -38,39 +40,49 @@ const FANTASMA =
 // ficam numa coluna de 208 a 232px entre 1024 e 1439px, e 280px de piso sangrava para fora dela.
 const LARGO = "w-full xs:w-auto xs:min-w-[min(280px,100%)] min-h-14 px-6 py-4";
 const TOTAL = "w-full xs:min-w-[min(280px,100%)] min-h-14 px-6 py-4";
-// `shrink-0`: na doca o botao dividia a linha com o texto do preco e encolhia ate o rotulo quebrar,
-// cortado pelo recorte de 1em. Quem cede e o texto, que pode quebrar em linhas.
-const COMPACTO = "w-auto min-w-0 shrink-0 min-h-12 px-4 py-3";
+// Em tela estreita a doca reserva uma linha inteira ao CTA. Em outras larguras,
+// ela pode quebrar a linha sem reduzir o alvo ou cortar o rotulo ampliado.
+const COMPACTO = "w-full xs:w-auto shrink-0 min-h-12 px-4 py-3";
 
 const ROTULO =
-  "block whitespace-nowrap transition-[translate] duration-(--motion-base) ease-(--ease-default) " +
-  "group-hover/botao:-translate-y-full group-focus-visible/botao:-translate-y-full";
+  "block whitespace-normal py-1 transition-[translate] duration-(--motion-base) ease-(--ease-default) " +
+  "motion-safe:group-hover/botao:-translate-y-full motion-safe:group-focus-visible/botao:-translate-y-full " +
+  "motion-reduce:transition-none";
 
 export function Botao({ params, posicao, compacto = false, fantasma = false, larguraTotal = false }) {
   const referencia = useRef(null);
+  const { disponivel, verificarDisponibilidade } = useCondicaoOferta(config.oferta, config.checkout);
 
-  function aoClicar() {
-    pulsar(referencia.current);
+  function aoClicar(event) {
+    if (!verificarDisponibilidade()) {
+      event.preventDefault();
+      return;
+    }
+    // Daqui para baixo nada cancela nem atrasa a navegacao: animacao e tracker sao sincronos,
+    // isolados um do outro, e o erro de qualquer um morre aqui.
+    try { pulsar(referencia.current); } catch { /* o pulso e enfeite */ }
     // Intencao, nao fato. `Purchase` nasce na Ticto (RF-L29).
-    evento("InitiateCheckout", { posicao });
+    try { registrarInicioCheckout(posicao); } catch { /* a compra nao depende do tracker */ }
   }
 
+  if (!disponivel) return null;
   return (
     <a
       ref={referencia}
       className={`${BASE} ${fantasma ? FANTASMA : CHEIO} ${compacto ? COMPACTO : larguraTotal ? TOTAL : LARGO}`}
       href={urlCheckout(params)}
       onClick={aoClicar}
+      onAuxClick={(event) => { if (event.button === 1) aoClicar(event); }}
       data-posicao={posicao}
     >
-      <span className="botao__rolo relative block h-[1em] leading-none overflow-clip">
+      <span className="botao__rolo relative block min-w-0 overflow-clip">
         <span className={ROTULO}>{VERBO_ACAO}</span>
         <span className={`${ROTULO} absolute inset-x-0 top-full`} aria-hidden="true">
           {VERBO_ACAO}
         </span>
       </span>
       <span
-        className="transition-[translate] duration-(--motion-fast) ease-(--ease-default) group-hover/botao:translate-x-1"
+        className="shrink-0 transition-[translate] duration-(--motion-fast) ease-(--ease-default) motion-safe:group-hover/botao:translate-x-1 motion-reduce:transition-none"
         aria-hidden="true"
       >
         &#8594;

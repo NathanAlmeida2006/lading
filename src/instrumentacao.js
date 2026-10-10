@@ -1,20 +1,25 @@
 /**
- * Instrumentacao: parametros, pixel e profundidade de rolagem.
+ * Instrumentacao: parametros, consentimento, pixel e alcance das secoes.
  *
  * Regra que organiza o arquivo inteiro (RF-L29): a landing reporta INTENCAO,
  * a Ticto reporta o FATO. `Purchase` nao nasce aqui. Pixel que dispara compra
  * no clique conta venda que pode nao ter acontecido, e o ledger passa a
  * registrar receita que o extrato desmente.
+ *
+ * O estado de mensuracao mora neste modulo, e nao em componente: sobrevive ao
+ * StrictMode e a remontagem, e a pagina tem um dono so para "ja enviei isto?".
  */
 import { config } from "./config.js";
 
 const CHAVE_PARAMS = "fluor:params";
 const CHAVE_CONSENTIMENTO = "fluor:consentimento";
 
+// Lista permitida: so estas chaves sao lidas da URL e repassadas ao checkout.
 const RASTREIO = [
   "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
   "fbclid", "src", "sck",
 ];
+const VALOR_PERMITIDO = /^[\w.~:+%-]{1,100}$/;
 
 /* -------------------------------------------------------------------------
    Parametros de campanha
@@ -40,110 +45,209 @@ export function capturarParametros() {
 }
 
 /**
- * Monta a URL do checkout com a origem preservada (RF-L26).
- * Sem isso a venda chega na Ticto sem dizer de qual criativo veio, e o ledger
- * registra resultado sem causa.
+ * Monta a URL do checkout com a origem preservada (RF-L26). A URL-base de
+ * `config.checkout.url` sai como esta (origin, pathname e query): so se
+ * ACRESCENTA, e chave que a base ja traz nao e sobrescrita. Sem URL confirmada
+ * o href fica intacto.
+ *
+ * Limitacao: em build estatico sem JavaScript o link do checkout funciona e
+ * aponta para a URL-base, mas as UTMs da visita nao sao repassadas, porque a
+ * leitura e o repasse ocorrem no navegador.
  */
 export function urlCheckout(params = {}) {
-  const { url, parametroRastreio } = config.checkout;
-  let destino;
+  const { url, urlConfirmada, parametroRastreio, parametroConfirmado } = config.checkout;
+  if (urlConfirmada !== true) return url;
+  let base;
   try {
-    destino = new URL(url);
+    base = new URL(url);
   } catch {
     return url;
   }
-  for (const [chave, valor] of Object.entries(params)) {
-    destino.searchParams.set(chave, valor);
+  const permitidos = {};
+  for (const chave of RASTREIO) {
+    const valor = params?.[chave];
+    if (typeof valor === "string" && VALOR_PERMITIDO.test(valor)) permitidos[chave] = valor;
   }
-  const origem = params.utm_content ?? params.utm_campaign ?? params.src;
-  if (origem && parametroRastreio) {
-    destino.searchParams.set(parametroRastreio, origem);
+  const extras = new URLSearchParams();
+  const acrescentar = (chave, valor) => {
+    if (!base.searchParams.has(chave) && !extras.has(chave)) extras.set(chave, valor);
+  };
+  for (const [chave, valor] of Object.entries(permitidos)) acrescentar(chave, valor);
+  const origem = permitidos.utm_content ?? permitidos.utm_campaign ?? permitidos.src;
+  if (origem && parametroConfirmado === true && typeof parametroRastreio === "string" && parametroRastreio.trim()) {
+    acrescentar(parametroRastreio.trim(), origem);
   }
-  return destino.toString();
+  const sufixo = extras.toString();
+  if (!sufixo) return url;
+  const corte = url.indexOf("#");
+  const semHash = corte < 0 ? url : url.slice(0, corte);
+  const juncao = !semHash.includes("?") ? "?" : /[?&]$/.test(semHash) ? "" : "&";
+  return semHash + juncao + sufixo + (corte < 0 ? "" : url.slice(corte));
 }
 
 /* -------------------------------------------------------------------------
-   Consentimento e pixel
+   Consentimento
    ------------------------------------------------------------------------- */
 
+let consentimento; // undefined = ainda nao lido; depois true | false | null (sem resposta)
+const assinantes = new Set();
+
+/** true | false | null. Valor estavel entre chamadas: serve de snapshot a `useSyncExternalStore`. */
 export function lerConsentimento() {
-  return ler(CHAVE_CONSENTIMENTO);
+  if (consentimento === undefined && typeof window !== "undefined") {
+    const guardado = ler(CHAVE_CONSENTIMENTO);
+    consentimento = typeof guardado === "boolean" ? guardado : null;
+  }
+  return consentimento ?? null;
 }
 
-export function gravarConsentimento(aceitou) {
-  gravar(CHAVE_CONSENTIMENTO, aceitou);
+/** Avisa quando o visitante responde. Devolve o cancelamento. */
+export function assinarConsentimento(assinante) {
+  assinantes.add(assinante);
+  return () => assinantes.delete(assinante);
 }
 
-/**
- * Carrega o pixel do Meta. So depois do aceite (RNF-L23): evento de terceiro
- * antes do consentimento e o que a LGPD nao permite.
- */
-export function carregarPixel() {
-  if (typeof window === "undefined" || !config.pixel.id) return;
-  if (window.fbq) return;
-
-  !(function (f, b, e, v, n, t, s) {
-    if (f.fbq) return; n = f.fbq = function () {
-      n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-    };
-    if (!f._fbq) f._fbq = n;
-    n.push = n; n.loaded = !0; n.version = "2.0"; n.queue = [];
-    t = b.createElement(e); t.async = !0; t.src = v;
-    s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
-  })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
-
-  window.fbq("init", config.pixel.id);
-  evento("PageView");
-}
-
-// Os unicos eventos PADRAO do Meta que a pagina dispara. Qualquer outro nome e evento
-// personalizado, e o Meta so o aceita por `trackCustom`.
-const PADRAO = new Set(["PageView", "ViewContent", "InitiateCheckout"]);
-
-/** Evento nomeado (RF-L28). Sem pixel carregado, no-op silencioso. */
-export function evento(nome, dados) {
-  if (typeof window === "undefined" || !window.fbq) return;
-  window.fbq(PADRAO.has(nome) ? "track" : "trackCustom", nome, dados);
+/** A unica porta de entrada da resposta: grava, e quem assina (aviso, doca, alcance) reage. */
+export function responderConsentimento(aceitou) {
+  consentimento = aceitou === true;
+  gravar(CHAVE_CONSENTIMENTO, consentimento);
+  for (const assinante of [...assinantes]) {
+    try { assinante(); } catch (erro) { console.error(erro); }
+  }
 }
 
 /* -------------------------------------------------------------------------
-   Profundidade de rolagem
+   Pixel
+   ------------------------------------------------------------------------- */
+
+let pixelInjetado = false; // o script que ESTE modulo pos na pagina; `window.fbq` alheio nao conta
+let paginaVista = false;
+const enviadas = new Set(); // impressoes de secao ja enviadas nesta carga de pagina
+
+const idDoPixel = () => String(config.pixel.id ?? "").trim();
+
+/**
+ * A guarda unica (RNF-L23). Carregar o pixel exige aceite e id; enviar exige, alem disso, o
+ * script injetado por este modulo. Nada de terceiro acontece fora dela.
+ */
+function elegivel(paraEnvio = true) {
+  if (typeof window === "undefined" || lerConsentimento() !== true || !idDoPixel()) return false;
+  return !paraEnvio || (pixelInjetado && typeof window.fbq === "function");
+}
+
+/** Idempotente: um script, um `init` e um PageView por carga de pagina. */
+function carregarPixel() {
+  if (!elegivel(false)) return;
+  if (!pixelInjetado) {
+    if (window.fbq) return; // pixel de outra origem: este modulo nao assume o que nao carregou
+    try {
+      const fbq = function () {
+        fbq.callMethod ? fbq.callMethod.apply(fbq, arguments) : fbq.queue.push(arguments);
+      };
+      fbq.push = fbq; fbq.loaded = true; fbq.version = "2.0"; fbq.queue = [];
+      window.fbq = fbq;
+      window._fbq ??= fbq;
+      const script = document.createElement("script");
+      script.async = true;
+      script.src = "https://connect.facebook.net/en_US/fbevents.js";
+      document.head.appendChild(script);
+      pixelInjetado = true;
+      fbq("init", idDoPixel());
+    } catch {
+      return;
+    }
+  }
+  if (!paginaVista) paginaVista = evento("PageView");
+}
+
+// Tudo o que a pagina sabe enviar (RF-L28). Nome fora desta lista nao sai: `Purchase` nao tem como nascer aqui.
+const EVENTOS = {
+  PageView: "track",
+  ViewContent: "track",
+  InitiateCheckout: "track",
+  SecaoAlcancada: "trackCustom",
+};
+
+/** Devolve se o evento saiu. Erro do tracker morre aqui: nunca chega a quem chamou. */
+function evento(nome, dados) {
+  try {
+    if (!EVENTOS[nome] || !elegivel()) return false;
+    if (dados) window.fbq(EVENTOS[nome], nome, dados);
+    else window.fbq(EVENTOS[nome], nome);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Intencao de compra no clique de um CTA: cada clique legitimo e um evento, sem deduplicar.
+ * Sincrono e sem retorno: o clique nao espera nada daqui. Com checkout nao confirmado (o link
+ * ainda e a ancora do preview) nao ha intencao a registrar.
+ */
+export function registrarInicioCheckout(posicaoCTA) {
+  if (config.checkout.urlConfirmada !== true) return;
+  evento("InitiateCheckout", { posicaoCTA, campanha: config.campanha });
+}
+
+/* -------------------------------------------------------------------------
+   Alcance das secoes
    ------------------------------------------------------------------------- */
 
 /**
- * Marca o alcance das secoes 4 (prova), 6 (oferta) e 9 (fechamento) — RF-L31.
- * E o dado que diz ONDE a pagina perde o visitante. Sem ele o ledger registra
- * resultado sem causa, e o proximo ciclo testa no escuro.
+ * Liga a mensuracao da pagina e devolve o desligamento. `alcance` e o mapa de secoes.js
+ * (id -> { etapa, canonico }); RF-L31 le as canonicas, e a oferta vira `ViewContent`:
+ * alcanca-la e o unico ponto da pagina que significa interesse pelo produto.
  *
- * `ViewContent` sai na oferta, nao na carga: alcancar a oferta e o unico
- * ponto da pagina que significa interesse pelo produto.
+ * Antes do aceite nao existe observador: nada e marcado nem desobservado. No aceite ele e
+ * criado, e a primeira entrega do IntersectionObserver e o estado DAQUELE instante: so conta
+ * o que esta na tela. O que ja passou nao e retransmitido, e volta a contar se for revisitado.
+ * A impressao so entra em `enviadas` depois de o evento ter saido de fato.
  */
-export function observarProfundidade() {
-  if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
-    return () => {};
+export function iniciarMensuracao(alcance = {}) {
+  if (typeof window === "undefined") return () => {};
+  let observador;
+
+  function sincronizar() {
+    observador?.disconnect();
+    observador = undefined;
+    carregarPixel();
+    if (!elegivel() || !("IntersectionObserver" in window)) return;
+    observador = new IntersectionObserver(
+      (entradas) => {
+        for (const { isIntersecting, target } of entradas) {
+          const id = target.id;
+          if (!isIntersecting || enviadas.has(id) || !alcance[id]) continue;
+          const { etapa, canonico } = alcance[id];
+          const base = { secao: id, etapa };
+          const saiu = id === "oferta"
+            ? evento("ViewContent", { ...base, campanha: config.campanha })
+            : evento("SecaoAlcancada", { ...base, canonico, campanha: config.campanha });
+          if (!saiu) continue;
+          enviadas.add(id);
+          observador?.unobserve(target);
+        }
+      },
+      // 40% DA JANELA, e nao 40% da secao: a prova tem 2500 a 3100 px, nunca mostra 40% de si de
+      // uma vez, e o evento dela nao disparava. A secao conta como alcancada quando o topo dela
+      // cruza a marca de 60% da altura da tela, que e o que 40% significava numa secao de uma tela.
+      // O 1px tirado do alto descarta o toque de borda: com a secao seguinte exatamente no topo da tela,
+      // a anterior encosta em y=0 sem mostrar nada, e o observador a daria como presente no aceite tardio.
+      { rootMargin: "-1px 0px -40% 0px", threshold: 0 },
+    );
+    for (const id of Object.keys(alcance)) {
+      const alvo = enviadas.has(id) ? null : document.getElementById(id);
+      if (alvo) observador.observe(alvo);
+    }
   }
-  const vistas = new Set();
-  const observador = new IntersectionObserver(
-    (entradas) => {
-      for (const entrada of entradas) {
-        if (!entrada.isIntersecting) continue;
-        const id = entrada.target.id;
-        if (vistas.has(id)) continue;
-        vistas.add(id);
-        evento(id === "oferta" ? "ViewContent" : "SecaoAlcancada", { secao: id });
-        observador.unobserve(entrada.target);
-      }
-    },
-    // 40% DA JANELA, e nao 40% da secao: a prova tem 2500 a 3100 px, nunca mostra 40% de si de
-    // uma vez, e o evento dela nao disparava. A secao conta como alcancada quando o topo dela
-    // cruza a marca de 60% da altura da tela, que e o que 40% significava numa secao de uma tela.
-    { rootMargin: "0px 0px -40% 0px", threshold: 0 },
-  );
-  for (const id of ["prova", "oferta", "fechamento"]) {
-    const alvo = document.getElementById(id);
-    if (alvo) observador.observe(alvo);
-  }
-  return () => observador.disconnect();
+
+  const cancelar = assinarConsentimento(sincronizar);
+  sincronizar();
+  return () => {
+    cancelar();
+    observador?.disconnect();
+    observador = undefined;
+  };
 }
 
 /* -------------------------------------------------------------------------

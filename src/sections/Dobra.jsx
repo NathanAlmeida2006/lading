@@ -4,8 +4,8 @@ import { FundoCapa } from "../components/FundoCapa.jsx";
 import { Moldura } from "../components/Moldura.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { Wordmark } from "../components/Wordmark.jsx";
-import { config } from "../config.js";
-import { camada, crus, envelope, grao, linha, painel, painelRodape, vazado } from "../ui.js";
+import { conteudo } from "../conteudo.js";
+import { camada, crus, envelope, grao, linha, painel, vazado } from "../ui.js";
 
 /**
  * A dobra, em painel de tela cheia.
@@ -32,10 +32,11 @@ import { camada, crus, envelope, grao, linha, painel, painelRodape, vazado } fro
  * (RNF-L01) nao depende da hidratacao.
  */
 const ENTRA = "animate-revelar motion-reduce:animate-surgir";
+const [antesDoDado, depoisDoDado] = conteudo.dobra.subheadline.texto.split("foi medido");
 
 export function Dobra({ params }) {
   return (
-    <section className={`${painel} ${grao} pendente:[--base:300ms]`} id="inicio">
+    <section className={`${painel} ${grao} painel-capa pendente:[--base:300ms]`} id="inicio">
       <FundoCapa />
       <Moldura entrada="css" />
 
@@ -44,7 +45,7 @@ export function Dobra({ params }) {
         <span className="font-terciaria text-mono-reg tabular-nums">Protocolo 01</span>
       </div>
 
-      <div className={`${envelope} flex-auto flex flex-col justify-center items-start gap-2 py-3 lg:pb-24 min-h-0 relative z-1`}>
+      <div className={`${envelope} flex-1 flex flex-col justify-center items-start gap-2 pt-3 pb-12 relative z-1`}>
         <Rotulo className={`painel__kicker ${ENTRA} [--atraso:120ms]`} margem="mb-2">hipertrofia · natural</Rotulo>
 
         <Fio atraso={260} />
@@ -52,31 +53,29 @@ export function Dobra({ params }) {
           className="painel__titulo flex flex-col w-full my-2 text-bone font-secundaria text-display-xxl uppercase tabular-nums tela-baixa:text-[length:clamp(56px,20vw,120px)]"
         >
           <span className={linha}>
-            <span className={`linha__texto block ${camada} animate-subir motion-reduce:animate-surgir [--atraso:380ms]`}>Natural</span>
+            <span className={`linha__texto block ${camada} animate-subir motion-reduce:animate-surgir [--atraso:380ms]`}>{conteudo.dobra.headline.linhas[0]}</span>
           </span>{" "}
           <span className={linha}>
-            <span className={`linha__texto block ${camada} ${vazado} animate-subir motion-reduce:animate-surgir [--atraso:490ms]`}>Cresce.</span>
+            <span className={`linha__texto block ${camada} ${vazado} animate-subir motion-reduce:animate-surgir [--atraso:490ms]`}>{conteudo.dobra.headline.linhas[1]}</span>
           </span>
         </h1>
         <Fio atraso={320} />
 
         <p className={`painel__corpo max-w-prose mt-3 text-silver font-terciaria text-body-lg ${ENTRA} [--atraso:780ms]`}>
-          O que não cresce é a comparação com quem não é natural. O teto de
-          quem não usa nada <strong className="text-bone font-semibold">foi medido</strong>, e ele fica muito
-          acima de onde a onda de motivação para.
+          {depoisDoDado === undefined
+            ? conteudo.dobra.subheadline.texto
+            : <>{antesDoDado}<strong className="text-bone font-semibold">foi medido</strong>{depoisDoDado}</>}
         </p>
 
-        <div className={`painel__acao w-full mt-4 ${ENTRA} [--atraso:900ms]`}>
+        <div className={`painel__acao w-full shrink-0 mt-4 ${ENTRA} [--atraso:900ms]`}>
           <Botao params={params} posicao="dobra" />
           <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
-            {config.oferta.preco
-              ? `${config.oferta.moeda} ${config.oferta.preco} · Pix · garantia de ${config.oferta.garantiaDias} dias`
-              : "12 semanas · Pix à vista · garantia em texto, mais abaixo"}
+            {conteudo.mecanismo.semanas} semanas · condições na oferta abaixo
           </p>
         </div>
       </div>
 
-      <div className={`${envelope} ${painelRodape} ${ENTRA} [--atraso:1020ms]`}>
+      <div className={`${envelope} painel__rodape absolute inset-x-0 bottom-4 z-1 flex items-end justify-between gap-4 text-silver tela-rasa:hidden ${ENTRA} [--atraso:1020ms]`}>
         <span className="flex flex-col gap-0.5 text-silver font-secundaria text-overline uppercase" aria-hidden="true">
           <span>rolar</span>
           <span>pra ver</span>
@@ -84,13 +83,13 @@ export function Dobra({ params }) {
         </span>
         <ul className={crus} role="list">
           <li>
-            <b className="text-bone font-bold">12</b> semanas
+            <b className="text-bone font-bold">{conteudo.mecanismo.semanas}</b> semanas
           </li>
           <li>
-            <b className="text-bone font-bold">3</b> sessões por semana
+            <b className="text-bone font-bold">{conteudo.mecanismo.sessoesObrigatorias}</b> sessões por semana
           </li>
           <li>
-            <b className="text-bone font-bold">4 a 5</b> horas
+            <b className="text-bone font-bold">{conteudo.mecanismo.sessoesOpcionais}</b> opcional
           </li>
         </ul>
       </div>

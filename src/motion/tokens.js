@@ -41,3 +41,11 @@ export function semMovimento() {
   if (typeof window === "undefined" || !window.matchMedia) return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
+
+/** Reexecuta efeitos quando a preferência muda sem deixar um listener órfão. */
+export function aoMudarPreferencia(ouvinte) {
+  if (typeof window === "undefined" || !window.matchMedia) return () => {};
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  media.addEventListener?.("change", ouvinte);
+  return () => media.removeEventListener?.("change", ouvinte);
+}

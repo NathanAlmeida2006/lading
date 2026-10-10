@@ -47,37 +47,72 @@ const GRANDE =
 // `(e-mail) endereco` na mesma linha, o rotulo pequeno e o valor grande: o par do site de origem.
 const PAR = "flex flex-wrap items-baseline gap-x-4 gap-y-2 lg:flex-col lg:items-start lg:gap-2";
 const LINK =
-  "inline-flex items-center gap-2 min-h-11 text-bone no-underline font-secundaria text-h3 hover:text-silver " +
+  "inline-flex max-w-full flex-wrap items-center gap-2 min-h-12 min-w-12 wrap-anywhere text-bone no-underline font-secundaria text-h3 hover:text-silver " +
   "transition-[color] duration-(--motion-fast) ease-(--ease-default)";
 
+function textoLegal(valor) {
+  return typeof valor === "string" && valor.trim() !== "" && !/\[(?:A DEFINIR|A CONFIRMAR)\]|DEFINIR/i.test(valor)
+    ? valor.trim()
+    : null;
+}
+
+function emailLegal(valor) {
+  const email = textoLegal(valor);
+  return email && /^[^\s@:<>()\[\]\\,;"]+@[a-z\d-]+(?:\.[a-z\d-]+)+$/i.test(email) ? email : null;
+}
+
+function urlDocumento(valor) {
+  const referencia = textoLegal(valor);
+  if (!referencia || referencia.includes("..") || /[\s\\]/.test(referencia)) return null;
+  if (/^\/(?!\/)[^?#]+$/.test(referencia)) return referencia;
+  try {
+    const url = new URL(referencia);
+    return url.protocol === "https:" && url.hostname && !url.username && !url.password
+      ? referencia
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export function RodapeLegal({ params }) {
-  const { responsavel, documento, contato, politicaPrivacidade, termosDeUso } = config.legal;
+  const responsavel = textoLegal(config.legal.responsavel);
+  const documento = textoLegal(config.legal.documento);
+  const contato = emailLegal(config.legal.contato);
+  const documentos = [
+    ["Política de privacidade", urlDocumento(config.legal.politicaPrivacidade)],
+    ["Termos de uso", urlDocumento(config.legal.termosDeUso)],
+  ];
   const ano = __ANO__;
 
   return (
-    <footer className="rodape relative overflow-clip bg-void text-silver border-t border-line">
+    <footer id="rodape-legal" className="rodape relative overflow-clip bg-void text-silver border-t border-line">
       <CampoDePontos variante="estelar" />
       <div
         className={`${envelope} relative z-1 grid grid-cols-[1fr_1fr] gap-x-6 gap-y-12 pt-16 pb-12 lg:grid-cols-[repeat(12,1fr)] lg:gap-x-8 lg:pt-24 lg:pb-16`}
       >
-        <address className="col-[1/-1] lg:col-[1/span_4] flex flex-col gap-4 not-italic">
+        <address className="col-[1/-1] lg:col-[1/span_4] min-w-0 flex flex-col gap-4 not-italic">
           <dl className={PAR}>
             <Rotulo como="dt" margem="mb-0">e-mail</Rotulo>
-            <dd className={GRANDE}>
-              <a className="text-acento" href={`mailto:${contato}`}>
-                {contato}
-              </a>
+            <dd className={`${GRANDE} min-w-0 max-w-full`}>
+              {contato ? (
+                <a className="inline-flex min-h-12 min-w-12 max-w-full flex-wrap items-center wrap-anywhere text-acento" href={`mailto:${contato}`}>
+                  {contato}
+                </a>
+              ) : (
+                <span className="text-bone">Contato a confirmar</span>
+              )}
             </dd>
           </dl>
           <dl className={PAR}>
             <Rotulo como="dt" margem="mb-0">responsável</Rotulo>
-            <dd className={`${GRANDE} text-bone`}>{responsavel}</dd>
+            <dd className={`${GRANDE} text-bone`}>{responsavel ?? "Responsável a confirmar"}</dd>
           </dl>
         </address>
 
-        <nav className="lg:col-[6/span_2]" aria-label="Seções da página">
+        <nav className="min-w-0 lg:col-[6/span_2]" aria-label="Seções da página">
           <Rotulo margem="mb-3">seções</Rotulo>
-          <ul className="flex flex-col" role="list">
+          <ul className="flex flex-col gap-2" role="list">
             {SECOES.map(([href, nome]) => (
               <li key={href}>
                 <a className={LINK} href={href}>
@@ -88,19 +123,22 @@ export function RodapeLegal({ params }) {
           </ul>
         </nav>
 
-        <nav className="lg:col-[8/span_2]" aria-label="Documentos legais">
+        <nav className="min-w-0 lg:col-[8/span_2]" aria-label="Documentos legais">
           <Rotulo margem="mb-3">documentos</Rotulo>
-          <ul className="flex flex-col" role="list">
-            <li>
-              <a className={LINK} href={politicaPrivacidade}>
-                Política de privacidade <span aria-hidden="true">&#8599;</span>
-              </a>
-            </li>
-            <li>
-              <a className={LINK} href={termosDeUso}>
-                Termos de uso <span aria-hidden="true">&#8599;</span>
-              </a>
-            </li>
+          <ul className="flex flex-col gap-2" role="list">
+            {documentos.map(([nome, href]) => (
+              <li key={nome}>
+                {href ? (
+                  <a className={LINK} href={href}>
+                    {nome} <span aria-hidden="true">&#8599;</span>
+                  </a>
+                ) : (
+                  <span className="inline-flex min-h-12 max-w-full flex-wrap items-center wrap-anywhere font-secundaria text-h3">
+                    {nome} (documento pendente de aprovação)
+                  </span>
+                )}
+              </li>
+            ))}
           </ul>
         </nav>
 
@@ -117,7 +155,7 @@ export function RodapeLegal({ params }) {
       <div className={`${envelope} relative z-1 flex flex-wrap justify-between gap-x-6 gap-y-2 py-6 border-t border-line`}>
         <p className="font-terciaria text-mono-reg tabular-nums">&copy; {ano} Lithium. Todos os direitos reservados.</p>
         <p className="font-terciaria text-caption">
-          {responsavel} &middot; <span className="tabular-nums">{documento}</span>
+          {responsavel ?? "Responsável a confirmar"} &middot; <span className="tabular-nums">{documento ?? "Documento a confirmar"}</span>
         </p>
       </div>
 

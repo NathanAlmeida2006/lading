@@ -12,9 +12,11 @@ const ouvintes = new Set();
 export const estaPausado = () => pausado;
 
 export function definirPausa(valor) {
-  pausado = valor;
-  if (typeof document !== "undefined") document.documentElement.toggleAttribute("data-pausado", valor);
-  for (const f of ouvintes) f(valor);
+  const proximo = Boolean(valor);
+  if (pausado === proximo) return;
+  pausado = proximo;
+  if (typeof document !== "undefined") document.documentElement.toggleAttribute("data-pausado", proximo);
+  for (const f of ouvintes) f(proximo);
 }
 
 /** Avisa quando a pausa muda. Devolve a funcao que cancela. */

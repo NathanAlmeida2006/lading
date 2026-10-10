@@ -1,8 +1,8 @@
-import { useRef } from "react";
+import { Fragment, useRef } from "react";
 import { CampoDePontos } from "../components/CampoDePontos.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
-import { mascaraDeLinha, revelar, revelarEmCascata, useMovimento } from "../motion/index.js";
-import { bloco, envelope, grao, mascara } from "../ui.js";
+import { acenderEmSequencia, revelar, revelarEmCascata, useMovimento } from "../motion/index.js";
+import { bloco, envelope, grao } from "../ui.js";
 
 /**
  * O que voce leva, na forma da secao "Members' Words" do Rep Republic.
@@ -85,35 +85,60 @@ const VOZES = [
  * garantida.
  */
 const ZIGUEZAGUE = [
-  "lg:self-start lg:mt-16",
+  "lg:self-start lg:mt-32",
   "lg:self-end lg:mt-[calc(15vh_-_--spacing(115))]",
-  "lg:self-center lg:mt-16",
+  "lg:self-center lg:mt-32",
 ];
+
+// Mesma animacao da prova: a palavra apagada e opacidade, e a da fronteira (`data-atual`) no acento.
+const PALAVRA =
+  "palavra inline-block transition-[opacity,color] duration-(--motion-fast) ease-(--ease-corte-2) " +
+  "js:opacity-[0.22] data-acesa:opacity-100 data-atual:text-acento " +
+  "motion-reduce:js:opacity-100 motion-reduce:data-atual:text-inherit";
+const TITULO = "Seis coisas. Nenhuma depende de motivação.";
 
 export function Leva() {
   const raiz = useRef(null);
+  const palco = useRef(null);
 
   useMovimento(() => {
     const no = raiz.current;
     if (!no) return;
     revelar(no.querySelector(".rotulo"));
-    mascaraDeLinha(no.querySelector(".titulo"), { atraso: 60 });
     revelar(no.querySelector(".leva__sub"), { atraso: 200 });
     revelarEmCascata(no.querySelectorAll(".voz"), { intervalo: 80 });
+    // O trilho `fixo` e o palco da prova: 190svh, 90svh de titulo pinado. Ele nasce acima do
+    // titulo (o titulo pina no meio da tela) para a conta comecar quando o titulo pina.
+    const anim = acenderEmSequencia(no.querySelectorAll(".titulo .palavra"), palco.current, {
+      fixo: true,
+      atributoAtual: "data-atual",
+    });
+    return () => anim?.revert?.();
   }, []);
 
   return (
-    <section id="o-que-e" className={`${bloco} py-16 md:py-24`} ref={raiz}>
+    <section id="o-que-e" className={`${bloco} py-20 md:py-32`} ref={raiz}>
       <CampoDePontos />
 
       <div className={`${envelope} relative z-1`}>
+        <div
+          className="absolute inset-x-0 top-[calc(140px-50svh)] h-[190svh] pointer-events-none motion-reduce:hidden"
+          ref={palco}
+          aria-hidden="true"
+        />
+        {/* O titulo fica pinado ate os cards chegarem pelo mesmo tempo da prova: o palco dela tem
+            190svh com 100svh pinado, 90svh de espera. Aqui a margem da lista (140svh - 140px) soma,
+            com o titulo centrado e ~280px de altura, esses mesmos 90svh. */}
         <header className="sticky top-[max(--spacing(12),calc(50svh-140px))] z-0 flex flex-col items-center py-8 text-center motion-reduce:static">
           <Rotulo>o que você leva pra academia</Rotulo>
           <h2
-            className={`titulo text-bone font-secundaria text-display normal-case tracking-[-0.005em] leading-[1.02] max-w-[14ch] lg:max-w-[16ch] ${mascara}`}
-            data-revelar
+            className="titulo text-bone font-secundaria text-display normal-case tracking-[-0.005em] leading-[1.02] max-w-[14ch] lg:max-w-[16ch]"
           >
-            Seis coisas. Nenhuma depende de motivação.
+            {TITULO.split(" ").map((palavra, indice) => (
+              <Fragment key={`${palavra}-${indice}`}>
+                <span className={PALAVRA}>{palavra}</span>{" "}
+              </Fragment>
+            ))}
           </h2>
           <p
             className="leva__sub max-w-prose lg:max-w-[30ch] mt-4 text-silver text-center font-terciaria text-body lg:text-body-lg"
@@ -124,7 +149,7 @@ export function Leva() {
           </p>
         </header>
 
-        <ol className="relative z-1 flex flex-col gap-6 mt-12 lg:mt-16 lg:gap-0" role="list">
+        <ol className="relative z-1 flex flex-col gap-10 mt-[calc(140svh-140px)] motion-reduce:mt-16 lg:gap-0" role="list">
           {VOZES.map((voz, indice) => {
             const claro = indice % 2 === 1;
             const posicao = indice === 0 ? "lg:self-start lg:mt-0" : ZIGUEZAGUE[indice % 3];

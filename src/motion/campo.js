@@ -134,8 +134,8 @@ export class Campo {
     if (this.fiel) {
       // Densidade por area, com teto, pela mesma razao da malha: num monitor
       // grande a rede nao pode multiplicar o trabalho de cada quadro.
-      const cols = Math.max(28, Math.min(104, Math.round(largura / 15)));
-      const rows = Math.max(20, Math.min(52, Math.round(Math.min(altura, 1100) / 24)));
+      const cols = Math.max(20, Math.min(64, Math.round(largura / 24)));
+      const rows = Math.max(14, Math.min(34, Math.round(Math.min(altura, 1100) / 36)));
       if (this.rede.length !== cols * rows) this.semear(cols, rows);
     }
   }
@@ -295,38 +295,38 @@ export class Campo {
       return;
     }
 
-    // A REDE em perspectiva.
+    // UMA ONDA, no plano, ocupando a secao inteira.
     //
-    // A altura de referencia e LIMITADA: a secao pode ter 2600px, e usar a
-    // altura dela como escala esticaria o relevo ate ele virar listra. O
-    // campo desenha o mesmo relevo em qualquer secao.
+    // A rede (u, v) vira uma unica fita: `u` percorre a largura toda e `v` (0 a 1) e a posicao na
+    // espessura. A curva e longa e a espessura respira devagar. A escala vertical e LIMITADA (a
+    // secao pode ter 2600px) pela mesma razao de antes: sem isso a fita viraria listra.
     const vis = Math.min(altura, 900);
-    const horizonte = altura * 0.4;
+    const amp = vis * 0.16;
     for (let i = 0; i < n; i += 1) {
       const pt = fonte[i];
-      const z = 1 + pt.v * pt.v * 8; // v ao quadrado adensa o fundo
-      const k = 1.55 / z; // perspectiva, ~1,55 a 0,17
+      const s = pt.v;
       const h =
-        Math.sin(pt.u * 2.4 + z * 1.15 + t * 0.00032) * 0.6 +
-        Math.sin(pt.u * 1.1 - z * 2.1 + t * 0.0002) * 0.4;
-      const x = largura / 2 + pt.u * k * largura * 0.52;
-      const y = horizonte + (0.9 - h * 0.72) * k * vis * 0.62;
+        Math.sin(pt.u * 2.2 + t * 0.00032) * 0.6 +
+        Math.sin(pt.u * 0.9 - t * 0.0002) * 0.4;
+      const espessura = vis * (0.38 + 0.12 * Math.sin(pt.u * 1.7 + t * 0.00025));
+      const x = largura / 2 + pt.u * largura * 0.5;
+      const y = altura / 2 + h * amp + (s - 0.5) * espessura;
       if (x < -8 || x > largura + 8 || y < -8 || y > altura + 8) {
         p.a[i] = 0;
         continue;
       }
 
-      // Perto = maior e mais claro. E o unico "sombreamento" que existe
-      // aqui: sem brilho, sem halo, sem gradiente (TR-03 e TR-09).
-      const perto = Math.max(0, Math.min(1, 1.15 - z / 7));
-      const alpha = (0.08 + perto * 0.62) * pt.j;
+      // Miolo da fita = mais claro e maior; borda e pontas esmaecem. Sem brilho, sem halo (TR-03).
+      const miolo = 1 - Math.abs(s - 0.5) * 1.4;
+      const ponta = 1 - Math.abs(pt.u) ** 3;
+      const alpha = (0.15 + miolo * 0.6) * ponta * pt.j;
       if (alpha < 0.05) {
         p.a[i] = 0;
         continue;
       }
       p.a[i] = Math.min(0.9, alpha);
       p.c[i] = pt.acento ? 1 : 0;
-      p.d[i] = perto > 0.6 ? 2 : 1.4;
+      p.d[i] = miolo > 0.6 ? 1.4 : 1;
       p.x[i] = Math.round(x);
       p.y[i] = Math.round(y);
     }

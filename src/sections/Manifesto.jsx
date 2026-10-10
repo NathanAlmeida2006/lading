@@ -1,56 +1,78 @@
-import { CampoDePontos } from "../components/CampoDePontos.jsx";
 import { Fragment, useRef } from "react";
+import { conteudo } from "../conteudo.js";
+import { CampoDePontos } from "../components/CampoDePontos.jsx";
+import { useCortina } from "../motion/cortina.js";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { acenderEmSequencia, useMovimento } from "../motion/index.js";
 import { bloco, envelope } from "../ui.js";
 
-/**
- * Reconhecimento: a situacao do visitante, na frase dele, palavra a palavra.
- *
- * Sai direto do angulo teto-natural: o §9 da persona registra o mito "natural
- * nao cresce" e o §2 registra que ela desconfia do fisico hormonizado vendido
- * como natural. As duas crencas nunca se encontraram, e a secao inteira e o
- * encontro.
- *
- * A forma vem do Nakula: cada palavra e um elemento e acende conforme a
- * pagina desce, ligada a rolagem e nao disparada por ela. O texto fica
- * grudado no meio da tela enquanto a secao passa por baixo.
- *
- * Parceiro, nunca juiz: nenhuma frase aqui culpa o leitor (TR-08). Descreve
- * o padrao e troca a regua; nao da bronca.
- *
- * A secao e mais alta que a tela e o texto fica grudado no meio dela: e o
- * trilho que mede (`acenderEmSequencia` le a travessia da secao) e o texto que
- * exibe. Quem gruda nunca e quem mede.
- */
-const TEXTO =
-  "Você desconfia do shape do feed. E mede o seu potencial por ele mesmo assim. " +
-  "Treina em ondas de duas a seis semanas, e toda onda termina na mesma conclusão: " +
-  "sem genética ou sem bomba, não dá. A conclusão está certa. A régua está errada.";
-
-// Cada palavra troca de estado como carimbo. Nasce apagada so sob `js:`: sem
-// JavaScript o manifesto abre inteiro e legivel (RNF-L16).
+// O texto vem do contrato editorial. O realce complementa a leitura: nenhuma
+// palavra depende da animação para ficar legível. Sem medição, tudo fica no fluxo.
+// Mesma convencao da prova: palavra apagada e opacidade, e a da fronteira (`data-atual`) no acento.
 const PALAVRA =
-  "palavra inline-block transition-[opacity] duration-(--motion-fast) ease-(--ease-corte-2) " +
-  "js:opacity-[0.16] data-acesa:opacity-100 motion-reduce:js:opacity-100";
+  "palavra inline-block transition-[opacity,color] duration-(--motion-fast) ease-(--ease-corte-2) " +
+  "js:opacity-[0.22] data-acesa:opacity-100 data-atual:text-acento " +
+  "motion-reduce:js:opacity-100 motion-reduce:data-atual:text-inherit";
 
 export function Manifesto() {
   const raiz = useRef(null);
+  useCortina(raiz);
 
   useMovimento(() => {
     const no = raiz.current;
     if (!no) return;
-    const anim = acenderEmSequencia(no.querySelectorAll(".palavra"), no);
-    return () => anim?.revert?.();
+    const texto = no.querySelector(".manifesto__texto");
+    if (!texto) return;
+    let ativo = true;
+    let quadro = 0;
+    const documento = document.documentElement;
+    const viewport = window.visualViewport;
+    const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const medir = () => {
+      quadro = 0;
+      if (!ativo) return;
+      const topo = parseFloat(getComputedStyle(texto).top);
+      const altura = Math.min(window.innerHeight, viewport?.height ?? window.innerHeight);
+      const movimentoDisponivel = documento.classList.contains("movimento-pronto") &&
+        !documento.classList.contains("movimento-falhou");
+      const cabe = movimentoDisponivel && !reduzido.matches && Number.isFinite(topo) &&
+        texto.getBoundingClientRect().height + topo * 2 <= altura;
+      if (no.hasAttribute("data-cabe") !== cabe) no.toggleAttribute("data-cabe", cabe);
+    };
+    const agendar = () => {
+      if (ativo && !quadro) quadro = requestAnimationFrame(medir);
+    };
+    // Observe apenas o texto: a altura da seção muda quando o sticky é habilitado.
+    const observador = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(agendar);
+    observador?.observe(texto);
+    // O trilho só existe enquanto a animação está disponível, inclusive após falha tardia.
+    const observadorMovimento = typeof MutationObserver === "undefined" ? null : new MutationObserver(agendar);
+    observadorMovimento?.observe(documento, { attributes: true, attributeFilter: ["class"] });
+    window.addEventListener("resize", agendar);
+    viewport?.addEventListener("resize", agendar);
+    document.fonts?.ready.then(agendar);
+    medir();
+    const anim = acenderEmSequencia(no.querySelectorAll(".palavra"), no, { fixo: true, atributoAtual: "data-atual" });
+    return () => {
+      ativo = false;
+      cancelAnimationFrame(quadro);
+      observador?.disconnect();
+      observadorMovimento?.disconnect();
+      window.removeEventListener("resize", agendar);
+      viewport?.removeEventListener("resize", agendar);
+      no.removeAttribute("data-cabe");
+      anim?.revert?.();
+    };
   }, []);
 
   return (
-    <section id="reconhecimento" className={`${bloco} min-h-[170svh] py-0 motion-reduce:min-h-0 motion-reduce:py-16`} ref={raiz}>
+    <section id="reconhecimento" className={`${bloco} isolate group/manifesto data-cabe:min-h-[205svh] motion-reduce:min-h-0`} ref={raiz}>
       <CampoDePontos variante="estelar" />
-      <div className={`${envelope} sticky top-[14svh] lg:top-[10svh] z-1 py-12 motion-reduce:static motion-reduce:py-0`}>
-        <Rotulo como="h2">onde você está</Rotulo>
-        <p className="font-secundaria text-display normal-case tracking-[-0.005em] leading-[1.05] max-w-[14ch] text-bone lg:text-[length:clamp(48px,5.2vw,76px)] lg:leading-[1.02] lg:max-w-[24ch]">
-          {TEXTO.split(" ").map((palavra, indice) => (
+      <div className={`${envelope} manifesto__texto relative z-1 top-0 min-h-svh flex flex-col items-center justify-center group-data-cabe/manifesto:sticky motion-reduce:static`}>
+        <div>
+        <Rotulo como="h2">{conteudo.reconhecimento.rotulo}</Rotulo>
+        <p className="font-secundaria font-bold text-[length:46.9px] leading-[1.05] normal-case tracking-normal max-w-prose text-bone lg:text-[length:clamp(58px,6.6vw,82px)] lg:leading-none lg:max-w-[32ch]">
+          {conteudo.reconhecimento.texto.split(" ").map((palavra, indice) => (
             // O espaco fica FORA do span: espaco no fim de um inline-block e
             // descartado pelo navegador, e as palavras colavam.
             <Fragment key={`${palavra}-${indice}`}>
@@ -58,6 +80,7 @@ export function Manifesto() {
             </Fragment>
           ))}
         </p>
+        </div>
       </div>
     </section>
   );

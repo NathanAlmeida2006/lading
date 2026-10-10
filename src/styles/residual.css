@@ -18,6 +18,19 @@
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Os painéis usam a viewport pequena quando disponível. */
+@layer components {
+  .painel-capa {
+    min-height: 100vh;
+  }
+
+  @supports (min-height: 100svh) {
+    .painel-capa {
+      min-height: 100svh;
+    }
+  }
+}
+
 /* ---- 0a. A inclinacao da marquise (`--scroll-velocity`) --------------------------
    O Lenis escreve a velocidade da rolagem nas faixas (px por quadro), e a faixa a consome em
    `skewX(calc(var(--scroll-velocity, 0) * -0.35deg))`. Registrada, e SEM heranca: uma custom
@@ -28,6 +41,12 @@
   syntax: "<number>";
   inherits: false;
   initial-value: 0;
+}
+
+/* A altura real da barra inclui texto ampliado e area segura. A regra fica
+   fora das camadas para prevalecer sobre o scroll-padding fixo do HTML. */
+html:has(body.com-doca) {
+  scroll-padding-bottom: calc(var(--doca-altura, var(--space-9)) + var(--space-3));
 }
 
 /* ---- 0b. Serrilha do recibo ------------------------------------------------
@@ -70,16 +89,14 @@
     color: var(--void);
   }
 
-  /* ---- 4. Estado inicial das revelacoes (RNF-L16, RNF-L35) ----------------
-     So existe com JS: sem ele a pagina abre inteira e legivel. */
-  .js [data-revelar] {
-    opacity: 0;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .js [data-revelar] {
-      opacity: 1;
-    }
-  }
+  /* A coreografia esconde cada alvo somente depois de o chunk carregar e o
+     IntersectionObserver estar registrado. O HTML permanece legivel se a rede falhar. */
+}
+
+/* Sem o chunk, as palavras não podem ficar no estado apagado do utilitário js:. */
+.js:not(.movimento-pronto) .palavra,
+.movimento-falhou .palavra {
+  opacity: 1;
 }
 
 /* ---- 4b. Pausa pedida pelo visitante (WCAG 2.2.2) -------------------------

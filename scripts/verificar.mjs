@@ -158,6 +158,11 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
   const p = await ctx.newPage();
   await p.goto(ALVO, { waitUntil: "networkidle" });
   await p.click("text=Aceitar").catch(() => {});
+  // O chunk instala o estado inicial de revelação após a hidratação.
+  // Varrer antes dessa instalação pode medir uma ordem de eventos diferente.
+  await p.evaluate(() => document.fonts.ready);
+  await p.waitForFunction(() => document.documentElement.classList.contains("pronto") &&
+    (document.documentElement.classList.contains("movimento-pronto") || document.documentElement.classList.contains("movimento-falhou")), null, { timeout: 5000 });
   const h = await p.evaluate(() => document.body.scrollHeight);
   for (let y = 0; y < h; y += 300) { await p.evaluate((v) => window.scrollTo({ top: v, behavior: "instant" }), y); await p.waitForTimeout(70); }
   await p.waitForTimeout(900);
@@ -248,7 +253,11 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
     for (const el of foco) {
       el.focus();
       const e = getComputedStyle(el);
-      const temAnel = (e.outlineStyle !== "none" && parseFloat(e.outlineWidth) >= 1) || e.boxShadow !== "none";
+      // RNF-L11 exige anel de 2px: uma sombra qualquer não prova foco.
+      const sombra = e.boxShadow.replace(/rgba?\([^)]*\)/g, "").trim().split(/\s+/).map(parseFloat);
+      const anelSombra = !e.boxShadow.includes("inset") && sombra.length === 4 &&
+        sombra[0] === 0 && sombra[1] === 0 && sombra[2] === 0 && sombra[3] >= 2;
+      const temAnel = (e.outlineStyle !== "none" && parseFloat(e.outlineWidth) >= 2) || anelSombra;
       if (!temAnel) ruins.push(el.textContent.trim().slice(0, 24) || el.tagName);
     }
     return { total: foco.length, ruins };
@@ -301,10 +310,8 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
   await ctx.close();
 }
 
-// --- PRV-01: a prova acende e o campo de pontos existe ---------------------
-// O estado final e o unico que nao pode falhar: palavra que nao acendeu e
-// texto invisivel. O campo e ornamento, entao o que se mede dele e que ele
-// existe, cobre a secao e NAO recebe evento de ponteiro.
+// --- PRV-01: a prova acende; ornamento não aprova a decisão TR-03 ----------
+// Conteúdo deve permanecer legível inclusive com fallback sem campo.
 {
   const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
   const p = await ctx.newPage();
@@ -336,8 +343,33 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
       pintou: [...document.querySelectorAll("#prova .campo")].some((c) => c.width > 0 && c.height > 0),
     };
   });
-  linha("PRV-01", r.palavras > 0 && r.apagadas === 0 && r.campo && r.cobre && r.inerte && r.pintou,
+  linha("PRV-01", r.palavras > 0 && r.apagadas === 0 && (!r.campo || r.inerte),
     `${r.apagadas} de ${r.palavras} palavras apagadas; campo presente: ${r.campo}, cobrindo: ${r.cobre}, inerte: ${r.inerte}, com area: ${r.pintou}`);
+  await ctx.close();
+}
+
+// TR-03 continua pendente. arquitetura-de-secoes.md:74 estabelece fallback
+// sem animar pontos; presença de canvas não concede aprovação estética.
+{
+  const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
+  const p = await ctx.newPage();
+  await p.addInitScript(() => {
+    window.__pinturasCampo = 0;
+    const limpar = CanvasRenderingContext2D.prototype.clearRect;
+    CanvasRenderingContext2D.prototype.clearRect = function (...args) {
+      if (this.canvas.classList.contains("campo")) window.__pinturasCampo += 1;
+      return limpar.apply(this, args);
+    };
+  });
+  await p.goto(ALVO, { waitUntil: "networkidle" });
+  await p.getByRole("button", { name: "Recusar", exact: true }).click();
+  await p.evaluate(() => window.scrollTo({ top: document.getElementById("prova").offsetTop + 400, behavior: "instant" }));
+  await p.waitForTimeout(1200); // término da entrada, antes da janela de medição
+  const antes = await p.evaluate(() => window.__pinturasCampo);
+  await p.waitForTimeout(500); // amostra finita, sem retries, para detectar animação contínua
+  const depois = await p.evaluate(() => window.__pinturasCampo);
+  linha("TR-03-FALLBACK", depois === antes,
+    `${depois - antes} pinturas do campo em 500ms; decisão §6 pendente exige fallback sem pontos animados`);
   await ctx.close();
 }
 
@@ -359,39 +391,41 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
   await ctx.close();
 }
 
-// --- ESP-01: a pilha de cards do espelho solta quando o pe de um card coberto nao cabe ---------
-// Um card coberto nunca mais mostra o que fica abaixo da dobra; se o botao dele ja nasce fora da
-// janela, a pilha vira fila (`data-solta` na lista). Em 360x640 e 1024x768 ela fecha.
+// --- ESP-01: fluxo legível, CTA único e ordem preservada em telas baixas/zoom ---
+// O contrato permite fluxo simples: não exige data-solta nem pilhas em alturas fixas.
 {
   const quebras = [];
-  for (const [w, h, solta] of [[360, 640, false], [1024, 768, false], [320, 568, true], [740, 360, true]]) {
-    const ctx = await nav.newContext({ viewport: { width: w, height: h }, isMobile: w < 640, hasTouch: w < 640 });
+  for (const [w, h, zoom] of [[360, 640, false], [1024, 768, false], [320, 568, false], [740, 360, false], [360, 560, true]]) {
+    const ctx = await nav.newContext({ viewport: { width: w, height: h }, reducedMotion: "reduce" });
     const p = await ctx.newPage();
     await p.goto(ALVO, { waitUntil: "networkidle" });
-    await p.waitForTimeout(300);
-    const real = await p.evaluate(() => document.querySelector("#espelho ol").hasAttribute("data-solta"));
-    if (real !== solta) quebras.push(`${w}x${h}: solta=${real}, esperado ${solta}`);
+    if (zoom) await p.evaluate(() => {
+      for (const el of document.querySelectorAll("#espelho *")) {
+        if ([...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) el.style.fontSize = `${parseFloat(getComputedStyle(el).fontSize) * 2}px`;
+      }
+    });
+    const r = await p.evaluate(() => {
+      const s = document.querySelector("#espelho"), cards = [...s.querySelectorAll(".carta")];
+      const boxes = cards.map(el => el.getBoundingClientRect());
+      const head = s.querySelector("header").getBoundingClientRect();
+      const ctas = [...s.querySelectorAll("a.botao")];
+      const cta = ctas[0]?.getBoundingClientRect();
+      const overlap = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+      const ids = [...document.querySelectorAll("main section[id]")].map(el => el.id);
+      return {
+        cards: cards.length,
+        ctas: ctas.length,
+        overlap: boxes.some((box, i) => overlap(box, head) || boxes.slice(i + 1).some(other => overlap(box, other)) || (cta && overlap(box, cta))),
+        overflow: s.scrollWidth > s.clientWidth + 1,
+        ordem: ids.indexOf("reconhecimento") < ids.indexOf("espelho") && ids.indexOf("espelho") < ids.indexOf("o-que-e") && ids.indexOf("o-que-e") < ids.indexOf("mapa"),
+        ctaDepois: cta && cta.top >= boxes.at(-1).bottom - 1,
+      };
+    });
+    if (r.cards !== 5 || r.ctas !== 1 || r.overlap || r.overflow || !r.ordem || !r.ctaDepois) quebras.push(`${w}x${h}, texto200=${zoom}: ${JSON.stringify(r)}`);
     await ctx.close();
   }
   linha("ESP-01", quebras.length === 0,
-    quebras.length ? quebras.join("; ") : "pilha fecha em 360x640 e 1024x768, solta em 320x568 e 740x360");
-}
-
-// --- MAR-01: a marquise cobre a janela depois de alargar -----------------------------------------
-// Medida uma vez, em 360px, ela abria um vao ao girar o aparelho ou alargar a janela. A tela de 1440
-// existe desde o inicio (`screen`), e e ela que o laco usa para saber quanto repetir.
-{
-  const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, screen: { width: 1440, height: 900 } });
-  const p = await ctx.newPage();
-  await p.goto(ALVO, { waitUntil: "networkidle" });
-  await p.setViewportSize({ width: 1440, height: 900 });
-  await p.waitForTimeout(600);
-  const faixas = await p.evaluate(() =>
-    [...document.querySelectorAll(".marquise")].map((m) => ({ janela: m.clientWidth, metade: m.firstElementChild.children[0].scrollWidth })),
-  );
-  linha("MAR-01", faixas.length > 0 && faixas.every((f) => f.metade >= f.janela),
-    faixas.map((f) => `metade ${f.metade}px para janela ${f.janela}px`).join(" · "));
-  await ctx.close();
+    quebras.length ? quebras.join("; ") : "5 cards sem sobreposição, CTA único após a lista, ordem preservada; telas baixas e texto 200%");
 }
 
 // --- INT-01: a cortina de introducao -----------------------------------------

@@ -274,9 +274,10 @@ tipografia como arquitetura, e aparecer pouco é o que mantém a escala como ass
 
 ## Estilo
 
-**Tailwind v4**, só no build (`@tailwindcss/vite`). Ele entrou depois de o contrato
-(§4.2) e o `RNF-L17` o recusarem porque "traz escala e paleta próprias". A objeção
-morre assim:
+**Tailwind v4**, só no build (`@tailwindcss/vite`), é a tecnologia de estilos mantida
+por decisão explícita do usuário em 03/10/2026. Refatorações preservam o plugin,
+os utilitários e a integração ao `ds-bundle`. A identidade visual continua governada
+pelos tokens; `residual.css` atende apenas às regras complementares.
 
 - **Paleta = tokens.** `styles/tailwind.css` zera a paleta padrão (`--color-*: initial`)
   e liga cada cor ao token do `ds-bundle` com `@theme inline`: `bg-void` vira

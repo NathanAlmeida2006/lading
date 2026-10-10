@@ -1,8 +1,9 @@
 import { CampoDePontos } from "../components/CampoDePontos.jsx";
-import { Fragment, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { Botao } from "../components/Botao.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
-import { acenderEmSequencia, revelar, revelarEmCascata, subirLinhas, useMovimento } from "../motion/index.js";
+import { conteudo } from "../conteudo.js";
+import { revelar, revelarEmCascata, subirLinhas, useMovimento } from "../motion/index.js";
 import { bloco, camada, envelope, linha } from "../ui.js";
 
 /**
@@ -20,57 +21,17 @@ import { bloco, camada, envelope, linha } from "../ui.js";
  *
  * Conteudo canonico, nao inventado (RF-L11a): as tres fases sao as do capitulo
  * do programa do draft de hipertrofia; as 12 semanas com 3 sessoes
- * obrigatorias e 1 opcional sao o RF-T02; o portao da fase 3 e o do glossario,
- * competencia e nao calendario. Cinco estados, nao doze.
+ * obrigatorias e 1 opcional sao o RF-T02. O capitulo 3 atual define o portao
+ * por competencia em cada exercicio. Cinco etapas, nao cinco fases.
  *
  * A regua das doze semanas continua acendendo e apagando com a posicao da
- * pagina (RF-L11b), agora no bloco do manifesto, onde ela e a linha do tempo
- * do plano inteiro. Sob movimento reduzido ela nasce inteira acesa, porque
+ * pagina (RF-L11b), neste mapa. O trilho em fluxo mede os cards; a regua
+ * sticky apenas exibe. Sob movimento reduzido ela nasce inteira acesa, porque
  * informa o caminho e informacao nao depende de animacao.
  */
-const SEMANAS = 12;
-
-const ESTADOS = [
-  {
-    capa: "1e2",
-    leitura: "semanas 1 e 2",
-    faixa: "semanas",
-    nome: "Fase 1 · Aprender",
-    texto: "Duas séries, topo da faixa, três repetições no tanque. Você calibra o placar antes de disputar ele.",
-  },
-  {
-    capa: "3a8",
-    leitura: "semanas 3 a 8",
-    faixa: "semanas",
-    nome: "Fase 2 · Construir",
-    texto:
-      "Três séries, faixa cheia. A Regra do 12 decide quando o peso sobe. É onde os números começam a contar história.",
-  },
-  {
-    capa: "05",
-    leitura: "semana 5",
-    faixa: "semana",
-    nome: "A quarta sessão",
-    texto: "Se as três obrigatórias estão acontecendo com folga, a quarta entra. Opcional, nunca cobrada.",
-  },
-  {
-    capa: "09",
-    leitura: "semana 9",
-    faixa: "semana",
-    nome: "O portão",
-    texto:
-      "O portão da fase 3 olha a sua ficha, não a data. Passou, troca. Não passou, repete daqui a duas semanas, sem drama.",
-  },
-  {
-    capa: "9a12",
-    leitura: "semanas 9 a 12",
-    faixa: "semanas",
-    nome: "Fase 3 · Consolidar",
-    texto: "Mesmas três séries, com duas trocas planejadas. Não é variedade por tédio: é a formatura.",
-  },
-];
-
-const LINHAS = ["Doze semanas", "já estão", "escritas"];
+const SEMANAS = conteudo.mecanismo.semanas;
+const ESTADOS = conteudo.mapa.estados;
+const LINHAS = conteudo.mapa.linhas;
 
 /**
  * Uma semana da regua: o ponto (::before) e o numero (::after, de um contador CSS).
@@ -83,7 +44,8 @@ const SEMANA =
   "data-acesa:before:bg-acento data-acesa:before:border-acento motion-reduce:before:bg-acento motion-reduce:before:border-acento " +
   "after:content-[counter(semana,decimal-leading-zero)] after:text-silver after:font-terciaria after:text-mono-reg after:tabular-nums " +
   "after:transition-[color] after:duration-(--motion-fast) after:ease-(--ease-corte-2) " +
-  "data-acesa:after:text-bone data-acesa:after:font-bold motion-reduce:after:text-bone";
+  "data-acesa:after:text-bone data-acesa:after:font-bold motion-reduce:after:text-bone " +
+  "data-atual:before:border-2 data-atual:after:underline";
 
 /**
  * Os cards em ziguezague: tres por linha no monitor, e o do meio desce uma
@@ -92,8 +54,132 @@ const SEMANA =
  */
 const DESCE = ["", "lg:mt-24", "lg:mt-48"];
 
+function topoEmFluxo(elemento) {
+  let topo = 0;
+  for (let no = elemento; no; no = no.offsetParent) topo += no.offsetTop;
+  return topo;
+}
+
+function marcosDasSemanas(trilho, altura) {
+  const origem = topoEmFluxo(trilho);
+  const marcos = Array.from(trilho.children, (card) => ({
+    topo: topoEmFluxo(card) - origem,
+    semana: Number(card.dataset.semana),
+  }));
+  // Se a grade alinhar cards, o grupo ocupa o seu trecho natural de leitura.
+  // A ordem editorial permanece explícita, sem transformar colunas em novas etapas.
+  for (let inicio = 0; inicio < marcos.length;) {
+    let fim = inicio + 1;
+    while (fim < marcos.length && marcos[fim].topo === marcos[inicio].topo) fim += 1;
+    const topo = marcos[inicio].topo;
+    const limite = marcos[fim]?.topo ?? trilho.offsetHeight;
+    for (let indice = inicio + 1; indice < fim; indice += 1) {
+      marcos[indice].topo = topo + (limite - topo) * (indice - inicio) / (fim - inicio);
+    }
+    inicio = fim;
+  }
+  const ultimo = marcos.at(-1);
+  // O caminho está lido quando o fim do último card entra na tela, antes do CTA.
+  marcos.push({ topo: Math.max(ultimo.topo, trilho.offsetHeight - altura / 2), semana: SEMANAS });
+  return marcos;
+}
+
+function semanaNoTrilho(posicao, marcos) {
+  if (posicao < marcos[0].topo) return 0;
+  for (let indice = 0; indice < marcos.length - 1; indice += 1) {
+    const inicio = marcos[indice];
+    const fim = marcos[indice + 1];
+    if (posicao >= fim.topo) continue;
+    const proporcao = (posicao - inicio.topo) / (fim.topo - inicio.topo);
+    return Math.floor(inicio.semana + proporcao * (fim.semana - inicio.semana));
+  }
+  return SEMANAS;
+}
+
+/** Estado local de leitura, medido no trilho que permanece no fluxo. */
+function useSemanasDoTrilho(raiz, trilho) {
+  useEffect(() => {
+    const no = trilho.current;
+    if (!no) return;
+    const semanas = Array.from(raiz.current?.querySelectorAll(".regua12__semana") ?? []);
+    const documento = document.documentElement;
+    const viewport = window.visualViewport;
+    const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let ativo = true;
+    let quadro = 0;
+    let ultimo = null;
+    const escrever = (acesas, atual) => {
+      const estado = `${acesas}:${atual}`;
+      if (estado === ultimo) return;
+      ultimo = estado;
+      for (const [indice, semana] of semanas.entries()) {
+        semana.toggleAttribute("data-acesa", indice < acesas);
+        semana.toggleAttribute("data-atual", indice === atual);
+      }
+    };
+    const atualizar = () => {
+      quadro = 0;
+      if (!ativo) return;
+      const leituraCompleta = reduzido.matches || documento.hasAttribute("data-pausado") ||
+        !documento.classList.contains("movimento-pronto") ||
+        documento.classList.contains("movimento-falhou");
+      const caixa = no.getBoundingClientRect();
+      if (leituraCompleta || caixa.height <= 0) {
+        escrever(semanas.length, -1);
+        return;
+      }
+      const altura = Math.min(window.innerHeight, viewport?.height ?? window.innerHeight);
+      const linhaDeLeitura = (viewport?.offsetTop ?? 0) + altura / 2;
+      // Marcos reais: F1 começa em 1, F2 em 3, sessão opcional em 5,
+      // portão e F3 em 9. A posição acompanha a leitura, nunca o calendário.
+      const acesas = semanaNoTrilho(linhaDeLeitura - caixa.top, marcosDasSemanas(no, altura));
+      escrever(acesas, acesas - 1);
+    };
+    const agendar = () => {
+      if (ativo && !quadro) quadro = requestAnimationFrame(atualizar);
+    };
+    const tamanho = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(agendar);
+    tamanho?.observe(no);
+    const movimento = typeof MutationObserver === "undefined" ? null : new MutationObserver(agendar);
+    movimento?.observe(documento, { attributes: true, attributeFilter: ["class", "data-pausado"] });
+    window.addEventListener("scroll", agendar, { passive: true });
+    window.addEventListener("resize", agendar);
+    window.addEventListener("orientationchange", agendar);
+    window.addEventListener("pageshow", agendar);
+    viewport?.addEventListener("resize", agendar);
+    viewport?.addEventListener("scroll", agendar, { passive: true });
+    reduzido.addEventListener("change", agendar);
+    document.fonts?.ready.then(agendar);
+    atualizar();
+    return () => {
+      ativo = false;
+      cancelAnimationFrame(quadro);
+      tamanho?.disconnect();
+      movimento?.disconnect();
+      window.removeEventListener("scroll", agendar);
+      window.removeEventListener("resize", agendar);
+      window.removeEventListener("orientationchange", agendar);
+      window.removeEventListener("pageshow", agendar);
+      viewport?.removeEventListener("resize", agendar);
+      viewport?.removeEventListener("scroll", agendar);
+      reduzido.removeEventListener("change", agendar);
+      escrever(semanas.length, -1);
+    };
+  }, [raiz, trilho]);
+}
+
+const { semanas, sessoesObrigatorias, sessoesOpcionais } = conteudo.mecanismo;
+const NUMEROS = [
+  { valor: semanas, rotulo: "semanas de treino" },
+  { valor: sessoesObrigatorias, rotulo: "sessões obrigatórias por semana" },
+  { valor: sessoesOpcionais, rotulo: "sessão opcional, a partir da semana 5" },
+  { valor: semanas * sessoesObrigatorias, rotulo: "sessões obrigatórias no protocolo" },
+];
+
 export function Semanas({ params }) {
   const raiz = useRef(null);
+  const trilho = useRef(null);
+  useSemanasDoTrilho(raiz, trilho);
 
   useMovimento(() => {
     const no = raiz.current;
@@ -115,10 +201,8 @@ export function Semanas({ params }) {
       intervalo: 60,
     });
     revelar(no.querySelector(".semanas__tese"), { atraso: 160 });
-    const anim = acenderEmSequencia(no.querySelectorAll(".regua12__semana"), no);
     revelarEmCascata(no.querySelectorAll(".slide"), { intervalo: 80 });
     revelar(no.querySelector(".semanas__mais"));
-    return () => anim?.revert?.();
   }, []);
 
   return (
@@ -133,13 +217,13 @@ export function Semanas({ params }) {
               na coluna, medido. O recorte de `.linha` e so vertical, entao uma palavra mais larga
               que a coluna transborda em vez de sair cortada. */}
           <h2
-            className="semanas__titulo flex flex-col text-bone font-secundaria font-extrabold uppercase tracking-[0.01em] leading-[0.86] tabular-nums text-[length:clamp(44px,21vw,96px)] lg:col-[1/span_8] lg:text-[length:clamp(72px,8.5vw,124px)]"
+            className="semanas__titulo flex flex-col text-bone font-secundaria font-extrabold uppercase tracking-[0.01em] leading-[1.08] tabular-nums text-[length:clamp(39.6px,18.9vw,86.4px)] lg:col-[1/span_8] lg:text-[length:clamp(64.8px,7.65vw,111.6px)]"
             data-revelar
           >
             {LINHAS.map((texto) => (
               <Fragment key={texto}>
                 <span className={linha}>
-                  <span className={`linha__texto block ${camada}`}>{texto}</span>
+                  <span className={`linha__texto block [overflow-wrap:anywhere] ${camada}`}>{texto}</span>
                 </span>{" "}
               </Fragment>
             ))}
@@ -149,54 +233,72 @@ export function Semanas({ params }) {
             className="semanas__tese max-w-[46ch] mt-8 text-silver font-terciaria text-body-lg lg:col-[8/-1] lg:self-end lg:mt-0 lg:pb-6"
             data-revelar
           >
-            Três sessões por semana, mais uma opcional. A{" "}
-            <strong className="text-acento font-semibold">Regra do 12</strong> decide quando o peso sobe, o{" "}
-            <strong className="text-acento font-semibold">portão da fase 3</strong> decide quando o exercício
-            muda, e nenhum dos dois pergunta como você está se sentindo hoje.
+            {conteudo.mapa.sessoes} A{" "}
+            <strong className="text-acento font-semibold">{conteudo.mecanismo.nome.replace(/^A /, "")}</strong> {conteudo.mapa.progressao} o{" "}
+            <strong className="text-acento font-semibold">portão da fase 3</strong>{conteudo.mapa.portao}
           </p>
         </div>
 
-        {/* A regua das doze semanas: acende e apaga com a rolagem (RF-L11b). Duas linhas de seis
-            no celular; doze numa linha a 360px nao cabe legivel. Cor nunca sozinha (RNF-L14): a
-            semana acesa muda de PREENCHIMENTO, de vazado para cheio, e o numero muda de peso. */}
-        <ol
-          className="[counter-reset:semana] grid grid-cols-[repeat(6,1fr)] sm:grid-cols-[repeat(12,1fr)] gap-x-2 gap-y-3 mt-12 pt-6 border-t border-line"
-          role="list"
-          aria-hidden="true"
-        >
-          {Array.from({ length: SEMANAS }, (_, i) => (
-            <li className={SEMANA} key={i} />
-          ))}
-        </ol>
+        <div className="semanas__caminho">
+          {/* A regua das doze semanas: acende e apaga com a rolagem (RF-L11b). Duas linhas de seis
+              no celular; doze numa linha a 360px nao cabe legivel. Cor nunca sozinha (RNF-L14): a
+              semana acesa muda de PREENCHIMENTO, de vazado para cheio, e o numero muda de peso. */}
+          <ol
+            className="regua12 sticky top-0 z-2 bg-void pb-4 motion-reduce:static [counter-reset:semana] grid grid-cols-[repeat(6,1fr)] sm:grid-cols-[repeat(12,1fr)] gap-x-2 gap-y-3 mt-12 pt-4 border-t border-line"
+            role="list"
+            aria-hidden="true"
+          >
+            {Array.from({ length: SEMANAS }, (_, i) => (
+              <li className={SEMANA} key={i} data-acesa />
+            ))}
+          </ol>
 
-        {/* Capa, nome, legenda: a anatomia do card de showcase. A capa e um bloco de superficie
-            com o numero em escala de cartaz, no lugar do preview de video. */}
-        <ol className="flex flex-col gap-12 mt-16 lg:grid lg:grid-cols-[repeat(3,1fr)] lg:gap-x-8 lg:gap-y-16 lg:mt-24" role="list">
-          {ESTADOS.map((estado, indice) => (
-            <li className={`slide flex flex-col gap-3 ${DESCE[indice % 3]}`.trim()} key={estado.nome} data-revelar>
-              <div className="relative flex items-center justify-center aspect-4/3 bg-surface-1 border border-line-strong overflow-clip">
+          {/* Capa, nome, legenda: a anatomia do card de showcase. A capa e um bloco de superficie
+              com o numero em escala de cartaz, no lugar do preview de video. */}
+          <ol className="semanas__trilho flex flex-col gap-12 mt-16 lg:grid lg:grid-cols-[repeat(3,1fr)] lg:gap-x-8 lg:gap-y-16 lg:mt-24" role="list" ref={trilho}>
+            {ESTADOS.map((estado, indice) => (
+              <li className={`slide flex flex-col gap-3 ${DESCE[indice % 3]}`.trim()} key={estado.nome} data-semana={estado.semana} data-revelar>
+                <div className="relative flex items-center justify-center aspect-4/3 bg-surface-1 border border-line-strong overflow-clip">
+                  <span
+                    className="text-bone font-secundaria font-extrabold uppercase tracking-[0.01em] leading-[0.86] tabular-nums text-[length:clamp(64px,22vw,132px)] lg:text-[length:clamp(72px,7vw,120px)]"
+                    aria-hidden="true"
+                  >
+                    {estado.capa}
+                  </span>
+                  <span className="absolute left-4 bottom-4 text-silver font-secundaria text-overline uppercase" aria-hidden="true">
+                    {estado.faixa}
+                  </span>
+                  <span className="sr-only">{estado.leitura}</span>
+                </div>
+                <h3 className="text-bone font-secundaria text-h3">{estado.nome}</h3>
+                <p className="max-w-prose text-silver font-terciaria text-body lg:text-body-lg">{estado.texto}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <p className="mt-8 text-silver font-terciaria text-body">{conteudo.mapa.fonte}</p>
+
+        {/* Grade de numeros no layout da secao "Why us" do Nakula: fio a esquerda e regua de marcas
+            no topo de cada coluna. */}
+        <div className="semanas__mais flex flex-col gap-8 mt-16 pt-8 border-t border-line" data-revelar>
+          <ul className="grid grid-cols-2 lg:grid-cols-4" role="list">
+            {NUMEROS.map(({ valor, rotulo }) => (
+              <li className="relative flex flex-col gap-8 border-l border-line px-6 pt-10 pb-6" key={rotulo}>
+                {/* Regua de 13 marcas no topo da coluna. */}
                 <span
-                  className="text-bone font-secundaria font-extrabold uppercase tracking-[0.01em] leading-[0.86] tabular-nums text-[length:clamp(64px,22vw,132px)] lg:text-[length:clamp(72px,7vw,120px)]"
+                  className="absolute top-0 left-[5%] h-2 w-[90%] bg-[repeating-linear-gradient(90deg,var(--line)_0_1px,transparent_1px_calc((100%-1px)/12))]"
                   aria-hidden="true"
-                >
-                  {estado.capa}
-                </span>
-                <span className="absolute left-4 bottom-4 text-silver font-secundaria text-overline uppercase" aria-hidden="true">
-                  {estado.faixa}
-                </span>
-                <span className="sr-only">{estado.leitura}</span>
-              </div>
-              <h3 className="text-bone font-secundaria text-h3">{estado.nome}</h3>
-              <p className="max-w-prose text-silver font-terciaria text-body lg:text-body-lg">{estado.texto}</p>
-            </li>
-          ))}
-        </ol>
+                />
+                <p className="font-secundaria font-extrabold text-bone tabular-nums leading-[1.1] text-[length:clamp(56px,7vw,96px)]">{valor}</p>
+                <p className="max-w-[16ch] text-bone font-terciaria text-body-lg">{rotulo}</p>
+              </li>
+            ))}
+          </ul>
 
-        <div className="semanas__mais flex flex-col items-start gap-6 mt-16 pt-8 border-t border-line lg:flex-row lg:items-center lg:justify-between lg:gap-8" data-revelar>
-          <p className="max-w-[24ch] lg:max-w-[32ch] text-bone font-secundaria text-h2 uppercase">
-            A semana 1 começa no dia em que o arquivo chega.
-          </p>
-          <Botao params={params} posicao="mapa" />
+          <div className="self-start">
+            <Botao params={params} posicao="mapa" />
+          </div>
         </div>
       </div>
     </section>

@@ -1,9 +1,22 @@
+# Dependencias e build
 node_modules/
 dist/
 dist-ssr/
 
-# Derivado do .design-sync/ds-bundle/ da base de documentacao.
-# Regenera com `npm run sync:ds` antes de commitar mudanca de design.
-# Versionado (nao gitignorado) porque a Vercel nao enxerga o ds-bundle
-# local no build - precisa da ultima copia sincronizada no repo.
+# Gerenciamento / agentes (nao fazem parte do site)
+CODEX.md
+obsidian-gerenciamento/
+docs/
 .superpowers/
+.playwright-cli/
+.claude/
+graphify-out/
+output/
+
+# Ambiente, logs e lixo de editor/SO
+.env
+.env.*
+*.log
+.vscode/
+.idea/
+.DS_Store
