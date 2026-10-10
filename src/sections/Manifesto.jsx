@@ -26,13 +26,19 @@ export function Manifesto() {
     let ativo = true;
     let quadro = 0;
     const documento = document.documentElement;
-    const viewport = window.visualViewport;
+    // `data-cabe` troca a altura da secao em ~1 tela. Medir contra `innerHeight`/`visualViewport` fazia
+    // a barra do navegador (ou o zoom) virar o dado no meio da rolagem e a pagina pulava de secao.
+    // `svh` nao muda com a barra: e a mesma unidade do `min-h-svh` do texto.
+    const sonda = document.createElement("div");
+    sonda.setAttribute("aria-hidden", "true");
+    sonda.style.cssText = "position:fixed;top:0;height:100svh;width:0;visibility:hidden;pointer-events:none";
+    no.appendChild(sonda);
     const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)");
     const medir = () => {
       quadro = 0;
       if (!ativo) return;
       const topo = parseFloat(getComputedStyle(texto).top);
-      const altura = Math.min(window.innerHeight, viewport?.height ?? window.innerHeight);
+      const altura = sonda.offsetHeight;
       const movimentoDisponivel = documento.classList.contains("movimento-pronto") &&
         !documento.classList.contains("movimento-falhou");
       const cabe = movimentoDisponivel && !reduzido.matches && Number.isFinite(topo) &&
@@ -49,7 +55,6 @@ export function Manifesto() {
     const observadorMovimento = typeof MutationObserver === "undefined" ? null : new MutationObserver(agendar);
     observadorMovimento?.observe(documento, { attributes: true, attributeFilter: ["class"] });
     window.addEventListener("resize", agendar);
-    viewport?.addEventListener("resize", agendar);
     document.fonts?.ready.then(agendar);
     medir();
     const anim = acenderEmSequencia(no.querySelectorAll(".palavra"), no, { fixo: true, atributoAtual: "data-atual" });
@@ -59,7 +64,7 @@ export function Manifesto() {
       observador?.disconnect();
       observadorMovimento?.disconnect();
       window.removeEventListener("resize", agendar);
-      viewport?.removeEventListener("resize", agendar);
+      sonda.remove();
       no.removeAttribute("data-cabe");
       anim?.revert?.();
     };
