@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal, flushSync } from "react-dom";
 import { idsDoIndice, secoesPorId } from "../secoes.js";
 import { envelope } from "../ui.js";
 
@@ -16,24 +16,85 @@ export function Menu() {
   const [montado, definirMontado] = useState(false);
   const [posicao, definirPosicao] = useState({ top: 0, left: 0 });
   const fechar = useRef(null);
+  const acionador = useRef(null);
+  const dialogo = useRef(null);
+  const destino = useRef(null);
 
   useEffect(() => definirMontado(true), []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!aberto) return;
-    const aoTecla = (e) => e.key === "Escape" && definirAberto(false);
-    document.documentElement.style.overflow = "hidden";
-    window.addEventListener("keydown", aoTecla);
-    fechar.current?.focus();
+    const menu = dialogo.current;
+    if (!menu) return;
+
+    // O portal e irmao da raiz React: isolar seus irmaos preserva o proprio modal.
+    const fundo = [...document.body.children]
+      .filter((elemento) => elemento !== menu)
+      .map((elemento) => ({ elemento, inert: elemento.getAttribute("inert") }));
+    for (const { elemento } of fundo) elemento.inert = true;
+
+    // Guardar as declaracoes existentes tambem preserva longhands e !important.
+    const rolagem = [document.documentElement, document.body].map((elemento) => ({
+      elemento,
+      declaracoes: Array.from(elemento.style)
+        .filter((nome) => ["overflow", "overflow-x", "overflow-y"].includes(nome))
+        .map((nome) => [nome, elemento.style.getPropertyValue(nome), elemento.style.getPropertyPriority(nome)]),
+    }));
+    for (const { elemento } of rolagem) elemento.style.setProperty("overflow", "hidden", "important");
+
+    const controlesVisiveis = () => [...menu.querySelectorAll(
+      'a[href], button, input, select, textarea, [tabindex], [contenteditable="true"]',
+    )].filter((elemento) => {
+      const estilo = getComputedStyle(elemento);
+      return elemento.tabIndex >= 0 && !elemento.matches(":disabled") &&
+        !elemento.closest("[inert], [hidden]") && elemento.getClientRects().length > 0 &&
+        estilo.visibility !== "hidden" && estilo.visibility !== "collapse";
+    });
+    const aoTecla = (evento) => {
+      if (evento.key === "Escape") {
+        evento.preventDefault();
+        definirAberto(false);
+      } else if (evento.key === "Tab") {
+        const controles = controlesVisiveis();
+        if (!controles.length) return;
+        evento.preventDefault();
+        const atual = controles.indexOf(document.activeElement);
+        const proximo = atual < 0
+          ? (evento.shiftKey ? controles.length - 1 : 0)
+          : (atual + (evento.shiftKey ? -1 : 1) + controles.length) % controles.length;
+        controles[proximo].focus();
+      }
+    };
+    const conterFoco = (evento) => {
+      if (!menu.contains(evento.target)) controlesVisiveis()[0]?.focus({ preventScroll: true });
+    };
+    document.addEventListener("keydown", aoTecla, true);
+    document.addEventListener("focusin", conterFoco);
+    fechar.current?.focus({ preventScroll: true });
     return () => {
-      document.documentElement.style.overflow = "";
-      window.removeEventListener("keydown", aoTecla);
+      document.removeEventListener("keydown", aoTecla, true);
+      document.removeEventListener("focusin", conterFoco);
+      for (const { elemento, inert } of fundo) {
+        if (inert === null) elemento.removeAttribute("inert");
+        else elemento.setAttribute("inert", inert);
+      }
+      for (const { elemento, declaracoes } of rolagem) {
+        elemento.style.removeProperty("overflow");
+        for (const [nome, valor, prioridade] of declaracoes) elemento.style.setProperty(nome, valor, prioridade);
+      }
+      const alvo = destino.current ? document.getElementById(destino.current) : acionador.current;
+      if (!alvo?.isConnected) return;
+      const tabindex = alvo.getAttribute("tabindex");
+      if (destino.current && tabindex === null) alvo.setAttribute("tabindex", "-1");
+      alvo.focus({ preventScroll: true });
+      if (destino.current && tabindex === null) alvo.removeAttribute("tabindex");
     };
   }, [aberto]);
 
   return (
     <>
       <button
+        ref={acionador}
         type="button"
         className="flex flex-col gap-[6px] w-6 h-8 pt-2 mr-2 cursor-pointer text-bone"
         aria-label="Abrir menu"
@@ -42,6 +103,7 @@ export function Menu() {
         onClick={(e) => {
           // O X de fechar ocupa o mesmo lugar das tres barras, onde quer que a dobra as ponha.
           const { top, left } = e.currentTarget.getBoundingClientRect();
+          destino.current = null;
           definirPosicao({ top, left });
           definirAberto(true);
         }}
@@ -53,6 +115,7 @@ export function Menu() {
 
       {montado && createPortal(
       <div
+        ref={dialogo}
         id="menu"
         role="dialog"
         aria-modal="true"
@@ -86,7 +149,11 @@ export function Menu() {
                 />
                 <a
                   href={`#${id}`}
-                  onClick={() => definirAberto(false)}
+                  onClick={() => {
+                    destino.current = id;
+                    // Liberar o fundo antes de o evento chegar ao Lenis ou a ancora nativa.
+                    flushSync(() => definirAberto(false));
+                  }}
                   className="flex items-baseline gap-4 py-[clamp(6px,1.5svh,18px)] text-void font-secundaria text-display uppercase transition-transform duration-300 ease-(--ease-expo) hover:translate-x-4 focus-visible:translate-x-4 motion-reduce:transition-none [&:hover_.menu-nome]:text-transparent [&:hover_.menu-nome]:[-webkit-text-stroke:1.5px_var(--void)] [&:focus-visible_.menu-nome]:text-transparent [&:focus-visible_.menu-nome]:[-webkit-text-stroke:1.5px_var(--void)]"
                 >
                   <span className="font-terciaria text-mono-reg tabular-nums">{doisDigitos(i + 1)}</span>

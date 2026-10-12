@@ -31,6 +31,17 @@ try {
 const EXEC = process.env.CHROMIUM ?? null;
 const ALVO = process.argv[2] ?? "http://localhost:4173/";
 const nav = await chromium.launch(EXEC ? { executablePath: EXEC, headless: true } : { headless: true });
+// Execução local de qualidade: nenhum contexto envia tráfego para terceiros.
+const criarContexto = nav.newContext.bind(nav);
+nav.newContext = async (...args) => {
+  const ctx = await criarContexto(...args);
+  await ctx.route("**/*", (rota) => {
+    const url = new URL(rota.request().url());
+    return url.origin === new URL(ALVO).origin || ["data:", "blob:"].includes(url.protocol)
+      ? rota.continue() : rota.abort();
+  });
+  return ctx;
+};
 let falhou = false;
 const linha = (id, ok, nota) => {
   if (!ok) falhou = true;
@@ -111,7 +122,7 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
   }, ACEITOS);
   linha("RNF-L09", contraste.length === 0,
     `${contraste.length} pares abaixo do minimo` + (aceitos.length ? ` (mais ${aceitos.length} aceitos: ${aceitos.join(", ")})` : ""));
-  contraste.slice(0, 4).forEach((c) => console.log("            " + c));
+  contraste.forEach((c) => console.log("            " + c));
   await ctx.close();
 }
 
@@ -220,11 +231,31 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
     await p.waitForTimeout(70);
   }
   await p.waitForTimeout(1200);
+  // Uma revelação pode interromper quando sai da viewport. Só é presa se
+  // continuar invisível ao revisitar seu conteúdo; não medir resíduo fora dela.
+  const candidatos = await p.evaluate(() => [...document.querySelectorAll("[data-revelar]")]
+    .flatMap((e, indice) => parseFloat(getComputedStyle(e).opacity) < 0.99 ? [indice] : []));
+  const presosRevisitados = [];
+  for (const indice of candidatos) {
+    const elemento = p.locator("[data-revelar]").nth(indice);
+    await elemento.evaluate((e) => window.scrollTo({ top: e.getBoundingClientRect().top + scrollY - innerHeight / 2, behavior: "instant" }));
+    try {
+      await p.waitForFunction((indice) => parseFloat(getComputedStyle(document.querySelectorAll("[data-revelar]")[indice]).opacity) >= 0.99,
+        indice, { timeout: 2500 });
+    } catch {
+      presosRevisitados.push(indice);
+    }
+  }
   const preso = await p.evaluate(() => ({
     opacos: [...document.querySelectorAll("[data-revelar]")]
       .filter((e) => parseFloat(getComputedStyle(e).opacity) < 0.99).length,
     quais: [...document.querySelectorAll("[data-revelar]")]
-      .filter((e) => parseFloat(getComputedStyle(e).opacity) < 0.99).slice(0, 6).map((e) => `${e.tagName.toLowerCase()}.${e.className.split(" ")[0]}`),
+      .filter((e) => parseFloat(getComputedStyle(e).opacity) < 0.99).slice(0, 6).map((e) => {
+        const r = e.getBoundingClientRect();
+        return JSON.stringify({ seletor: `${e.tagName.toLowerCase()}.${e.className.split(" ")[0]}`,
+          secao: e.closest("section")?.id, top: r.top, bottom: r.bottom,
+          opacity: getComputedStyle(e).opacity, texto: e.textContent.trim().slice(0, 120) });
+      }),
     // Titulo com mascara falha de outro jeito: o pai fica em `opacity: 1` e
     // sao as LINHAS que ficam paradas fora do recorte, invisiveis. Olhar so a
     // opacidade do pai relata "tudo bem" com o titulo sumido, e foi assim que
@@ -234,8 +265,8 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
       return t && t !== "none" && !t.endsWith(", 0)");
     }).length,
   }));
-  linha("RNF-L35", preso.opacos === 0 && preso.linhas === 0,
-    `${preso.opacos} elementos e ${preso.linhas} linhas de titulo presos apos rolagem completa`);
+  linha("RNF-L35", presosRevisitados.length === 0 && preso.linhas === 0,
+    `${candidatos.length} candidatos fora da tela; ${presosRevisitados.length} elementos presos ao revisitar e ${preso.linhas} linhas de titulo presas`);
   if (preso.quais.length) console.log("            " + preso.quais.join(", "));
   await ctx.close();
 }
@@ -245,24 +276,41 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
   const ctx = await nav.newContext({ viewport: { width: 1024, height: 800 } });
   const p = await ctx.newPage();
   await p.goto(ALVO, { waitUntil: "networkidle" });
-  const semAnel = await p.evaluate(async () => {
-    // So o que esta na tela: a doca fora de cena e `display: none` e nao
-    // recebe foco, entao medir o anel dela e medir o nada.
-    const foco = [...document.querySelectorAll("a[href],button")].filter((el) => el.offsetParent !== null);
-    const ruins = [];
-    for (const el of foco) {
-      el.focus();
-      const e = getComputedStyle(el);
-      // RNF-L11 exige anel de 2px: uma sombra qualquer não prova foco.
+  await p.waitForFunction(() => document.documentElement.classList.contains("pronto"));
+  await p.getByRole("button", { name: "Recusar", exact: true }).click();
+  const semAnel = { total: 0, ruins: [], menu: 0 };
+  let abriu = false, fechou = false;
+  for (let passo = 0; passo < 70; passo++) {
+    await p.keyboard.press("Tab");
+    const foco = await p.evaluate(() => {
+      const el = document.activeElement, e = getComputedStyle(el);
       const sombra = e.boxShadow.replace(/rgba?\([^)]*\)/g, "").trim().split(/\s+/).map(parseFloat);
       const anelSombra = !e.boxShadow.includes("inset") && sombra.length === 4 &&
         sombra[0] === 0 && sombra[1] === 0 && sombra[2] === 0 && sombra[3] >= 2;
-      const temAnel = (e.outlineStyle !== "none" && parseFloat(e.outlineWidth) >= 2) || anelSombra;
-      if (!temAnel) ruins.push(el.textContent.trim().slice(0, 24) || el.tagName);
+      return { tag: el.tagName, nome: el.getAttribute("aria-label") || el.textContent.trim().slice(0, 32),
+        menu: !!el.closest("#menu"), link: el.tagName === "A",
+        anel: (e.outlineStyle !== "none" && parseFloat(e.outlineWidth) >= 2) || anelSombra };
+    });
+    if (foco.tag === "BODY") break;
+    semAnel.total++;
+    if (!foco.anel) semAnel.ruins.push(foco.nome || foco.tag);
+    if (!abriu && foco.nome === "Abrir menu") {
+      await p.keyboard.press("Enter");
+      await p.waitForFunction(() => !document.getElementById("menu").inert);
+      abriu = true;
+    } else if (foco.menu && foco.link) {
+      semAnel.menu++;
+      const esperado = await p.locator("#menu a").count();
+      if (semAnel.menu === esperado) {
+        await p.keyboard.press("Escape");
+        await p.waitForFunction(() => document.getElementById("menu").inert);
+        fechou = true;
+      }
     }
-    return { total: foco.length, ruins };
-  });
-  linha("RNF-L11", semAnel.ruins.length === 0, `${semAnel.total} elementos focaveis, ${semAnel.ruins.length} sem anel`);
+  }
+  linha("RNF-L11", semAnel.ruins.length === 0 && abriu && fechou && semAnel.menu > 0,
+    `${semAnel.total} focos via Tab, ${semAnel.menu} links de menu aberto, ${semAnel.ruins.length} sem anel de 2px`);
+  semAnel.ruins.forEach((texto) => console.log("            " + texto));
   await ctx.close();
 }
 
@@ -319,8 +367,11 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
   await p.click("text=Aceitar").catch(() => {});
   const alvo = await p.evaluate(() => {
     const s = document.getElementById("prova");
-    return s.offsetTop + s.offsetHeight - window.innerHeight;
+    return s ? s.offsetTop + s.offsetHeight - window.innerHeight : null;
   });
+  if (alvo === null) {
+    linha("PRV-01", false, "seção prova ausente: falta justificativa no contrato secoes.js; cenário não executável");
+  } else {
   for (let y = 0; y <= alvo; y += 240) {
     await p.evaluate((v) => window.scrollTo({ top: v, behavior: "instant" }), y);
     await p.waitForTimeout(40);
@@ -345,6 +396,7 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
   });
   linha("PRV-01", r.palavras > 0 && r.apagadas === 0 && (!r.campo || r.inerte),
     `${r.apagadas} de ${r.palavras} palavras apagadas; campo presente: ${r.campo}, cobrindo: ${r.cobre}, inerte: ${r.inerte}, com area: ${r.pintou}`);
+  }
   await ctx.close();
 }
 
@@ -363,13 +415,14 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
   });
   await p.goto(ALVO, { waitUntil: "networkidle" });
   await p.getByRole("button", { name: "Recusar", exact: true }).click();
-  await p.evaluate(() => window.scrollTo({ top: document.getElementById("prova").offsetTop + 400, behavior: "instant" }));
+  const campos = await p.locator("canvas.campo").count();
+  await p.evaluate(() => { const campo = document.querySelector("canvas.campo"); if (campo) window.scrollTo({ top: campo.closest("section").offsetTop + 400, behavior: "instant" }); });
   await p.waitForTimeout(1200); // término da entrada, antes da janela de medição
   const antes = await p.evaluate(() => window.__pinturasCampo);
   await p.waitForTimeout(500); // amostra finita, sem retries, para detectar animação contínua
   const depois = await p.evaluate(() => window.__pinturasCampo);
-  linha("TR-03-FALLBACK", depois === antes,
-    `${depois - antes} pinturas do campo em 500ms; decisão §6 pendente exige fallback sem pontos animados`);
+  linha("TR-03-FALLBACK", campos === 0 || depois === antes,
+    `${campos} canvases presentes; ${depois - antes} pinturas do campo em 500ms; decisão §6 pendente exige fallback sem pontos animados`);
   await ctx.close();
 }
 

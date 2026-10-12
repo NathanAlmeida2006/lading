@@ -1,324 +1,73 @@
 # fluor-landing
 
-Landing page do **Projeto Flúor**. Ângulo `teto-natural`, protocolo de hipertrofia.
+Landing page do Projeto Flúor, um protocolo de hipertrofia com o ângulo `teto-natural`. Este documento descreve a implementação consultada em 10/10/2026, sem declarar aprovação comercial ou publicação.
 
-A especificação vive na base de documentação, não aqui:
-`~/Documentos/projetos/02-fluor/landing/requisitos-landing.md` (série `RF-L`/`RNF-L`).
-Este repositório é a implementação dela. Em divergência, **o documento vence**.
+A fonte soberana é `~/Documentos/projetos/02-fluor/landing/requisitos-landing.md`. Em divergência, os requisitos prevalecem. Consulte o [relatório de validação](docs/validacao-rebranding.md) para resultados, evidências e lacunas.
 
-## Por que fora da base
+## Executar localmente
 
-A base de documentação trava a profundidade em 3 níveis dentro de cada raiz, e
-`02-fluor/landing/site/src/sections/Hero.jsx` seria 4. Além disso o
-`.design-sync/NOTES.md` registra que não há código vivo nas três raízes. Então o
-código mora aqui, ao lado, e a ponte entre os dois é o `ds-bundle`.
+Instale as dependências com `npm install` e inicie o desenvolvimento com `npm run dev`. Os tokens, fontes e wordmark existentes são preservados. `npm run sync:ds` é uma operação explícita de sincronização, separada do build: copia recursos do bundle soberano para o projeto e exige revisão do diff. A origem pode ser indicada por `DS_BUNDLE=/caminho/do/ds-bundle`.
 
-## Começar
+Para verificar um build local, mantenha o preview aberto em outro terminal:
 
 ```bash
-npm install
-npm run sync:ds     # traz tokens e fontes do ds-bundle
-npm run dev
+npm run build
+npm run preview -- --host 127.0.0.1 --port 4173
 ```
-
-Se a base estiver em outro caminho:
 
 ```bash
-DS_BUNDLE=/caminho/para/.design-sync/ds-bundle npm run sync:ds
+CHROMIUM=/caminho/do/chrome npm run verificar -- http://127.0.0.1:4173/
+CHROMIUM=/caminho/do/chrome npm run verificar:conversao -- http://127.0.0.1:4173/
 ```
+
+As verificações usam `playwright-core` e precisam de Chromium disponível. A suíte adicional executa fixtures isoladas, intercepta rede externa e não comprova Pixel real, compra ou conversão.
 
 ## Comandos
 
-| Comando | O que faz |
+| Comando | Finalidade |
 | --- | --- |
-| `npm run sync:ds` | copia tokens e fontes do `ds-bundle` e gera o wordmark em SVG |
-| `npm run dev` | servidor de desenvolvimento |
-| `npm run build` | build do cliente, build SSR, pré-renderização e conferência de orçamento. **Não** roda o `sync:ds`: ele reescreve tokens e wordmark versionados, e sincronizar é um passo à parte (rode, confira o diff, commite) |
-| `npm run verificar` | contraste, foco, reflow (320, 360, 1024 e 1280px), movimento reduzido, CLS, leitura sem JS, manifesto, régua das semanas, prova, pilha do espelho, marquise, doca e introdução |
+| `npm run dev` | Desenvolvimento com Vite. |
+| `npm run build` | Cliente, SSR, pré-renderização e orçamento; não sincroniza o design system. |
+| `npm run preview` | Servir o build local. |
+| `npm run size` | Conferir o orçamento do build existente. |
+| `npm run verificar` | Verificações de navegador da página e dos comportamentos presentes. |
+| `npm run verificar:conversao -- URL` | Integração de consentimento, eventos, oferta, componentes e CTA com fixtures isoladas. |
+| `npm run teste:halteres` | Verificação específica dos halteres. |
+| `npm run sync:ds` | Sincronização explícita de recursos do bundle soberano. |
 
-Os `[A DEFINIR]` de `src/config.js` (preço, garantia, checkout, pixel e dados legais) são listados a
-cada build. Com `PUBLICAR=1` no ambiente, o `prerender` recusa o build enquanto sobrar algum: é o que
-deve ficar ligado na produção, para a página não ir ao ar com o checkout apontando para `DEFINIR`.
+## Arquitetura implementada
 
-O `verificar` precisa de um Chromium. Sem um no cache do Playwright:
-`npx playwright-core install chromium`, ou `CHROMIUM=/caminho npm run verificar`.
+React 19 hidrata o HTML produzido por SSR e pré-renderização no build Vite 6. Tailwind v4 permanece integrado pelo `@tailwindcss/vite`; `src/App.jsx` importa `src/styles/tailwind.css`, que integra o CSS complementar de `residual.css`. Tokens, fontes e temas Sigilo/Cartaz vêm do design system.
 
-## A página, seção a seção
+| Ordem na árvore | Responsabilidade |
+| --- | --- |
+| `Dobra` | Promessa e CTA de abertura. |
+| `Manifesto` e `Espelho` | Reconhecimento do problema. |
+| `Leva` | Apresentação do que o protocolo entrega. |
+| `Halteres` | Transição ornamental em canvas; não cria etapa de mensuração. |
+| `Semanas` | Mapa do caminho, condicionado à configuração. |
+| `Amostra` | Trecho real, exibido somente quando habilitado. |
+| `Oferta` | Apresentação comercial e condição factual configurada. |
+| `Objecoes` | Respostas às objeções. |
+| `Fechamento` | CTA final. |
+| `RodapeLegal` | Identificação e referências legais. |
 
-A ordem é a sequência canônica do `RF-L08`. O que a versão 6 (06/09/2026) mudou foi a
-**forma** de cada seção: a v5 vestia todas com a mesma caixa, e três delas com o mesmo
-capítulo travado, e a página lia como um componente repetido nove vezes. Agora cada
-seção é um desenho próprio, tirado das cinco engenharias reversas em
-`02-fluor/reversos/`:
+A ordem efetiva está em [App.jsx](src/App.jsx); IDs, presença e etapas de eventos estão em [secoes.js](src/secoes.js). Na configuração consultada, o mapa está ativo, a amostra está desativada por falta de trecho aprovado e a prova está ausente da árvore. Componentes existentes como `ProvaSocial` e `Garantia` não comprovam integração na página. O relatório registra essa diferença entre o contrato e a árvore atual.
 
-| # | Seção | Tema | Desenho | De onde vem |
-| --- | --- | --- | --- | --- |
-| 01 | `Dobra` | Sigilo | headline de duas linhas, a segunda em contorno, encostando nas bordas | Rep Republic (tipografia como arquitetura) |
-| 02 | `Manifesto` | Sigilo | texto grudado no meio da tela, palavra a palavra, ligado à rolagem | Nakula |
-| — | `Marquise` | Sigilo | faixa em laço, uma só, onde a energia cai | Gaspar |
-| 03 | `Espelho` | Cartaz | baralho de cinco cards que grudam e se acumulam; o hoje riscado como metadado, lastro no lugar das estrelas, botão em contorno por card | Rep Republic ("Find Your Program"), conteúdo do Kora |
-| 04 | `Leva` | Sigilo, cards alternando Cartaz | cabeça centrada e grudada no meio da tela, seis cards passando por cima em ziguezague, sobre o campo de pontos; a fala é o benefício, o nome é o termo-marca | Rep Republic ("Members' Words") |
-| 05 | `Semanas` | Sigilo | fio vertical, título em três linhas e tese deslocada à direita; régua de 12 e cinco cards em ziguezague com capa, nome e legenda | lenis.dev ("runs the web") |
-| 06 | `Prova` | Sigilo | bloco pinado sobre campo de pontos animado, statement acendendo palavra a palavra com a corrente em acento; depois a régua e o intervalo | Google Cloud × Team USA (fecho) |
-| 07 | `Oferta` | Cartaz | recibo com serrilha, marcadores em colchetes e preço fatiado | Nakula e Kora |
-| 08 | `Garantia` | Cartaz | selo carimbado, levemente fora do eixo, cruz de registro | mestre visual §7 |
-| 09 | `Objecoes` | Sigilo | diálogo: objeção à direita com aspas gigantes, resposta à esquerda | Nakula (aspas) |
-| 10 | `Fechamento` | Sigilo | segunda capa: a headline espelhada e a marquise do verbo sobre o botão | Rep Republic e Gaspar ("Next") |
-| 11 | `RodapeLegal` | Sigilo, faixa em acento | quatro colunas com e-mail no acento, seções e documentos com seta, aviso com botão em contorno; copyright; faixa inteira em Rubro com o wordmark gigante e a tagline | Nakula |
+`Consentimento`, `IndiceFixo`, `Doca`, `Intro` e `PausaMovimento` são controles transversais. O CTA compartilha o verbo `Começar o protocolo`. A doca depende de JavaScript e de suas regras de visibilidade.
 
-Mais a **doca** (`Doca.jsx`): barra fixa na base com preço, Pix e o botão, que entra quando
-a dobra sai da tela e sai quando o fechamento entra. Sem JavaScript ela não existe, e
-isso é regra, não falta: em CSS puro ela comeria 56px da primeira tela.
+## Contratos e limites
 
-O botão aparece seis vezes mais a doca, sempre com o mesmo verbo (`RF-L10`), nunca duas
-vezes na mesma tela. O rótulo faz text roll no hover, que é a convenção dos cinco sites.
+[config.js](src/config.js) centraliza os dados comerciais. Ausência de confirmação usa `null` ou flags explícitas; no preview, o checkout é a âncora segura `#oferta`. Preço, entrega, garantia, checkout, Pixel e dados legais exigem informações reais. `PUBLICAR=1 npm run build` recusa configurações incompletas e referências legais inválidas. Uma fixture completa aprovada em teste não preenche nem autoriza a configuração de produção.
 
-## O que o build faz de diferente
+[oferta.js](src/oferta.js) valida a condição comercial com fonte, confirmação, datas absolutas, fuso e correspondência ao checkout. O intervalo usa início inclusivo e fim exclusivo; o SSR apresenta estado neutro. Não há escassez fictícia nem contador reiniciado.
 
-**Pré-renderiza.** Uma SPA React entrega uma `div` vazia sem JavaScript, o que reprova
-o `RNF-L16` e atrasa o LCP. O build roda um segundo passe SSR e injeta o HTML em
-`index.html`; o cliente só hidrata. Os pedaços preguiçosos entram em `modulepreload`.
+[instrumentacao.js](src/instrumentacao.js) captura parâmetros permitidos, preserva a query da URL-base e acrescenta atribuição quando confirmada. O envio depende de consentimento e Pixel configurado. A landing registra intenção de checkout e alcance; `Purchase` pertence à Ticto. Sem JavaScript, o link usa a URL-base e não repassa UTMs da visita.
 
-**Mede o orçamento.** `scripts/check-size.mjs` falha o build no dia em que o JavaScript
-comprimido passar de 120 KB (`RNF-L04`) ou as fontes de 130 KB (`RNF-L05`). Hoje: 99,6 KB
-de JavaScript, com React, anime.js, Lenis e a página inteira dentro; 79,2 KB de fonte.
+Animejs entra por import dinâmico de [coreografias.js](src/motion/coreografias.js), solicitado após hidratação; a falha abre a leitura em vez de ocultar a copy. Lenis usa `syncTouch: false`, mantendo o toque nativo, e respeita movimento reduzido. A composição efetiva do bundle e o comportamento em execução precisam das verificações descritas no relatório.
 
-## Rolagem
-
-**Lenis**, com os defaults do estúdio que o escreveu: `lerp 0.1`, `anchors: true`. Não invente
-valores; foram calibrados em milhões de sessões. Só o laço é nosso (`autoRaf: false`): ver
-"O laço dorme", abaixo.
-
-Três coisas que importam sobre como ele foi ligado:
-
-- **O toque é nativo.** `syncTouch` fica em `false`, então no celular a rolagem é a do
-  sistema, com o momentum do próprio iOS e Android. O Lenis só assume roda e trackpad.
-  É onde o tráfego chega, e nada é sequestrado.
-- **A janela rola de verdade.** A biblioteca usa `window.scrollTo`, então `position:
-  sticky`, `IntersectionObserver` e o `onScroll` do anime.js continuam lendo a rolagem
-  nativa. Nada precisou ser adaptado.
-- **Movimento reduzido é da própria biblioteca.** `respectReducedMotion` força o `lerp`
-  para 1 e mantém a instância viva. Não desligue o Lenis para isso.
-
-O `html` **não** tem `scroll-behavior: smooth`: os dois juntos fariam o navegador
-suavizar por cima do lerp. E toda conferência manual passa `behavior: "instant"` no
-`scrollTo`, porque leitura imediata depois de um scroll suavizado devolve a posição velha.
-
-Ele expõe a velocidade em `--scroll-velocity`, que a marquise consome em CSS para
-inclinar com a rolagem. A propriedade é **registrada, sem herança** (`@property`, em
-`residual.css`), e só se escreve na faixa que está a até uma tela da janela, e só quando o valor
-muda: uma propriedade herdável invalidava o estilo dos 78 nós de dentro de cada faixa a cada
-quadro de rolagem.
-
-### O laço dorme
-
-Com `autoRaf: true` o Lenis pede um `requestAnimationFrame` por quadro **para sempre**, e cada
-quadro pedido é um quadro inteiro da thread principal, inclusive com a página parada. Pior: com
-qualquer laço de rAF ativo o Chrome reavalia o estilo das animações de CSS a cada quadro, mesmo
-as que ele roda no compositor (medido numa página mínima: 0 recálculos por segundo sem laço, 60
-com um laço vazio). Por isso o laço (`ligarLenis`, em `motion/index.js`) só existe enquanto há
-rolagem suave: a roda e o clique numa âncora o acordam, e ele volta a dormir quando a animação
-termina. Ao acordar, o relógio do Lenis é posto **um quadro atrás**, senão o primeiro passo seria
-um salto direto ao destino.
-
-O anime.js tem o mesmo defeito: o `onScroll` liga um temporizador de 30 quadros por segundo
-(`dataTimer`) que não desliga quando a rolagem para, e o motor ficava pedindo quadro para sempre.
-`dormirComARolagem` (em `motion/index.js`) o pausa junto com o `wakeTicker` e o retoma a cada
-rolagem. Mexe em dois campos de instância da biblioteca (testados contra a 4.5.0): se uma versão
-futura os mudar, a guarda não faz nada e a página só deixa de dormir.
-
-## A introdução
-
-A cortina do lenis.dev, lida do CSS de produção do site (`intro-module`): cortina fixa na
-cor da marca, letras nascendo abaixo da própria linha (`translateY(100% + índice * 5%)`) e
-subindo uma a uma em 1,5 s expo-out com 75 ms por índice; aos 1,5 s a cortina sobe
-(`translateY(-100%)`) e o bloco de letras sobe quase duas vezes mais rápido que ela, com o
-herói já composto por baixo. Aqui a cortina é o Rubro e as letras são a headline da dobra
-em tinta, na mesma escala, no mesmo envelope (`Intro.jsx`).
-
-Três decisões, e cada uma tem um motivo medido:
-
-- **Em toda carga**, inclusive recarga no meio da página (decisão do gerente do projeto).
-  A cortina é fixa, então cobre a tela em qualquer posição de rolagem.
-- **Decidida antes da primeira pintura.** O script inline do `index.html` escreve
-  `intro-pendente` no `html` antes de qualquer CSS aplicar, senão a cortina pisca por
-  cima do herói pré-renderizado. Sem JavaScript e sob movimento reduzido ela não existe.
-- **É CSS, e não espera o pacote.** A coreografia é keyframes (`styles/residual.css`), e o
-  mesmo script inline a recolhe e destrava a rolagem aos 3,2 s. Se o JavaScript atrasar ou
-  falhar, a cortina sobe e some do mesmo jeito; aos 8 s sem o pacote, o script tira a
-  classe `js` e a página abre inteira (`RNF-L35`).
-- **O herói compõe debaixo da cortina**, e já está parado quando ela levanta, como no
-  site de origem. Compor depois empurrava o LCP local de 1,1 s para 2,4 s: o que está
-  coberto continua contando como pintado, e o que está em `opacity: 0` não.
-
-`pointer-events: none` e `aria-hidden`: é imagem, não interface. O `verificar` cobre a
-entrada, a saída em menos de 4 s, a presença na recarga e a ausência sob movimento reduzido
-(`INT-01`).
-
-## Movimento
-
-Dois vocabulários, e a regra que os separa: **revelação de marca corta em `steps()`;
-movimento de layout é contínuo em expo-out**, a mesma curva do Lenis. Se tudo cortasse,
-o corte deixaria de significar.
-
-Quem anima é o anime.js; quem dispara a revelação é `IntersectionObserver` nativo. O
-`onScroll` da biblioteca só aparece em movimento **ligado** à rolagem: parallax, as
-palavras do manifesto e o odômetro das semanas. Como gatilho de revelação ele deixou 14
-de 30 elementos invisíveis em 05/09/2026. Há uma rede de segurança em
-`garantirVisibilidade()`: qualquer `[data-revelar]` que continue invisível dentro da
-viewport depois de 2,5 s volta a aparecer.
-
-Armadilhas pagas com defeito medido, todas ainda válidas:
-
-- **O gatilho por observador desconta 80px do rodapé da janela.** O que já está na tela
-  quando o JavaScript acorda e mora nesses 80px (o rodapé da dobra) nunca é revelado
-  pela rolagem. Por isso `revelar()` tem `imediato`, e `abrirPainel()` o usa na dobra.
-- **A varredura de resgate cobre o que já passou, não só o que está na tela.** Em rolagem
-  rápida o observador perde o disparo, e o elemento nunca mais volta a intersectar: sem
-  isso ele só aparecia 2,5 s depois, pela rede de segurança.
-- **A duração da subida é por contexto, não global.** O padrão de `subirLinhas` (820 ms com
-  110 ms de escalonamento) é o da dobra, onde a headline abre a página junto da cortina. No
-  meio da página o visitante já está olhando para o título, e a mesma duração lê como demora:
-  a seção das doze semanas passa 520 ms com 60 ms, fechando em ~640 ms, dentro do teto de
-  0,8 s que as engenharias reversas fixam para interação direta.
-- **`overflow: clip` na linha corta os dois eixos.** Com entrelinha abaixo de 1, o acento sai
-  da caixa e some. `.linha` tem folga em cima e embaixo, e cada uma tem motivo próprio.
-- **Título com `data-revelar` cujas linhas animam por dentro** precisa sair do
-  `opacity: 0` na mão (`utils.set(titulo, { opacity: 1 })`), senão as linhas sobem
-  dentro de um pai invisível.
-- **Espaço no fim de um `inline-block` é descartado.** As palavras do manifesto colavam;
-  o espaço fica fora do `span`.
-- **Parallax move conteúdo dentro de um recorte, nunca o recorte**, com teto de 72px, e
-  o limiar do `onScroll` se lê "borda da janela, borda do alvo": escrito ao contrário o
-  fim cai antes do começo e a biblioteca zera a distância sem avisar.
-- **A marquise repete o conteúdo até cobrir a janela**: uma metade precisa ser mais
-  larga que a tela, senão um vão corre junto com o texto.
-- **`overflow: clip`, nunca `hidden`**, em qualquer ancestral de algo grudado (`RNF-L37`).
-- **Painel com filho absoluto usa flex, não grid.**
-- **`100svh`, nunca `100vh`** nos painéis de tela cheia.
-
-**O odômetro** (`Semanas.jsx`): a seção é o trilho e mede; o painel gruda no alto e
-exibe. `percorrer()` divide a travessia em 12 degraus, e cada degrau troca o número, o
-estado e a régua por corte. Existem cinco estados, não doze, e todos saem do capítulo do
-programa do draft. Sem JavaScript e sob movimento reduzido o painel não gruda e os cinco
-aparecem empilhados.
-
-**As palavras** (`Manifesto.jsx`): `acenderPalavras()` acende uma por vez conforme a
-seção passa, e apaga na volta. Completam a 74% da travessia, para o texto estar inteiro
-antes de a seção ir embora. Apagada é opacidade, não cor: é a convenção da página para
-revelação pendente, e é o que o `verificar` sabe descontar.
-
-## O campo de pontos
-
-Ao fundo da **prova**, do **que se leva** e das **três perguntas** (`CampoDePontos.jsx`).
-Cada um para o laço quando a sua seção sai da tela.
-
-Duas variantes:
-
-- **`malha`** (prova, o que se leva): grade regular com deslocamento senoidal. Barata e
-  discreta.
-- **`fiel`** (as três perguntas): a rede em perspectiva, que é a leitura mais próxima do site
-  de origem. **A lição que custou duas tentativas:** naquele site os pontos não são
-  aleatórios. Nas áreas calmas aparece uma rede regular, e o adensamento só acontece nas
-  cristas; randomizar destrói justamente o que torna a crista legível. Então é uma malha
-  regular deformada por um relevo e projetada: perto espalha e brilha, longe junta e apaga.
-  Medida em 16,7 ms de quadro nos dois formatos.
-
-**Ele esbarra no `TR-03`**, um dos 16 testes de rejeição, que reprova peça com "faísca ou
-partícula". A decisão está em aberto no contrato (§6). Por isso ele é feito só do material do
-sistema (ponto de 1 bit, fio de grade, zero brilho, zero gradiente, zero cor própria) e vive
-isolado: reprovado o teste, troque o componente por `null` em `Prova.jsx` e o layout continua
-de pé, só o fundo fica liso.
-
-Quatro travas de custo, e nenhuma é opcional:
-
-- **Só anima na tela.** `IntersectionObserver` para o laço quando a seção sai.
-- **Movimento reduzido desenha um quadro e para.** É ornamento: não informa nada.
-- **Densidade por área, com teto de pontos por quadro.** Num monitor grande a malha não pode
-  multiplicar o trabalho de cada quadro.
-- **O canvas é fatiado em ladrilhos de 320 px** (`motion/campo.js`), e a cada quadro só os que
-  estão na tela são atualizados. A prova tem 1905 × 3482 px: um canvas desse tamanho (26 MB)
-  reenviado ao compositor a cada quadro derrubava a página a 20-30 quadros por segundo, e o
-  problema era o **tamanho do buffer**, não o desenho (com o buffer em um quarto da área ele some;
-  escondendo o canvas com `visibility` ele continua). Cada ladrilho roda a mesma conta nas
-  coordenadas da seção, e os ladrilhos juntos são o canvas inteiro de antes (conferido byte a
-  byte; as únicas diferenças são ≤ 2/255 em meio-tom nas emendas e os entalhes do rasterizador
-  nos fios verticais longos do original). 320 é de propósito: 320 × DPR é inteiro para todo DPR em
-  passos de 0,05, e só assim a emenda é invisível. Um **Worker com OffscreenCanvas** foi tentado e
-  descartado: tirava o desenho da main thread, mas piorava o ritmo de quadros com canvas grande e
-  só poupava ~0,5 ms por quadro.
-
-E uma trava de leitura: a nota honesta tem superfície opaca por cima do campo, porque o
-`TR-07` proíbe texto corrido sobre imagem sem scrim ou moldura por baixo.
-
-## Tema
-
-A página **compõe** os dois modos em vez de escolher um: blocos Sigilo e blocos Cartaz
-alternados, com a troca no limite da seção, em corte. Não segue `prefers-color-scheme`,
-e isso é deliberado (`RNF-L19`).
-
-Há uma correção de token em `styles/residual.css`: o `ds-bundle` declara
-`--acento: var(--rubro)` em `:root` e não re-aliasa no bloco Cartaz. A correção de
-verdade é na fundação; a regra daqui sai quando ela chegar.
-
-## Escala
-
-Uma família assina, anuncia e rotula (Secundária); a Terciária explica. A escala
-canônica vive no `@theme` de `styles/tailwind.css`, com o nome do token: `text-h1`,
-`text-display`, `text-body-lg`, `text-mono-reg`. No desktop cada papel sobe um degrau
-(`lg:text-display` no título, `lg:text-body-lg` no corpo, 24px na marquise e no diálogo).
-
-`display-xxl` é a exceção declarada: `clamp(72px, 27vw, 240px)`, em **três** lugares
-só (as duas headlines de painel e o número da semana). Não é tamanho de texto, é
-tipografia como arquitetura, e aparecer pouco é o que mantém a escala como assinatura.
-
-## Estilo
-
-**Tailwind v4**, só no build (`@tailwindcss/vite`), é a tecnologia de estilos mantida
-por decisão explícita do usuário em 03/10/2026. Refatorações preservam o plugin,
-os utilitários e a integração ao `ds-bundle`. A identidade visual continua governada
-pelos tokens; `residual.css` atende apenas às regras complementares.
-
-- **Paleta = tokens.** `styles/tailwind.css` zera a paleta padrão (`--color-*: initial`)
-  e liga cada cor ao token do `ds-bundle` com `@theme inline`: `bg-void` vira
-  `var(--void)`. O `inline` é o que mantém os temas Sigilo e Cartaz: sem ele a cor
-  resolveria uma vez em `:root` e as seções Cartaz herdariam o valor já resolvido, o
-  mesmo defeito do `--acento`.
-- **Escala = px.** Espaço, breakpoints e raio são px, e não rem: o original nunca foi
-  rem, e a preferência de tamanho de fonte do navegador não pode mexer em espaço nem em
-  breakpoint (por isso o `verificar` mede reflow por LARGURA de janela, e não por `font-size`). A escala de 4px coincide com `--space-1..9`
-  (4, 8, 12, 16, 24, 32, 48, 64, 96 = `1, 2, 3, 4, 6, 8, 12, 16, 24`). Breakpoints: `xs`
-  480, `sm` 640, `md` 768, `lg` 1024, `wide` 1440.
-- **Os tokens continuam sendo CSS.** `tokens/cor.css`, `forma-espaco.css` e `movimento.css`
-  são importados como estão (o `sync:ds` os sobrescreve), porque o tema muda em tempo de
-  execução e o JS lê `--motion-*`. `tokens/tipografia.css` não é importado: a escala está
-  no `@theme`.
-- **Resíduo** em `styles/residual.css`: o grão (SVG como token), a serrilha do recibo,
-  as regras de base (foco, seleção, `[data-revelar]`, a correção do `--acento`), a pausa
-  e os keyframes (as pontas soltas e a cortina).
-
-Três armadilhas pagas com defeito medido:
-
-- **Duas utilitárias do mesmo grupo, na mesma variante, não têm ordem garantida.**
-  `text-h1` e `text-[48px]` brigam pelo `font-size`. Nunca some: monte com as peças
-  (`font-secundaria font-extrabold text-[48px]`) ou passe a margem/tamanho por prop
-  (`Rotulo margem="mb-2"`).
-- **`hover:` do Tailwind v4 só vale com `@media (hover: hover)`.** O original responde ao
-  toque, então `styles/tailwind.css` redefine a variante para `:hover` puro.
-- **Os `will-change` originais não são enfeite.** O grão tem `mix-blend-mode`; sem as
-  camadas que eles criam (linhas das headlines, trilho da marquise, selo) o navegador
-  mistura o grão à página inteira que o precede e o texto perde o antialiasing por
-  subpixel. Medido por comparação de pixels (`ui.js`, `camada`).
-
-## O que não entra aqui
-
-Roteador (uma página só), biblioteca de componentes (raio 0 e zero sombra não são o
-padrão de nenhuma), gerenciador de estado, backend, segunda biblioteca de animação ou
-de rolagem, e CDN em tempo de execução.
+O campo de pontos permanece em uso e sua decisão contra `TR-03` continua em aberto na fonte soberana. Não recebe aprovação implícita por existir ou por um teste técnico passar. Os limites de build são JavaScript gzip ≤120 KB e fontes ≤130 KB; valores medidos pertencem ao relatório da execução correspondente.
 
 ## Antes de publicar
 
-O `npm run verificar` cobre o que dá para medir. O que sobra é olho, e não é opcional:
-os 16 testes de rejeição de `extracao-pontos-negativos.md` §8 e os campos
-`[A DEFINIR]` de `src/config.js`: preço, prazo de garantia, URL da Ticto, id do pixel e
-o parâmetro de rastreio. Sem eles a página não vende.
+Resolver os dados comerciais e legais, as divergências normativas e os defeitos documentados; validar a campanha com Pixel real e atribuição de compra na Ticto. Testes locais de interface e desempenho não demonstram aumento de conversão. Consulte também o [backlog dos Testes de Fogo](docs/testes-de-fogo-tarefas.md).

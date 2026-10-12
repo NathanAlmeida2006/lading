@@ -12,9 +12,8 @@ import { CampoDePontos } from "../components/CampoDePontos.jsx";
  * entrada: a queda (ragdoll, com colisao e giro) e simulada UMA vez num Worker e gravada; a pose de
  * cada haltere e leitura da gravacao (motion/halteres.js), sem fisica rodando durante a rolagem,
  * entao nada vibra, rolar para cima desfaz a queda e rolar rapido nao deixa ninguem para tras.
- * O progresso desenhado persegue o MAIOR entre o da rolagem e o do relogio: a queda corre sozinha
- * assim que a secao entra na tela e a rolagem so a adianta, entao parar de rolar nunca congela os
- * halteres no meio do caminho. O amortecimento curto alisa os degraus da roda do mouse. Aqui so ha o que e do navegador: canvas, rolagem, laco e desenho.
+ * O progresso desenhado persegue o da rolagem com um amortecimento curto, o que alisa os
+ * degraus da roda do mouse. Aqui so ha o que e do navegador: canvas, rolagem, laco e desenho.
  *
  * Cada queda sorteia um de dez presets (motion/halteres.js: ordem das colunas, ritmo, empurrao),
  * diferente do anterior; o proximo e assado em segundo plano e entra quando a pilha some. Sob
@@ -26,10 +25,9 @@ const COMPLETA_EM = 0.85; // fracao da rolagem em que a tela esta cheia
 const AMORTECIMENTO = 0.09; // s: constante de tempo do progresso desenhado
 // Respiro: nada fica parado de vez. Oscilacao lenta e suave (periodos de 4 a 10 s) somada a pose
 // gravada, em fracao de L e rad; pequena demais para ler como tremor ou para abrir vao na pilha.
-const RESPIRO_X = 0.03;
-const RESPIRO_Y = 0.02;
-const RESPIRO_ANGULO = 0.04;
-const QUADROS_POR_S = 60; // a gravacao e de passo fixo: o relogio a reproduz na velocidade em que foi simulada
+const RESPIRO_X = 0.012;
+const RESPIRO_Y = 0.008;
+const RESPIRO_ANGULO = 0.02;
 
 export function Halteres() {
   const trilho = useRef(null);
@@ -57,8 +55,6 @@ export function Halteres() {
     let anterior = 0;
     let relogio = 0; // s, para o respiro
     let atual = 0; // progresso desenhado, 0..1 (ja dividido por COMPLETA_EM)
-    let corrida = 0; // progresso do relogio, 0..1: a queda andando sozinha (so com a gravacao pronta)
-    let emCena = false; // a secao ja entrou na tela e a queda ainda nao terminou
     let vivo = true;
     let visivel = false;
     const pose = { x: 0, y: 0, a: 0 };
@@ -112,7 +108,9 @@ export function Halteres() {
 
     const alvo = () => {
       const r = raiz.getBoundingClientRect();
-      const p = Math.max(0, Math.min(1, -r.top / (r.height - window.innerHeight)));
+      // Pela altura do PROPRIO palco (h-svh, fixa), nao por `innerHeight`: no celular a barra do
+      // navegador recolhe e o `innerHeight` cresce no meio da rolagem, o que mexia na pilha sem rolar.
+      const p = Math.max(0, Math.min(1, -r.top / (r.height - canvas.clientHeight)));
       return Math.min(1, p / COMPLETA_EM);
     };
 
@@ -166,18 +164,14 @@ export function Halteres() {
       const dt = anterior ? Math.min(0.05, (agora - anterior) / 1000) : 1 / 60;
       anterior = agora;
       relogio = agora / 1000;
-      const topo = raiz.getBoundingClientRect().top;
-      if (topo > window.innerHeight) corrida = 0; // voltou para antes da secao: a queda recomeca ao entrar
-      emCena = topo <= window.innerHeight && corrida < 1;
-      if (emCena && sim) corrida = Math.min(1, corrida + (dt * QUADROS_POR_S) / Math.max(1, sim.quadros - 1));
-      const meta = Math.max(alvo(), corrida);
+      const meta = alvo();
       atual += (meta - atual) * (1 - Math.exp(-dt / AMORTECIMENTO));
       if (Math.abs(meta - atual) < 0.0005) atual = meta;
       if (atual > 0 && !pedida) pedir(); // a queda comecou: assa a da proxima vez, em segundo plano
       trocar();
       desenhar();
       // Com algo na tela o laco nao para: o respiro nunca deixa a pilha congelada.
-      if (atual !== meta || (atual > 0 && sim) || emCena) quadro = requestAnimationFrame(laco);
+      if (atual !== meta || (atual > 0 && sim)) quadro = requestAnimationFrame(laco);
       else anterior = 0;
     };
     const despertar = () => {

@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "size": "node scripts/check-size.mjs",
     "verificar": "node scripts/verificar.mjs",
+    "verificar:conversao": "node scripts/verificar-conversao.mjs",
     "teste:halteres": "node scripts/teste-halteres.mjs"
   },
   "dependencies": {
