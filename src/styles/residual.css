@@ -207,9 +207,12 @@ html:has(body.com-doca) {
 
 /* ---- 8. A cor viva do "Vitalicio" ------------------------------------------
    Gradiente osso -> acento -> osso deslizando por dentro do texto. Sem movimento
-   (`prefers-reduced-motion`) fica parado no osso. */
+   (`prefers-reduced-motion`) fica parado no osso.
+   O gradiente vai na linha (`[data-line]`, criada pelo `splitText`), nunca no titulo: `background-clip: text`
+   no pai, com os filhos do `splitText` (texto oculto para leitores de tela, recorte, transform),
+   e fragil em navegador de celular. */
 @keyframes cor-viva { to { background-position: -200% 0; } }
-.cor-viva {
+.cor-viva [data-line] {
   background: linear-gradient(90deg, var(--bone-pure) 0 25%, var(--acento) 50%, var(--bone-pure) 75% 100%) 0 0 / 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -217,7 +220,7 @@ html:has(body.com-doca) {
   animation: cor-viva 3.5s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) {
-  .cor-viva { animation: none; background: none; color: var(--bone-pure); }
+  .cor-viva [data-line] { animation: none; background: none; color: var(--bone-pure); }
 }
 
 /* ---- 9. O pulso do preco ----------------------------------------------------
