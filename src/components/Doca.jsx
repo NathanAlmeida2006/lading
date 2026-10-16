@@ -111,7 +111,7 @@ export function Doca({ params }) {
     return () => document.body.classList.remove("com-doca");
   }, [ativa]);
 
-  // O preco vem da pilha de valor (a oferta de R$ 77,99); `config.oferta.preco` segue nulo.
+  // O preco vem da pilha de valor (a oferta de R$ 79,99); `config.oferta.preco` segue nulo.
   const oferta = pilhaApresentavel(config.pilhaDeValor);
 
   return (

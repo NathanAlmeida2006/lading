@@ -19,7 +19,7 @@ export const config = {
     totalRotulo: "Preço antigo:",
     totalDeclarado: 600,
     conector: { rotulo: "Vitalício" },
-    oferta: { rotulo: "por apenas:", preco: 77.99, subtexto: "pagamento único / acesso vitalício" },
+    oferta: { rotulo: "por apenas:", preco: 79.99, subtexto: "pagamento único / acesso vitalício" },
   },
 
   angulo: "teto-natural",
@@ -85,4 +85,4 @@ export const config = {
   depoimentos: [], // { id, texto, identificacao, contexto, origem, autorizacaoRef, aprovado }
 };
 
-export const VERBO_ACAO = "Começar o protocolo";
+export const VERBO_ACAO = "Quero o Lithium vitalício por R$ 79,99";

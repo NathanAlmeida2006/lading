@@ -244,12 +244,11 @@ function useSemanasDoTrilho(raiz, trilho) {
   }, [raiz, trilho]);
 }
 
-const { semanas, sessoesObrigatorias, sessoesOpcionais } = conteudo.mecanismo;
 const NUMEROS = [
-  { valor: semanas, rotulo: "semanas de treino" },
-  { valor: sessoesObrigatorias, rotulo: "sessões obrigatórias por semana" },
-  { valor: sessoesOpcionais, rotulo: "sessão opcional, a partir da semana 5" },
-  { valor: semanas * sessoesObrigatorias, rotulo: "sessões obrigatórias no protocolo" },
+  { valor: 1, rotulo: "APP" },
+  { valor: 3, rotulo: "PROTOCOLOS" },
+  { valor: 12, rotulo: "SEMANAS" },
+  { valor: 1, rotulo: "OBJETIVO" },
 ];
 
 export function Semanas({ params }) {
@@ -309,9 +308,7 @@ export function Semanas({ params }) {
             className="semanas__tese max-w-[46ch] mt-8 text-silver font-terciaria text-body-lg lg:col-[8/-1] lg:self-end lg:mt-0 lg:pb-6"
             data-revelar
           >
-            {conteudo.mapa.sessoes} A{" "}
-            <strong className="text-acento font-semibold">{conteudo.mecanismo.nome.replace(/^A /, "")}</strong> {conteudo.mapa.progressao} o{" "}
-            <strong className="text-acento font-semibold">portão da fase 3</strong>{conteudo.mapa.portao}
+            {conteudo.mapa.sub}
           </p>
         </div>
 
@@ -352,7 +349,6 @@ export function Semanas({ params }) {
           </ol>
         </div>
 
-        <p className="mt-8 text-silver font-terciaria text-body">{conteudo.mapa.fonte}</p>
 
         {/* Grade de numeros no layout da secao "Why us" do Nakula: fio a esquerda e regua de marcas
             no topo de cada coluna. */}
@@ -366,7 +362,7 @@ export function Semanas({ params }) {
                   aria-hidden="true"
                 />
                 <p className="font-secundaria font-extrabold text-bone tabular-nums leading-[1.1] text-[length:clamp(56px,7vw,96px)]">{valor}</p>
-                <p className="max-w-[16ch] text-bone font-terciaria text-body-lg">{rotulo}</p>
+                <p className="max-w-[16ch] text-bone font-secundaria text-body-lg">{rotulo}</p>
               </li>
             ))}
           </ul>

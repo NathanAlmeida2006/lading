@@ -38,24 +38,9 @@ import { bloco, envelope, grao } from "../ui.js";
  * de nada grudado: a trava e sobre ancestrais.
  */
 const VOZES = [
-  {
-    fala: "Você para de perguntar se sobe o peso. Bateu 12 boas em todas as séries, sobe. Acabou o achismo.",
-    nome: "A Regra do 12",
-    governa: "Progressão",
-    onde: "no capítulo do programa",
-  },
-  {
-    fala: "Faltou uma semana? O protocolo já sabe o que você faz na próxima sessão. A quebra está prevista, não punida.",
-    nome: "O plano de retorno",
-    governa: "Retomada",
-    onde: "no capítulo da retomada",
-  },
-  {
-    fala: "A unidade é a semana, nunca a sequência de dias. Uma amarela é dado do processo, não veredito sobre você.",
-    nome: "Semana verde, semana amarela",
-    governa: "Unidade de medida",
-    onde: "em todo o protocolo",
-  },
+  { nome: "Protocolo Hipertrofia", governa: "Treino", onde: "12 semanas", fala: "Zero improviso: o mapa completo de 12 semanas no app, usando a Regra do 12 para extrair seu máximo crescimento natural." },
+  { nome: "Protocolo Dieta", governa: "Combustível", onde: "no app", fala: "Ajuste estratégico de combustível para construir massa densa e seca, sem passar fome e sem embaçar o shape com bulking sujo." },
+  { nome: "Protocolo Sono", governa: "Recuperação", onde: "no app", fala: "Sono profundo alinhado para manter sua testosterona no topo e acelerar a reconstrução muscular entre um treino e outro." },
 ];
 
 /**
@@ -77,7 +62,7 @@ const PALAVRA =
   "palavra inline-block transition-[opacity,color] duration-(--motion-fast) ease-(--ease-corte-2) " +
   "js:opacity-[0.22] data-acesa:opacity-100 data-atual:text-acento " +
   "motion-reduce:js:opacity-100 motion-reduce:data-atual:text-inherit";
-const TITULO = "Três coisas. Nenhuma depende de motivação.";
+const TITULO = "Cresça calado. Imponha respeito.";
 
 export function Leva() {
   const raiz = useRef(null);
@@ -111,16 +96,18 @@ export function Leva() {
             190svh com 100svh pinado, 90svh de espera. Aqui a margem da lista (140svh - 140px) soma,
             com o titulo centrado e ~280px de altura, esses mesmos 90svh. */}
         <header className="sticky top-[max(--spacing(12),calc(50svh-140px))] z-0 flex flex-col items-center py-8 text-center motion-reduce:static">
-          <Rotulo>o que você leva pra academia</Rotulo>
+          <Rotulo>Veja tudo que você terá direito</Rotulo>
           <h2
-            className="titulo text-bone font-secundaria text-display [font-size:clamp(57.6px,6.48vw,80.64px)] normal-case tracking-[-0.005em] leading-[1.02] max-w-[14ch] lg:max-w-[16ch]"
+            className="titulo text-bone font-secundaria text-display [font-size:clamp(31px,13.08vw,89.9px)] lg:[font-size:clamp(89.9px,10.1vw,125.8px)] normal-case tracking-[-0.005em] leading-[1.02]"
           >
             {TITULO.split(" ").map((palavra, indice) => (
               <Fragment key={`${palavra}-${indice}`}>
                 <span className={PALAVRA}>{palavra}</span>{" "}
+                {indice === 1 ? <br /> : null}
               </Fragment>
             ))}
           </h2>
+          <p className="max-w-[46ch] mt-4 text-silver font-terciaria text-body-lg">Três armas para você nunca mais pisar na academia perdido.</p>
         </header>
 
         <ol className="relative z-1 flex flex-col gap-10 mt-[calc(140svh-140px)] motion-reduce:mt-16 lg:gap-0" role="list">
@@ -140,7 +127,7 @@ export function Leva() {
                 >
                   &ldquo;
                 </span>
-                <p className="flex-auto text-bone font-secundaria text-h3 [font-size:24px] lg:text-[28.8px] lg:leading-[1.15]">
+                <p className="flex-auto text-left text-bone font-secundaria text-h3 [font-size:23.76px] lg:text-[28.51px] lg:leading-[1.15]">
                   {voz.fala}
                 </p>
                 <div className="flex flex-col gap-1">

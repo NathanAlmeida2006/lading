@@ -47,18 +47,18 @@ export function Espelho({ params }) {
     <section id="espelho" className={`${bloco} py-16 md:py-24`} data-theme="cartaz" ref={raiz}>
       <div className={`${envelope} lg:grid lg:grid-cols-[repeat(12,1fr)] lg:gap-x-8 lg:items-start`}>
         <header className="mb-8 lg:mb-0 lg:col-[1/span_4] lg:sticky lg:top-12">
-          <Rotulo>a troca de régua</Rotulo>
+          <Rotulo>hipertrofia · natural</Rotulo>
           <h2
             className={`titulo text-bone font-secundaria text-h1 uppercase lg:text-display ${mascara}`}
             data-revelar
           >
-            O que muda quando a régua muda
+            {conteudo.espelho.titulo}
           </h2>
           <p
             className="espelho__sub max-w-prose mt-4 text-silver font-terciaria text-body lg:text-body-lg"
             data-revelar
           >
-            Cinco situações do treino e o que o protocolo organiza em cada uma.
+            {conteudo.espelho.sub}
           </p>
         </header>
 
@@ -73,7 +73,7 @@ export function Espelho({ params }) {
               <span className="text-silver font-terciaria text-mono-reg tabular-nums" aria-hidden="true">
                 {String(indice + 1).padStart(2, "0")}
               </span>
-              <h3 className="text-bone font-secundaria text-h3 normal-case tracking-normal lg:text-h2">
+              <h3 className="text-bone font-secundaria text-h3 uppercase [font-size:24px] tracking-normal lg:text-h2 lg:[font-size:28.8px]">
                 {carta.titulo}
               </h3>
               <p className="max-w-prose text-bone font-terciaria text-body-lg">{carta.depois}</p>
