@@ -1,9 +1,9 @@
 /**
- * Pausa de movimento pelo visitante (WCAG 2.2.2): marquise, seta, campos de pontos
+ * Pausa de movimento pelo visitante (WCAG 2.2.2): seta, campos de pontos
  * e as pontas soltas andam sozinhos por mais de 5 s, ao lado do texto. Quem nao usa
  * `prefers-reduced-motion` ainda precisa de um jeito de parar.
  *
- * Um estado so, fora do React: o laco de cada canvas e o da marquise vivem fora da arvore.
+ * Um estado so, fora do React: o laco de cada canvas vive fora da arvore.
  * O CSS le o atributo `data-pausado` do <html> (styles/residual.css).
  */
 let pausado = false;

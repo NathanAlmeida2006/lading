@@ -1,12 +1,13 @@
 import { animate, createDrawable, splitText, stagger, steps, utils } from "animejs";
 import { duracao, semMovimento } from "./tokens.js";
-import { aoMudarPausa, estaPausado } from "./pausa.js";
 import { abrirLeitura } from "./carregador.js";
 
 // Dispara na borda da tela, e nao 80px dentro: com rolagem rapida o elemento ja estaria no meio
 // da tela quando a animacao comecasse, e apareceria "de repente".
 const MARGEM = "0px 0px 0px 0px";
-const EXPO = "cubicBezier(0.16, 1, 0.3, 1)";
+// `outExpo` nativo do Anime.js 4: a string `cubicBezier(...)` foi removida do core (e importar a funcao
+// estoura o teto de JS). Difere de cubic-bezier(0.16, 1, 0.3, 1) em no maximo 0,012 (a 4% do tempo).
+const EXPO = "outExpo";
 // Aparicao fluida: curva expo-out em ~0,65 s, no lugar dos degraus `steps(2)` de 180 ms.
 const APARICAO = 650;
 
@@ -76,36 +77,6 @@ function aoEntrar(gatilho, executar) {
       observador?.disconnect();
       observador = null;
     }
-  };
-}
-
-/**
- * Um laco infinito so anda enquanto da para ver. A marquise nao termina
- * nunca: sem isto ela ocupa a `requestAnimationFrame` da pagina inteira
- * para pintar o que ninguem esta olhando.
- */
-function pausarForaDaTela(alvo, animacao) {
-  if (!alvo || !animacao) return () => {};
-  if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
-    return () => animacao.pause();
-  }
-  animacao.pause();
-  // Anda so se da para ver E o visitante nao pausou (WCAG 2.2.2, ver pausa.js).
-  let visivel = false;
-  const atualizar = () => (visivel && !estaPausado() ? animacao.play() : animacao.pause());
-  const obs = new IntersectionObserver(
-    ([entrada]) => {
-      visivel = entrada.isIntersecting;
-      atualizar();
-    },
-    { rootMargin: "200px 0px" },
-  );
-  obs.observe(alvo);
-  const soltar = aoMudarPausa(atualizar);
-  return () => {
-    obs.disconnect();
-    soltar();
-    animacao.pause();
   };
 }
 
@@ -224,26 +195,6 @@ export function subirLinhas(linhas, { atraso = 0, intervalo = 110, pai = null, t
 }
 
 /**
- * O carimbo: a revelacao de marca. Tres degraus, na duracao de celebracao.
- * Reservado ao numero da prova, ao selo da garantia e a semana do odometro.
- */
-export function carimbar(alvo, { atraso = 0 } = {}) {
-  if (!alvo) return;
-  const reduzido = semMovimento();
-  utils.set(alvo, { opacity: 0, scale: reduzido ? 1 : 1.14 });
-  const limpar = aoEntrar(alvo, () =>
-    animate(alvo, {
-      opacity: [0, 1],
-      scale: reduzido ? 1 : [1.14, 1],
-      duration: reduzido ? duracao("--motion-fast") : APARICAO,
-      delay: atraso,
-      ease: reduzido ? "linear" : EXPO,
-    }),
-  );
-  return () => { limpar?.(); utils.set(alvo, { opacity: 1, scale: 1 }); };
-}
-
-/**
  * Desenha um traco de SVG quando ele chega a tela. Serve a moldura do fechamento, a regua e os
  * riscos do espelho. Sob movimento reduzido o traco ja nasce inteiro e so aparece.
  */
@@ -270,57 +221,6 @@ export function desenhar(alvos, { atraso = 0, tempo } = {}) {
 /* -------------------------------------------------------------------------
    Movimento ligado a rolagem
    ------------------------------------------------------------------------- */
-
-/**
- * Marquise: faixa horizontal em laco. O conteudo e duplicado no markup para o
- * laco nao ter costura visivel, e a copia leva `aria-hidden`.
- */
-export function marquise(trilho, { tempo = 26000, sentido = -1 } = {}) {
-  if (!trilho || semMovimento()) return;
-
-  // Uma metade precisa ser MAIS LARGA que a janela, e essa e a regra inteira
-  // do laco. Se falta largura, repete-se o conteudo ate cobrir. Cobre a MAIOR
-  // dimensao da tela, e nao so a janela de agora: girar o aparelho ou alargar a
-  // janela depois nao pode abrir um vao.
-  const metades = [...trilho.children];
-  const alvo = Math.max(trilho.parentElement?.clientWidth ?? 0, window.screen.width, window.screen.height);
-  const uma = metades[0]?.scrollWidth ?? 0;
-  const clones = [];
-  let fator = 1;
-
-  if (metades.length === 2 && uma > 0 && uma < alvo) {
-    fator = Math.ceil(alvo / uma) + 1;
-    for (const metade of metades) {
-      const base = [...metade.children];
-      for (let copia = 1; copia < fator; copia += 1) {
-        for (const item of base) {
-          const clone = item.cloneNode(true);
-          clone.setAttribute("aria-hidden", "true");
-          metade.append(clone);
-          clones.push(clone);
-        }
-      }
-    }
-  }
-
-  if (!trilho.scrollWidth) return;
-
-  // Em %, e nao em px: a metade muda de largura quando a fonte troca de tamanho no breakpoint
-  // `lg`, e uma distancia fixa em px deixava a costura do laco fora do lugar depois disso.
-  const laco = animate(trilho, {
-    x: sentido < 0 ? ["0%", "-50%"] : ["-50%", "0%"],
-    duration: tempo * fator,
-    ease: "linear",
-    loop: true,
-  });
-
-  const parar = pausarForaDaTela(trilho.parentElement ?? trilho, laco);
-  return () => {
-    parar();
-    laco.revert();
-    for (const clone of clones) clone.remove();
-  };
-}
 
 /** Estado da trilha medido pela seção, nunca pelo filho sticky. */
 export function acenderEmSequencia(alvos, contexto, { atributo = "data-acesa", atributoAtual = null, fixo = false, ritmo = 1.02 } = {}) {

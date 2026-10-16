@@ -1,0 +1,25 @@
+{
+  "_comentario": "Tetos da regua de carga (cartao 29). Propostos pela lideranca de qualidade e sujeitos a confirmacao do gerente no cartao 38. Todos entram como aviso; viram vigente quando o 38 os declarar vigentes. Tempos em ms desde o inicio da navegacao, cenario frio, variante com-cortina. A estatistica comparada e o p75 (ate teto + tolerancia), exceto tbt, que usa a mediana contra a linha de base.",
+  "toleranciaP75": 0.15,
+  "perfis": {
+    "4g-bom": {
+      "fcp": { "teto": 900, "modo": "aviso" },
+      "lcp": { "teto": 1200, "modo": "aviso" },
+      "headlineLegivel": { "teto": 1500, "modo": "aviso" },
+      "ctaVisivel": { "teto": 1500, "modo": "aviso" },
+      "rolagemLivre": { "regra": "<= fcp", "modo": "aviso" },
+      "cls": { "teto": 0.02, "modo": "aviso" },
+      "tbt": { "linhaBase": 382, "faixaBase": [346, 418], "subidaMaxima": 0.1, "modo": "aviso" }
+    },
+    "4g-lento": {
+      "fcp": { "teto": 1700, "modo": "aviso" },
+      "lcp": { "teto": 2500, "modo": "aviso" },
+      "headlineLegivel": { "teto": 2500, "modo": "aviso" },
+      "ctaVisivel": { "teto": 2500, "modo": "aviso" },
+      "rolagemLivre": { "regra": "<= fcp", "modo": "aviso" },
+      "cls": { "teto": 0.02, "modo": "aviso" },
+      "tbt": { "linhaBase": 382, "faixaBase": [346, 418], "subidaMaxima": 0.1, "modo": "aviso" }
+    },
+    "sem-limite": {}
+  }
+}

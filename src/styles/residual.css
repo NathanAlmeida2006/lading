@@ -31,18 +31,6 @@
   }
 }
 
-/* ---- 0a. A inclinacao da marquise (`--scroll-velocity`) --------------------------
-   O Lenis escreve a velocidade da rolagem nas faixas (px por quadro), e a faixa a consome em
-   `skewX(calc(var(--scroll-velocity, 0) * -0.35deg))`. Registrada, e SEM heranca: uma custom
-   property comum e herdavel, entao cada escrita invalidava o estilo dos 78 nos de dentro de cada
-   faixa, a cada quadro de rolagem, para inclinar duas faixas. Sem heranca, a mudanca invalida so a
-   propria faixa. O valor inicial (0) e o `var(..., 0)` de antes: o desenho e o mesmo. */
-@property --scroll-velocity {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 0;
-}
-
 /* A altura real da barra inclui texto ampliado e area segura. A regra fica
    fora das camadas para prevalecer sobre o scroll-padding fixo do HTML. */
 html:has(body.com-doca) {
@@ -58,6 +46,9 @@ html:has(body.com-doca) {
 :root {
   --serrilha-sup: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 6 L4 0 L8 6 Z' fill='%23f6f4ef'/%3E%3C/svg%3E");
   --serrilha-inf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0 L4 6 L8 0 Z' fill='%23f6f4ef'/%3E%3C/svg%3E");
+  /* Mesmo dente com o `--surface-1` do Sigilo (#121215), para o recibo em tema escuro. */
+  --serrilha-escura-sup: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 6 L4 0 L8 6 Z' fill='%23121215'/%3E%3C/svg%3E");
+  --serrilha-escura-inf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0 L4 6 L8 0 Z' fill='%23121215'/%3E%3C/svg%3E");
 }
 
 /* ---- 1. Textura de grao -------------------------------------------------
@@ -101,7 +92,7 @@ html:has(body.com-doca) {
 
 /* ---- 4b. Pausa pedida pelo visitante (WCAG 2.2.2) -------------------------
    `motion/pausa.js` escreve `data-pausado` no <html>; as animacoes de CSS (as pontas
-   soltas) congelam aqui, e as de JavaScript (marquise, seta, campos) escutam o mesmo
+   soltas) congelam aqui, e as de JavaScript (seta, campos) escutam o mesmo
    estado. */
 @layer base {
   [data-pausado] *,
@@ -187,16 +178,17 @@ html:has(body.com-doca) {
    navegador deixaria cada peca como camada composta para sempre, e o texto perderia o
    antialiasing por subpixel. */
 @theme inline {
-  --animate-revelar: revelar 650ms var(--ease-expo) calc(var(--atraso, 0ms) + var(--base, 0ms)) backwards;
-  --animate-subir: subir 820ms var(--ease-expo) calc(var(--atraso, 0ms) + var(--base, 0ms)) backwards;
+  --animate-revelar: revelar 400ms var(--ease-expo) calc(var(--atraso, 0ms) + var(--base, 0ms)) backwards;
+  --animate-subir: subir 500ms var(--ease-expo) calc(var(--atraso, 0ms) + var(--base, 0ms)) backwards;
   --animate-tracar: tracar 560ms cubic-bezier(0.5, 1, 0.89, 1) calc(var(--atraso, 0ms) + var(--base, 0ms)) backwards;
   --animate-tracar-fio: tracar 620ms cubic-bezier(0.5, 1, 0.89, 1) calc(var(--atraso, 0ms) + var(--base, 0ms)) backwards;
   --animate-surgir: surgir var(--motion-fast) linear backwards;
   --animate-seta: seta 1800ms cubic-bezier(0.45, 0, 0.55, 1) calc(1400ms + var(--base, 0ms)) infinite backwards;
 }
 
+/* So `transform`: nenhum texto nem CTA da dobra nasce invisivel, ou o Chrome so conta o LCP no fim da animacao. */
 @keyframes revelar {
-  from { opacity: 0; transform: translateY(12px); }
+  from { transform: translateY(12px); }
 }
 @keyframes surgir {
   from { opacity: 0; }
@@ -211,4 +203,99 @@ html:has(body.com-doca) {
   0% { opacity: 0; transform: translateY(0); }
   50% { opacity: 1; transform: translateY(6px); }
   100% { opacity: 0.35; transform: translateY(0); }
+}
+
+/* ---- 8. A cor viva do "Vitalicio" ------------------------------------------
+   Gradiente osso -> acento -> osso deslizando por dentro do texto. Sem movimento
+   (`prefers-reduced-motion`) fica parado no osso. */
+@keyframes cor-viva { to { background-position: -200% 0; } }
+.cor-viva {
+  background: linear-gradient(90deg, var(--bone-pure) 0 25%, var(--acento) 50%, var(--bone-pure) 75% 100%) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cor-viva 3.5s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cor-viva { animation: none; background: none; color: var(--bone-pure); }
+}
+
+/* ---- 9. O pulso do preco ----------------------------------------------------
+   Diferente do "Vitalicio": a cor inteira respira entre branco e acento, com um
+   brilho que cresce junto. Sem movimento fica branco e parado. */
+@keyframes preco-pulso {
+  0%, 100% { color: var(--bone-pure); text-shadow: 0 0 0 transparent; }
+  50% { color: var(--acento); text-shadow: 0 0 .25em color-mix(in srgb, var(--acento) 55%, transparent); }
+}
+.preco-pulso { animation: preco-pulso 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .preco-pulso { animation: none; }
+}
+
+/* ---- 10. O brilho varrido do "Vitalicio" -------------------------------------
+   Texto em acento com uma faixa fina de luz que o cruza e descansa; sem movimento
+   fica em acento, parado. */
+@keyframes brilho-varrido {
+  0% { background-position: 100% 0; }
+  45%, 100% { background-position: 0 0; }
+}
+.brilho-varrido {
+  background: linear-gradient(105deg, var(--acento) 0 42%, var(--cor-realce) 50%, var(--acento) 58% 100%) 100% 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: brilho-varrido 3.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brilho-varrido { animation: none; background: none; color: var(--acento); }
+}
+
+/* ---- 11. O neon do preco -----------------------------------------------------
+   Branco com halo vermelho que respira devagar, em curva suave e sem apagoes. Sem
+   movimento fica com o halo medio e parado. */
+@keyframes neon-preco {
+  0%, 100% { color: var(--cor-realce); text-shadow: 0 0 .05em color-mix(in srgb, var(--acento) 45%, transparent), 0 0 .2em color-mix(in srgb, var(--acento) 30%, transparent), 0 0 .45em color-mix(in srgb, var(--acento) 15%, transparent); }
+  50% { color: color-mix(in srgb, var(--cor-realce) 88%, var(--acento)); text-shadow: 0 0 .06em var(--acento), 0 0 .24em var(--acento), 0 0 .55em color-mix(in srgb, var(--acento) 70%, transparent); }
+}
+.neon-preco { animation: neon-preco 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .neon-preco { animation: none; color: var(--cor-realce); text-shadow: 0 0 .06em var(--acento), 0 0 .22em var(--acento); }
+}
+
+/* A cor de realce das animacoes acima: branco puro no escuro, o osso do tema no cartaz. */
+.neon-preco, .brilho-varrido { --cor-realce: var(--bone-pure); }
+[data-theme="cartaz"] :is(.neon-preco, .brilho-varrido) { --cor-realce: var(--bone); }
+
+/* ---- 12. O enchimento do preco ----------------------------------------------
+   O numero se enche de acento de baixo para cima, como liquido, segura e esvazia.
+   Sem movimento fica no tom de realce, parado. */
+@keyframes enchimento {
+  0%, 10% { background-position: 0 100%; }
+  50%, 60% { background-position: 0 0; }
+  100% { background-position: 0 100%; }
+}
+.enchimento {
+  background: linear-gradient(to top, var(--acento) 50%, var(--cor-realce) 50%) 0 100% / 100% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: enchimento 5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .enchimento { animation: none; background: none; color: var(--cor-realce); }
+}
+.enchimento { --cor-realce: var(--bone-pure); }
+[data-theme="cartaz"] .enchimento { --cor-realce: var(--bone); }
+
+/* ---- 13. A aberracao do preco -------------------------------------------------
+   Duas copias em acento se abrem para os lados do numero e voltam, em curva suave,
+   como desalinhamento de cor de impressao. Sem movimento fica alinhado e parado. */
+@keyframes aberracao {
+  0%, 100% { text-shadow: 0 0 0 transparent, 0 0 0 transparent; }
+  50% { text-shadow: -.04em 0 0 var(--acento), .04em 0 0 color-mix(in srgb, var(--acento) 45%, transparent); }
+}
+.aberracao { color: var(--bone-pure); animation: aberracao 4.5s ease-in-out infinite; }
+[data-theme="cartaz"] .aberracao { color: var(--bone); }
+@media (prefers-reduced-motion: reduce) {
+  .aberracao { animation: none; }
 }

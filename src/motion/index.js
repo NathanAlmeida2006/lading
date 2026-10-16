@@ -99,7 +99,7 @@ function chamar(nome, args) {
       console.error(erro);
       abrirLeitura();
     }
-  }).catch((erro) => { if (ativo) { console.error(erro); abrirLeitura(); } });
+  }).catch(() => { if (ativo) abrirLeitura(); }); // o erro da carga e registrado uma vez, em carregador.js
   return cancelar;
 }
 
@@ -107,9 +107,7 @@ export const revelar = (...args) => chamar("revelar", args);
 export const revelarEmCascata = (...args) => chamar("revelarEmCascata", args);
 export const mascaraDeLinha = (alvo, opcoes = {}) => chamar("mascaraDeLinha", [alvo, opcoes]);
 export const subirLinhas = (...args) => chamar("subirLinhas", args);
-export const carimbar = (...args) => chamar("carimbar", args);
 export const desenhar = (...args) => chamar("desenhar", args);
-export const marquise = (...args) => chamar("marquise", args);
 export const acenderEmSequencia = (...args) => chamar("acenderEmSequencia", args);
 export const pulsar = (...args) => chamar("pulsar", args);
 export const abrirPainel = (...args) => chamar("abrirPainel", args);

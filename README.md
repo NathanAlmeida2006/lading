@@ -32,7 +32,6 @@ As verificações usam `playwright-core` e precisam de Chromium disponível. A s
 | `npm run size` | Conferir o orçamento do build existente. |
 | `npm run verificar` | Verificações de navegador da página e dos comportamentos presentes. |
 | `npm run verificar:conversao -- URL` | Integração de consentimento, eventos, oferta, componentes e CTA com fixtures isoladas. |
-| `npm run teste:halteres` | Verificação específica dos halteres. |
 | `npm run sync:ds` | Sincronização explícita de recursos do bundle soberano. |
 
 ## Arquitetura implementada
@@ -44,7 +43,6 @@ React 19 hidrata o HTML produzido por SSR e pré-renderização no build Vite 6.
 | `Dobra` | Promessa e CTA de abertura. |
 | `Manifesto` e `Espelho` | Reconhecimento do problema. |
 | `Leva` | Apresentação do que o protocolo entrega. |
-| `Halteres` | Transição ornamental em canvas; não cria etapa de mensuração. |
 | `Semanas` | Mapa do caminho, condicionado à configuração. |
 | `Amostra` | Trecho real, exibido somente quando habilitado. |
 | `Oferta` | Apresentação comercial e condição factual configurada. |

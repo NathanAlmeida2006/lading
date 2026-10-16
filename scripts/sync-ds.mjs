@@ -21,7 +21,7 @@ const bundle = resolve(
   process.env.DS_BUNDLE ?? join(raiz, "..", "projetos", ".design-sync", "ds-bundle"),
 );
 
-const TOKENS = ["cor.css", "forma-espaco.css", "movimento.css", "tipografia.css"];
+const TOKENS = ["cor.css", "forma-espaco.css", "movimento.css"];
 
 // Tres familias, nunca quatro na mesma peca (RF-G05, TR-05).
 //

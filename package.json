@@ -12,7 +12,7 @@
     "size": "node scripts/check-size.mjs",
     "verificar": "node scripts/verificar.mjs",
     "verificar:conversao": "node scripts/verificar-conversao.mjs",
-    "teste:halteres": "node scripts/teste-halteres.mjs"
+    "medir": "node scripts/medir-carga.mjs"
   },
   "dependencies": {
     "animejs": "^4.0.2",

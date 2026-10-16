@@ -29,8 +29,9 @@ import { bloco, camada, envelope, linha } from "../ui.js";
  * sticky apenas exibe. Sob movimento reduzido ela nasce inteira acesa, porque
  * informa o caminho e informacao nao depende de animacao.
  */
-const SEMANAS = conteudo.mecanismo.semanas;
-const ESTADOS = conteudo.mapa.estados;
+// So os tres primeiros cards; a regua acompanha: um passo por card (1 a 3), e nao as doze semanas.
+const ESTADOS = conteudo.mapa.estados.slice(0, 3);
+const SEMANAS = ESTADOS.length;
 const LINHAS = conteudo.mapa.linhas;
 
 /**
@@ -315,11 +316,10 @@ export function Semanas({ params }) {
         </div>
 
         <div className="semanas__caminho">
-          {/* A regua das doze semanas: acende e apaga com a rolagem (RF-L11b). Duas linhas de seis
-              no celular; doze numa linha a 360px nao cabe legivel. Cor nunca sozinha (RNF-L14): a
+          {/* A regua (1 a 3, um passo por card): acende e apaga com a rolagem (RF-L11b). Cor nunca sozinha (RNF-L14): a
               semana acesa muda de PREENCHIMENTO, de vazado para cheio, e o numero muda de peso. */}
           <ol
-            className="regua12 sticky top-0 z-2 bg-void pb-4 motion-reduce:static [counter-reset:semana] grid grid-cols-[repeat(6,1fr)] sm:grid-cols-[repeat(12,1fr)] gap-x-2 gap-y-3 mt-12 pt-4 border-t border-line"
+            className="regua12 sticky top-0 z-2 bg-void pb-4 motion-reduce:static [counter-reset:semana] grid grid-cols-[repeat(3,1fr)] gap-x-2 gap-y-3 mt-12 pt-4 border-t border-line"
             role="list"
             aria-hidden="true"
           >
@@ -332,7 +332,7 @@ export function Semanas({ params }) {
               com o numero em escala de cartaz, no lugar do preview de video. */}
           <ol className="semanas__trilho flex flex-col gap-12 mt-16 lg:grid lg:grid-cols-[repeat(3,1fr)] lg:gap-x-8 lg:gap-y-16 lg:mt-24" role="list" ref={trilho}>
             {ESTADOS.map((estado, indice) => (
-              <li className={`slide flex flex-col gap-3 ${DESCE[indice % 3]}`.trim()} key={estado.nome} data-semana={estado.semana} data-revelar>
+              <li className={`slide flex flex-col gap-3 ${DESCE[indice % 3]}`.trim()} key={estado.nome} data-semana={indice + 1} data-revelar>
                 <div className="relative flex items-center justify-center aspect-4/3 bg-surface-1 border border-line-strong overflow-clip">
                   <span
                     className="text-bone font-secundaria font-extrabold uppercase tracking-[0.01em] leading-[0.86] tabular-nums text-[length:clamp(64px,22vw,132px)] lg:text-[length:clamp(72px,7vw,120px)]"

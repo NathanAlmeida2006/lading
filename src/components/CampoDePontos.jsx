@@ -40,7 +40,7 @@ import { ligarCampo } from "../motion/campo.js";
  * performance:
  *
  *   1. So anima na tela. `IntersectionObserver` para o laco quando a secao
- *      sai, que e a mesma disciplina da marquise.
+ *      sai.
  *   2. `prefers-reduced-motion` desenha UM quadro e para. O campo e
  *      ornamento: nao informa nada, entao nao precisa se mover.
  *   3. Densidade por area, com teto. Num monitor de 2560px a malha nao pode

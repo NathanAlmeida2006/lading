@@ -14,6 +14,9 @@ const PALAVRA =
   "js:opacity-[0.22] data-acesa:opacity-100 data-atual:text-acento " +
   "motion-reduce:js:opacity-100 motion-reduce:data-atual:text-inherit";
 
+// Palavras em vermelho (o acento do protocolo, ja vermelho) dentro do texto.
+const DESTAQUE = /^(verdadeiro|potencial)\W*$/i;
+
 export function Manifesto() {
   const raiz = useRef(null);
   useCortina(raiz);
@@ -78,12 +81,12 @@ export function Manifesto() {
       <div className={`${envelope} manifesto__texto relative z-1 top-0 min-h-svh flex flex-col items-center justify-center group-data-cabe/manifesto:sticky motion-reduce:static`}>
         <div>
         <Rotulo como="h2">{conteudo.reconhecimento.rotulo}</Rotulo>
-        <p className="font-secundaria font-bold text-[length:46.9px] leading-[1.05] normal-case tracking-normal max-w-prose text-bone lg:text-[length:clamp(58px,6.6vw,82px)] lg:leading-none lg:max-w-[32ch]">
+        <p className="font-secundaria font-bold text-[length:49.2px] leading-[1.05] normal-case tracking-normal max-w-prose text-bone lg:text-[length:clamp(61px,6.93vw,86px)] lg:leading-none lg:max-w-[32ch]">
           {conteudo.reconhecimento.texto.split(" ").map((palavra, indice) => (
             // O espaco fica FORA do span: espaco no fim de um inline-block e
             // descartado pelo navegador, e as palavras colavam.
             <Fragment key={`${palavra}-${indice}`}>
-              <span className={PALAVRA}>{palavra}</span>{" "}
+              <span className={DESTAQUE.test(palavra) ? `${PALAVRA} text-acento` : PALAVRA}>{palavra}</span>{" "}
             </Fragment>
           ))}
         </p>

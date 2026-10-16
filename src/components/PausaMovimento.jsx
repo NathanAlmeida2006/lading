@@ -4,7 +4,7 @@ import { definirPausa } from "../motion/pausa.js";
 /**
  * Pausar e retomar o movimento (WCAG 2.2.2).
  *
- * Marquise, campos de pontos, seta e pontas soltas andam sozinhos por mais de 5 s ao
+ * Campos de pontos, seta e pontas soltas andam sozinhos por mais de 5 s ao
  * lado do texto. `prefers-reduced-motion` ja os desliga para quem configurou o
  * sistema; este botao e para todos os outros. Como o "pular para o conteudo", fica
  * fora da tela ate receber foco: o desenho da pagina nao ganha nenhum controle, e quem

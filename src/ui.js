@@ -15,7 +15,7 @@ export const grao =
  * Camada propria, como no original (`will-change: transform`). Nao e enfeite: o grao tem
  * `mix-blend-mode`, e sem camadas intermediarias o navegador mistura o grao a pagina
  * inteira que o precede, o que apaga o antialiasing por subpixel do texto (fica cinza).
- * Estas camadas (as linhas das headlines, o trilho da marquise, o selo) sao o que
+ * Estas camadas (as linhas das headlines, o selo) sao o que
  * mantem o texto das secoes como era. Medido por comparacao de pixels em 02/10/2026.
  */
 export const camada = "will-change-transform";

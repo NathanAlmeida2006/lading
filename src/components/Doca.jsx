@@ -3,6 +3,8 @@ import { Botao } from "./Botao.jsx";
 import { config } from "../config.js";
 import { assinarConsentimento, lerConsentimento } from "../instrumentacao.js";
 import { useCondicaoOferta } from "../oferta.js";
+import { pilhaApresentavel } from "../pilha.js";
+import { Cronometro } from "../sections/PilhaDeValor.jsx";
 
 /**
  * A doca de venda: barra fixa na base, com preco, Pix e o botao.
@@ -42,14 +44,12 @@ export function Doca({ params }) {
 
   useEffect(() => {
     const inicio = document.getElementById("inicio");
-    // A doca fica sempre visivel, menos na dobra, na regua do treino (manifesto), nos halteres e no rodape.
+    // A doca fica sempre visivel, menos na dobra, na regua do treino (manifesto), com o CTA do fechamento visivel e no rodape.
     const regua = document.getElementById("reconhecimento");
     // O rodape tem o proprio botao e a faixa de acento: a doca por cima dele
     // seria o segundo acento na mesma tela.
     const rodape = document.getElementById("rodape-legal");
-    // Os halteres caem sobre a tela inteira: a doca nao aparece nessa secao.
-    const halteres = document.getElementById("halteres");
-    if (!inicio || !regua || !rodape || !halteres || !("IntersectionObserver" in window)) return;
+    if (!inicio || !regua || !rodape || !("IntersectionObserver" in window)) return;
     const naTela = new Set();
     const obs = new IntersectionObserver(
       (entradas) => {
@@ -61,7 +61,11 @@ export function Doca({ params }) {
       },
       { threshold: 0 }, // qualquer pixel do alvo na tela esconde a doca; a regua e alta, 12% dela ainda cobria a janela
     );
-    for (const alvo of [inicio, regua, rodape, halteres]) obs.observe(alvo);
+    // O CTA do fechamento tem a propria acao na tela: a doca sai enquanto ele estiver visivel.
+    const ctaFechamento = document.querySelector('[data-posicao="fechamento"]');
+    // A pilha de valor tambem esconde a doca enquanto tiver qualquer pixel na tela; sem a secao, e nulo.
+    const pilha = document.getElementById("pilha-de-valor");
+    for (const alvo of [inicio, regua, rodape, ctaFechamento, pilha]) if (alvo) obs.observe(alvo);
     return () => {
       obs.disconnect();
       definirLivre(false);
@@ -107,7 +111,8 @@ export function Doca({ params }) {
     return () => document.body.classList.remove("com-doca");
   }, [ativa]);
 
-  const { preco, moeda } = config.oferta;
+  // O preco vem da pilha de valor (a oferta de R$ 77,99); `config.oferta.preco` segue nulo.
+  const oferta = pilhaApresentavel(config.pilhaDeValor);
 
   return (
     <aside
@@ -120,10 +125,11 @@ export function Doca({ params }) {
     >
       <div className="flex flex-col gap-1 min-w-0 max-w-full text-silver">
         <span className="font-secundaria text-label uppercase text-bone">Protocolo 01</span>
-        <span className="font-terciaria text-mono-reg tabular-nums">
-          {preco ? `${moeda} ${preco} · Pix à vista` : "Pix à vista · preço a definir"}
-        </span>
+        <div className="font-terciaria text-mono-reg tabular-nums whitespace-nowrap">
+          {oferta ? `${oferta.moeda} ${oferta.oferta.preco} · Pix à vista` : "Pix à vista · preço a definir"}
+        </div>
       </div>
+      {oferta ? <Cronometro classe="ml-auto text-mono-reg [&>span]:hidden" /> : null}
       <Botao params={params} posicao="doca" compacto />
     </aside>
   );

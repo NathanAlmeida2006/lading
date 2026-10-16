@@ -87,7 +87,6 @@ export function Leva() {
     const no = raiz.current;
     if (!no) return;
     revelar(no.querySelector(".rotulo"));
-    revelar(no.querySelector(".leva__sub"), { atraso: 200 });
     revelarEmCascata(no.querySelectorAll(".voz"), { intervalo: 80 });
     // O trilho `fixo` e o palco da prova: 190svh, 90svh de titulo pinado. Ele nasce acima do
     // titulo (o titulo pina no meio da tela) para a conta comecar quando o titulo pina.
@@ -114,7 +113,7 @@ export function Leva() {
         <header className="sticky top-[max(--spacing(12),calc(50svh-140px))] z-0 flex flex-col items-center py-8 text-center motion-reduce:static">
           <Rotulo>o que você leva pra academia</Rotulo>
           <h2
-            className="titulo text-bone font-secundaria text-display [font-size:clamp(48px,5.4vw,67.2px)] normal-case tracking-[-0.005em] leading-[1.02] max-w-[14ch] lg:max-w-[16ch]"
+            className="titulo text-bone font-secundaria text-display [font-size:clamp(57.6px,6.48vw,80.64px)] normal-case tracking-[-0.005em] leading-[1.02] max-w-[14ch] lg:max-w-[16ch]"
           >
             {TITULO.split(" ").map((palavra, indice) => (
               <Fragment key={`${palavra}-${indice}`}>
@@ -122,13 +121,6 @@ export function Leva() {
               </Fragment>
             ))}
           </h2>
-          <p
-            className="leva__sub max-w-prose lg:max-w-[30ch] mt-4 text-silver text-center font-terciaria text-body lg:text-body-lg"
-            data-revelar
-          >
-            Cada uma tem nome, e o nome é o que você procura dentro do protocolo quando a semana
-            aperta.
-          </p>
         </header>
 
         <ol className="relative z-1 flex flex-col gap-10 mt-[calc(140svh-140px)] motion-reduce:mt-16 lg:gap-0" role="list">

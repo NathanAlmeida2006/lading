@@ -86,6 +86,9 @@ if (ancoragem) {
   afirmacao("oferta.ancoragem.fonte", texto(ancoragem.fonte));
   afirmacao("oferta.ancoragem.confirmado", ancoragem.confirmado === true, "ancoragem comercial não confirmada");
 }
+if (config.pilhaDeValor.ativo === true) {
+  afirmacao("pilhaDeValor.confirmado", config.pilhaDeValor.confirmado === true, "pilha de valor sem confirmação do gerente");
+}
 for (const [indice, depoimento] of config.depoimentos.entries()) {
   for (const campo of ["id", "texto", "identificacao", "contexto", "origem", "autorizacaoRef"])
     afirmacao(`depoimentos[${indice}].${campo}`, texto(depoimento[campo]));
@@ -132,6 +135,20 @@ for (const secao of secoes.filter(({ presente }) => presente)) {
 }
 // Função, e não texto: `$&` ou `$$` na copy seriam lidos como padrão de substituição.
 let saida = html.replace(marcador, () => pagina);
+
+// CSS embutido (cartao 33): a folha era a unica requisicao a bloquear a primeira pintura. O arquivo fica em
+// dist/ (o check-size o conta), so deixa de ser pedido. Sem o link, ou com `</style` no CSS, o build falha.
+const ligacao = saida.match(/<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/);
+if (!ligacao) {
+  console.error('prerender  <link rel="stylesheet"> de /assets/ nao encontrado em index.html');
+  process.exit(1);
+}
+const css = await readFile(join(raiz, "dist", ligacao[1]), "utf8");
+if (/<\/style/i.test(css)) {
+  console.error("prerender  o CSS contem </style: nao pode ser embutido");
+  process.exit(1);
+}
+saida = saida.replace(ligacao[0], () => `<style>${css}</style>`);
 
 await writeFile(molde, saida, "utf8");
 console.log("prerender  index.html com a pagina dentro; chunks tardios sem modulepreload");

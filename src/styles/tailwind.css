@@ -42,8 +42,8 @@
   --breakpoint-lg: 1024px;
   --breakpoint-wide: 1440px;
 
-  /* ---- Tipografia · espelha tokens/tipografia.css §3.8 -------------------- */
-  --font-secundaria: "Big Shoulders Display", "Oswald", "Arial Narrow", sans-serif;
+  /* ---- Tipografia · espelha .design-sync/ds-bundle/tokens/tipografia.css §3.8 -------------------- */
+  --font-secundaria: "Big Shoulders Display", "Big Shoulders Reserva Arial", "Big Shoulders Reserva Roboto", "Oswald", "Arial Narrow", sans-serif;
   --font-terciaria: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --text-display-xxl: clamp(72px, 27vw, 240px);

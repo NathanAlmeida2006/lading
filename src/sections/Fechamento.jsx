@@ -16,10 +16,9 @@ const HEADLINE = ["Apenas", "Faça."];
  * Fechamento: a segunda capa.
  *
  * O Rep Republic fecha a pagina com o wordmark em display gigante, no mesmo
- * peso do heroi, e o Gaspar poe o unico marquee do site exatamente onde o
- * leitor decide se continua: a navegacao para o proximo projeto. Aqui os dois
- * se juntam - a headline de duas linhas espelha a dobra, e a marquise carrega
- * o verbo do botao em laco, com o proprio botao logo abaixo.
+ * peso do heroi, e o Gaspar poe a navegacao para o proximo projeto exatamente
+ * onde o leitor decide se continua. Aqui os dois se juntam - a headline de duas
+ * linhas espelha a dobra, com o proprio botao logo abaixo.
  *
  * Sem argumento novo (RF-L08). O que muda em relacao a dobra sao os numeros
  * crus: la anunciam o programa, aqui anunciam a entrega.
@@ -85,7 +84,7 @@ export function Fechamento({ params }) {
         </div>
       </div>
 
-      <div className={`${envelope} painel__rodape absolute inset-x-0 bottom-4 z-1 flex items-end justify-between gap-4 text-silver tela-rasa:hidden`} data-revelar>
+      <div className={`${envelope} painel__rodape pointer-events-none absolute inset-x-0 bottom-4 z-1 flex items-end justify-between gap-4 text-silver tela-rasa:hidden`} data-revelar>
         <ul className={crus} role="list">
           <li>
             <b className="text-bone font-bold">Formato</b> {texto(config.entrega.formato) ? config.entrega.formato : pendente}

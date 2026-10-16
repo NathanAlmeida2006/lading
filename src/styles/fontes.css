@@ -22,6 +22,30 @@
     U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2212, U+FEFF, U+FFFD;
 }
 
+/* Reserva da Secundaria (cartao 32): enquanto a Big Shoulders Display nao chega, a headline cai numa fonte
+   instalada ajustada para ocupar a mesma largura. Sem isto a troca (`swap`) refaz a quebra de linha da
+   dobra inteira (CLS 0,11 em 4G lento, medido em 14/10/2026). Medido com `800 100px`, "NATURAL CRESCE.":
+   Big Shoulders 601 contra Arial Bold 948 (63,2%) e Roboto Bold 877 (68%). Ascent e descent saem da propria
+   Big Shoulders (hhea 98,4% e 21,3% do em) divididos pelo `size-adjust`. So `local()`: nada a baixar. */
+@font-face {
+  font-family: "Big Shoulders Reserva Arial";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Arimo Bold"), local("Liberation Sans Bold"), local("Helvetica Bold");
+  font-weight: 700 900;
+  size-adjust: 63.2%;
+  ascent-override: 155.7%;
+  descent-override: 33.7%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Big Shoulders Reserva Roboto";
+  src: local("Roboto Bold"), local("Roboto-Bold");
+  font-weight: 700 900;
+  size-adjust: 68%;
+  ascent-override: 144.7%;
+  descent-override: 31.3%;
+  line-gap-override: 0%;
+}
+
 /* Terciaria - IBM Plex Sans, variavel. Explica. */
 @font-face {
   font-family: "IBM Plex Sans";

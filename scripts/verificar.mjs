@@ -4,7 +4,7 @@
  * Cobre RNF-L09 (contraste), RNF-L11 (foco), RNF-L12 (reflow em 320, 360,
  * 1024 e 1280px), RNF-L13 (movimento reduzido), RNF-L16 (legivel sem
  * JavaScript), RNF-L35 (nada preso invisivel), o manifesto, a regua das
- * semanas, a pilha do espelho, a marquise e a doca. Os dois temas (Sigilo e
+ * semanas, a pilha do espelho e a doca. Os dois temas (Sigilo e
  * Cartaz) estao na mesma pagina, e uma leitura cobre os dois.
  *
  * O que ele NAO cobre continua sendo trabalho de olho: os 16 testes de

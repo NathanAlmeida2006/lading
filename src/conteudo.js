@@ -20,7 +20,7 @@ export const conteudo = {
   },
   reconhecimento: {
     rotulo: "a régua do treino",
-    texto: "O feed nem sempre deixa claro quem usa hormônios. Mesmo assim, vira régua de treino natural. Essa régua não mede o limite de cada pessoa.",
+    texto: "O feed esconde quem usa bomba e não mede seu verdadeiro potencial. Abandone a frustração e descubra o caminho para construir o seu corpo estético.",
     origem: `${ANGULO} · A dor · ${INSTANCIA} · Reconhecimento`,
   },
   mecanismo: MECANISMO,
@@ -91,8 +91,4 @@ export const conteudo = {
     { pergunta: "A quarta sessão é obrigatória?", resposta: `Não. Ela entra a partir da semana cinco, se as ${MECANISMO.sessoesObrigatorias} obrigatórias estiverem acontecendo com folga, e não substitui sessão perdida.`, origem: `${DRAFT}/09-cap-03-o-programa.md §3.2` },
     { pergunta: "Quando eu aumento o peso?", resposta: `${MECANISMO.nome} decide: bateu 12 repetições boas em todas as séries, o peso sobe.`, origem: `${DRAFT}/11-cap-05-progressao.md` },
   ],
-  marquise: {
-    palavras: ["Natural cresce", MECANISMO.nome, `${MECANISMO.semanas} semanas`, `${MECANISMO.sessoesObrigatorias} sessões`],
-    origem: `${ANGULO} · A promessa · ${MECANISMO.origem}`,
-  },
 };

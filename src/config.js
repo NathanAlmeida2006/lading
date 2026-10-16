@@ -1,5 +1,27 @@
 /** Dados comerciais da instância. null indica informação ainda não confirmada. */
 export const config = {
+  // Dados comerciais da seção de pilha de valor. null indica valor não confirmado. Só `confirmado`
+  // true libera a publicação (PUBLICAR=1); `ativo` false retira a seção do preview.
+  pilhaDeValor: {
+    ativo: true, // desliga a seção no preview
+    confirmado: false, // só barra PUBLICAR=1; vira true quando o gerente confirmar valores e fonte
+    fonte: "informado pelo usuário em 15/10/2026; sem lastro na base",
+    moeda: "R$",
+    cabecalho: "Veja tudo que você terá direito",
+    itens: [
+      { id: "protocolo-hipertrofia", nome: "Protocolo Hipertrofia", valor: 90 },
+      { id: "protocolo-dieta", nome: "Protocolo Dieta", valor: 70 },
+      { id: "protocolo-sono", nome: "Protocolo Sono", valor: 55 },
+      { id: "social-vibe", nome: "Social Vibe", valor: 35 },
+      { id: "checklist-integrado", nome: "Checklist Integrado", valor: 50 },
+      { id: "app", nome: "App", valor: 300 },
+    ],
+    totalRotulo: "Preço antigo:",
+    totalDeclarado: 600,
+    conector: { rotulo: "Vitalício" },
+    oferta: { rotulo: "por apenas:", preco: 77.99, subtexto: "pagamento único / acesso vitalício" },
+  },
+
   angulo: "teto-natural",
   protocolo: "hipertrofia",
   campanha: "cmp-2026-10-teto-natural",

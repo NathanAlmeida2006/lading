@@ -117,56 +117,15 @@ export function ligarLenis() {
     });
   });
 
-  const faixas = [...document.querySelectorAll(".marquise")];
-  const perto = new Set();
-  const escrito = new Map();
-  let velocidadeAgora = "0.00";
-  // So escreve quando o valor muda: 0,00 repetido nao muda nada, e cada escrita invalida a faixa.
-  const escrever = (faixa, v) => {
-    if (escrito.get(faixa) === v) return;
-    escrito.set(faixa, v);
-    faixa.style.setProperty("--scroll-velocity", v);
-  };
-  const observador =
-    "IntersectionObserver" in window
-      ? new IntersectionObserver(
-          (entradas) => {
-            for (const e of entradas) {
-              // Ao entrar, a faixa recebe a velocidade de agora; ao sair, volta a 0. Uma faixa fora da tela
-              // NAO pode ficar com a inclinacao velha: o evento que zera (400 ms depois de a rolagem parar)
-              // chegaria quando ela ja saiu, e ela ficaria torta, transbordando a pagina em alguns pixels.
-              if (e.isIntersecting) {
-                perto.add(e.target);
-                escrever(e.target, velocidadeAgora);
-              } else {
-                perto.delete(e.target);
-                escrever(e.target, "0.00");
-              }
-            }
-          },
-          { rootMargin: "100% 0px" },
-        )
-      : null;
-  // Sem IntersectionObserver, todas as faixas valem: o comportamento de antes.
-  if (observador) for (const faixa of faixas) observador.observe(faixa);
-  else for (const faixa of faixas) perto.add(faixa);
-
-  const soltarScroll = lenis.on("scroll", ({ velocity }) => {
-    velocidadeAgora = Math.max(-18, Math.min(18, velocity)).toFixed(2);
-    for (const faixa of perto) escrever(faixa, velocidadeAgora);
-  });
   return () => {
     vivo = false;
     cancelAnimationFrame(quadro);
     cancelAnimationFrame(quadroMedicaoA);
     cancelAnimationFrame(quadroMedicaoB);
     soltarVirtual();
-    soltarScroll();
     window.removeEventListener("click", aoClicarAncora);
     window.removeEventListener("keydown", aoRolarPorTeclado);
     liberarAncora();
-    observador?.disconnect();
     lenis.destroy();
-    for (const faixa of faixas) faixa.style.removeProperty("--scroll-velocity");
   };
 }
