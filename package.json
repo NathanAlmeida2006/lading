@@ -9,12 +9,7 @@
     "dev": "vite",
     "build": "vite build && vite build --ssr src/entry-server.jsx --outDir dist-ssr && node scripts/prerender.mjs && node scripts/check-size.mjs",
     "preview": "vite preview",
-    "size": "node scripts/check-size.mjs",
-    "teste:dados": "node scripts/verificar-pilha-dados.mjs",
-    "verificar": "node scripts/verificar.mjs",
-    "verificar:conversao": "node scripts/verificar-conversao.mjs",
-    "verificar:pilha": "node scripts/verificar-pilha.mjs",
-    "medir": "node scripts/medir-carga.mjs"
+    "size": "node scripts/check-size.mjs"
   },
   "dependencies": {
     "animejs": "^4.0.2",
@@ -25,7 +20,6 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^4.3.4",
-    "playwright-core": "^1.44.1",
     "tailwindcss": "^4.3.3",
     "vite": "^6.0.0"
   }

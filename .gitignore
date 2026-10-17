@@ -23,3 +23,10 @@ output/
 
 # Wrangler
 .wrangler/
+
+# Ferramentas de dev locais (fora do repo)
+scripts/verificar*.mjs
+scripts/medir-carga*
+scripts/retestar-*
+scripts/wordmark.py
+README.md
