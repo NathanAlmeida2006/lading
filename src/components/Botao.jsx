@@ -49,7 +49,7 @@ const ROTULO =
   "motion-safe:group-hover/botao:-translate-y-full motion-safe:group-focus-visible/botao:-translate-y-full " +
   "motion-reduce:transition-none";
 
-export function Botao({ params, posicao, compacto = false, fantasma = false, larguraTotal = false }) {
+export function Botao({ params, posicao, compacto = false, fantasma = false, larguraTotal = false, rotulo = VERBO_ACAO }) {
   const referencia = useRef(null);
   const { disponivel, verificarDisponibilidade } = useCondicaoOferta(config.oferta, config.checkout);
 
@@ -76,9 +76,9 @@ export function Botao({ params, posicao, compacto = false, fantasma = false, lar
       data-posicao={posicao}
     >
       <span className="botao__rolo relative block min-w-0 overflow-clip">
-        <span className={ROTULO}>{VERBO_ACAO}</span>
+        <span className={ROTULO}>{rotulo}</span>
         <span className={`${ROTULO} absolute inset-x-0 top-full`} aria-hidden="true">
-          {VERBO_ACAO}
+          {rotulo}
         </span>
       </span>
       <span

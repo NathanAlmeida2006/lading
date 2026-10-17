@@ -112,13 +112,11 @@ export function Leva() {
 
         <ol className="relative z-1 flex flex-col gap-10 mt-[calc(140svh-140px)] motion-reduce:mt-16 lg:gap-0" role="list">
           {VOZES.map((voz, indice) => {
-            const claro = indice % 2 === 1;
             const posicao = indice === 0 ? "lg:self-start lg:mt-0" : ZIGUEZAGUE[indice % 3];
             return (
               <li
-                className={`voz relative flex flex-col gap-3 min-h-95 p-6 bg-surface-1 text-bone border border-line-strong *:relative *:z-1 lg:w-[calc((100%-2*--spacing(8))/3)] lg:min-h-115 lg:p-8 ${posicao}${claro ? "" : ` ${grao} before:z-0`}`}
+                className={`voz relative flex flex-col gap-3 min-h-95 p-6 bg-surface-1 text-bone border border-line-strong *:relative *:z-1 lg:w-[calc((100%-2*--spacing(8))/3)] lg:min-h-115 lg:p-8 ${posicao} ${grao} before:z-0`}
                 key={voz.nome}
-                data-theme={claro ? "cartaz" : undefined}
                 data-revelar
               >
                 <span

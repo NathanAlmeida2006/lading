@@ -7,7 +7,7 @@ import { mascaraDeLinha, revelar, revelarEmCascata, useMovimento } from "../moti
 import { semMovimento } from "../motion/tokens.js";
 import { bloco, envelope, mascara } from "../ui.js";
 
-/** Três objeções em diálogo, sobre o campo de pontos original. */
+/** Três objeções em diálogo, sobre o campo estelar (pontos que cintilam e somem). */
 export function Objecoes() {
   const raiz = useRef(null);
   useMovimento(() => {
@@ -22,16 +22,16 @@ export function Objecoes() {
 
   return (
     <section id="objecoes" className={`${bloco} py-8 md:py-24`} ref={raiz}>
-      <CampoDePontos variante="fiel" />
+      <CampoDePontos variante="estelar" />
       <div className={`${envelope} relative z-1 lg:grid lg:grid-cols-[repeat(12,1fr)] lg:gap-x-8`}>
-        <div className="min-w-0 lg:col-[1/span_6]">
+        <div className="min-w-0 lg:col-[1/span_5] lg:sticky lg:top-24 lg:self-start">
           <Rotulo>{conteudo.objecoesRotulo}</Rotulo>
           <h2 className={`titulo text-bone font-secundaria text-h1 uppercase lg:text-display ${mascara}`} data-revelar>
             Perguntas frequentes
           </h2>
-          <div className="mt-6 lg:mt-10">
-            <PerguntasFrequentes itens={conteudo.objecoes} />
-          </div>
+        </div>
+        <div className="mt-6 min-w-0 lg:mt-0 lg:col-[6/span_7] lg:pt-4">
+          <PerguntasFrequentes itens={conteudo.objecoes} />
         </div>
       </div>
     </section>

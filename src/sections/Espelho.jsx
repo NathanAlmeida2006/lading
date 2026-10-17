@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { conteudo } from "../conteudo.js";
+import { CampoDePontos } from "../components/CampoDePontos.jsx";
 import { Botao } from "../components/Botao.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { mascaraDeLinha, revelar, useMovimento } from "../motion/index.js";
@@ -44,12 +45,13 @@ export function Espelho({ params }) {
   }, []);
 
   return (
-    <section id="espelho" className={`${bloco} py-16 md:py-24`} data-theme="cartaz" ref={raiz}>
-      <div className={`${envelope} lg:grid lg:grid-cols-[repeat(12,1fr)] lg:gap-x-8 lg:items-start`}>
-        <header className="mb-8 lg:mb-0 lg:col-[1/span_4] lg:sticky lg:top-12">
+    <section id="espelho" className={`${bloco} isolate py-16 md:py-24`} ref={raiz}>
+      <CampoDePontos variante="estelar" />
+      <div className={`${envelope} relative z-1 lg:grid lg:grid-cols-[repeat(12,1fr)] lg:gap-x-8 lg:items-start`}>
+        <header className="mb-8 lg:mb-0 lg:col-[1/span_5] lg:sticky lg:top-12">
           <Rotulo>hipertrofia · natural</Rotulo>
           <h2
-            className={`titulo text-bone font-secundaria text-h1 uppercase lg:text-display ${mascara}`}
+            className={`titulo text-bone font-secundaria text-h1 uppercase lg:text-display [--text-h1:51.2px] lg:[--text-display:clamp(48px,6.2vw,89.6px)] ${mascara}`}
             data-revelar
           >
             {conteudo.espelho.titulo}

@@ -153,7 +153,7 @@ export function PilhaDeValor({ params, id = "pilha-de-valor", posicao = "pilha" 
           {disponivel ? <OfertaLimitada /> : null}
 
           {disponivel ? (
-            <div className="chamada flex flex-col items-start mt-12" data-revelar>
+            <div className="chamada flex flex-col items-start lg:items-center mt-12" data-revelar>
               <Botao params={params} posicao={posicao} />
             </div>
           ) : null}

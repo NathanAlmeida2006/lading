@@ -70,7 +70,7 @@ export function Dobra({ params }) {
         </p>
 
         <div className={`painel__acao w-full shrink-0 mt-4 tela-rasa:mt-2 ${ENTRA} [--atraso:80ms]`}>
-          <Botao params={params} posicao="dobra" />
+          <Botao params={params} posicao="dobra" rotulo="Quero o Lithium vitalício" />
           <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
             {conteudo.mecanismo.semanas} semanas · condições na oferta abaixo
           </p>

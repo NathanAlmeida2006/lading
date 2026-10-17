@@ -31,15 +31,19 @@ export function PerguntasFrequentes({ itens }) {
             data-revelar
           >
             <summary
-              className="flex items-start justify-between gap-4 py-5 cursor-pointer list-none [&::-webkit-details-marker]:hidden font-secundaria text-h3 wrap-anywhere"
+              className="flex items-start justify-between gap-4 py-5 cursor-pointer list-none [&::-webkit-details-marker]:hidden font-secundaria text-h3 wrap-anywhere lg:items-center lg:gap-8 lg:py-7 lg:text-h2"
               aria-expanded={aqui}
               onClick={(e) => {
                 e.preventDefault();
                 definirAberto(aqui ? -1 : indice);
               }}
             >
-              <span>{pergunta}</span>
-              <span className="relative shrink-0 w-4 h-4 mt-1 transition-transform duration-700 ease-(--ease-expo) group-data-aberto/pergunta:rotate-45 motion-reduce:transition-none" aria-hidden="true">
+              <span className="hidden lg:block w-10 shrink-0 font-terciaria text-body tabular-nums opacity-60" aria-hidden="true">
+                {String(indice + 1).padStart(2, "0")}
+              </span>
+              {/* Mobile: uma linha so. A maior pergunta mede ~19x o corpo em px, entao o corpo encolhe com a largura (20px no maximo). */}
+              <span className="whitespace-nowrap [font-size:min(20px,calc((100vw-68px)/19))] lg:whitespace-normal lg:[font-size:inherit] lg:flex-1">{pergunta}</span>
+              <span className="relative shrink-0 w-4 h-4 mt-1 lg:mt-0 lg:w-5 lg:h-5 transition-transform duration-700 ease-(--ease-expo) group-data-aberto/pergunta:rotate-45 motion-reduce:transition-none" aria-hidden="true">
                 <span className="absolute inset-x-0 top-1/2 h-0.5 -mt-px bg-current" />
                 <span className="absolute inset-y-0 left-1/2 w-0.5 -ml-px bg-current" />
               </span>
@@ -50,7 +54,7 @@ export function PerguntasFrequentes({ itens }) {
               inert={hidratado && !aqui}
             >
               <div className="min-h-0 overflow-clip">
-                <p className="max-w-[40ch] pb-5 pr-8 font-terciaria text-body wrap-anywhere">{resposta}</p>
+                <p className="max-w-[40ch] pb-5 pr-8 lg:max-w-[52ch] lg:pb-8 lg:pl-[72px] lg:pr-16 font-terciaria text-body wrap-anywhere">{resposta}</p>
               </div>
             </div>
           </details>

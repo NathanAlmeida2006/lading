@@ -104,10 +104,6 @@ export function RodapeLegal({ params }) {
               )}
             </dd>
           </dl>
-          <dl className={PAR}>
-            <Rotulo como="dt" margem="mb-0">responsável</Rotulo>
-            <dd className={`${GRANDE} text-bone`}>{responsavel ?? "Responsável a confirmar"}</dd>
-          </dl>
         </address>
 
         <nav className="min-w-0 lg:col-[6/span_2]" aria-label="Seções da página">
