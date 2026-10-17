@@ -1,9 +1,5 @@
-import { useEffect, useSyncExternalStore } from "react";
-import {
-  assinarConsentimento,
-  lerConsentimento,
-  responderConsentimento,
-} from "../instrumentacao.js";
+import { useEffect } from "react";
+import { responderConsentimento, useConsentimento } from "../instrumentacao.js";
 
 /**
  * Consentimento antes do evento de terceiro (RNF-L23).
@@ -19,12 +15,9 @@ const BOTAO =
   "flex-1 inline-flex items-center justify-center min-h-12 px-4 py-3 border rounded-xs cursor-pointer " +
   "font-secundaria text-label uppercase bg-transparent text-bone border-bone";
 
-// No servidor e na hidratacao o aviso nao existe; a resposta real so se le no navegador.
-const semAvisoNoServidor = () => false;
-
 export function Consentimento() {
   // A resposta mora em instrumentacao.js, que tambem decide o pixel: aqui so se pergunta e se le.
-  const resposta = useSyncExternalStore(assinarConsentimento, lerConsentimento, semAvisoNoServidor);
+  const resposta = useConsentimento();
   const decidido = resposta !== null;
 
   // O banner e fixed: sem esta folga ele cobre o micro-registro do botao,

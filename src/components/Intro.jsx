@@ -1,3 +1,4 @@
+import { conteudo } from "../conteudo.js";
 import { envelope } from "../ui.js";
 
 /**
@@ -32,8 +33,6 @@ import { envelope } from "../ui.js";
  *      interface. O leitor de tela nao a ouve e nada fica inclicavel por
  *      tras dela.
  */
-const LINHAS = ["Natural", "Cresce."];
-
 export function Intro() {
   let indice = 0;
   return (
@@ -44,7 +43,7 @@ export function Intro() {
       <div className={`${envelope} flex flex-col gap-3 animate-intro-bloco`}>
         <span className="font-secundaria text-overline uppercase text-void">(protocolo 01 · hipertrofia)</span>
         <p className="flex flex-col w-full font-secundaria text-display-xxl uppercase tabular-nums">
-          {LINHAS.map((linha) => (
+          {conteudo.dobra.headline.linhas.map((linha) => (
             <span className="block overflow-clip pb-[0.04em] -mb-[0.04em] whitespace-nowrap" key={linha}>
               {[...linha].map((letra, i) => (
                 <span className="inline-block will-change-transform animate-intro-letra" style={{ "--index": indice++ }} key={`${linha}-${i}`}>

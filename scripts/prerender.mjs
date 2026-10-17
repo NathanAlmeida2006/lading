@@ -10,6 +10,7 @@ import { readFile, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { validarCondicaoOferta } from "../src/oferta.js";
+import { emailReal, textoReal as texto, urlDocumento } from "../src/validacao.js";
 
 const raiz = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const molde = join(raiz, "dist", "index.html");
@@ -18,7 +19,6 @@ const { config } = await import(pathToFileURL(join(raiz, "src", "config.js")).hr
 const { secoes } = await import(pathToFileURL(join(raiz, "src", "secoes.js")).href);
 const faltam = [];
 const falta = (campo, motivo) => faltam.push(`${campo}: ${motivo}`);
-const texto = (valor) => typeof valor === "string" && valor.trim() !== "" && !/\[(?:A DEFINIR|A CONFIRMAR)\]|DEFINIR/i.test(valor);
 const afirmacao = (campo, valido, motivo = "informação ausente ou inválida") => {
   if (!valido) falta(campo, motivo);
 };
@@ -62,16 +62,18 @@ afirmacao("checkout.parametroRastreio", /^[a-zA-Z][\w-]*$/.test(config.checkout.
   "nome do parâmetro de rastreio ainda não confirmado na conta");
 afirmacao("pixel.id", /^\d+$/.test(String(config.pixel.id ?? "")), "ID do Pixel ausente");
 for (const campo of ["responsavel", "documento"]) afirmacao(`legal.${campo}`, texto(config.legal[campo]));
-afirmacao("legal.contato", texto(config.legal.contato) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.legal.contato), "e-mail de contato ausente ou inválido");
+afirmacao("legal.contato", emailReal(config.legal.contato), "e-mail de contato ausente ou inválido");
 
+// A mesma regra do rodape (src/validacao.js): o que ele esconderia, o build recusa.
 const documentoLegal = async (campo) => {
   const valor = config.legal[campo];
   if (!texto(valor)) return falta(`legal.${campo}`, "referência ausente");
-  if (urlHttps(valor)) return;
-  if (!valor.startsWith("/") || valor.includes("..") || /[?#]/.test(valor)) return falta(`legal.${campo}`, "use URL HTTPS ou arquivo estático publicado");
-  const caminho = resolve(raiz, "dist", `.${valor}`);
+  const referencia = urlDocumento(valor);
+  if (!referencia) return falta(`legal.${campo}`, "use URL HTTPS sem credenciais ou arquivo estático publicado");
+  if (!referencia.startsWith("/")) return;
+  const caminho = resolve(raiz, "dist", `.${referencia}`);
   try { if (!(await stat(caminho)).isFile()) throw new Error("não é arquivo"); }
-  catch { falta(`legal.${campo}`, `documento estático não existe em dist${valor}`); }
+  catch { falta(`legal.${campo}`, `documento estático não existe em dist${referencia}`); }
 };
 await Promise.all([documentoLegal("politicaPrivacidade"), documentoLegal("termosDeUso")]);
 

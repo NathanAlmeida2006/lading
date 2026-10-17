@@ -5,6 +5,7 @@ import { Menu } from "../components/Menu.jsx";
 import { Moldura } from "../components/Moldura.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { Wordmark } from "../components/Wordmark.jsx";
+import { VERBO_CURTO } from "../config.js";
 import { conteudo } from "../conteudo.js";
 import { camada, crus, envelope, grao, linha, painel, vazado } from "../ui.js";
 
@@ -33,9 +34,8 @@ import { camada, crus, envelope, grao, linha, painel, vazado } from "../ui.js";
  * (RNF-L01) nao depende da hidratacao.
  */
 const ENTRA = "animate-revelar motion-reduce:animate-none";
-const [antesDoDado, depoisDoDado] = conteudo.dobra.subheadline.texto.split("foi medido");
 
-export function Dobra({ params }) {
+export function Dobra() {
   return (
     <section className={`${painel} ${grao} painel-capa pendente:[--base:300ms]`} id="inicio">
       <FundoCapa />
@@ -64,13 +64,11 @@ export function Dobra({ params }) {
         <Fio atraso={320} />
 
         <p className={`painel__corpo max-w-prose mt-3 tela-rasa:mt-2 text-silver font-terciaria text-[length:1.125rem] leading-[1.65] ${ENTRA}`}>
-          {depoisDoDado === undefined
-            ? conteudo.dobra.subheadline.texto
-            : <>{antesDoDado}<strong className="text-bone font-semibold">foi medido</strong>{depoisDoDado}</>}
+          {conteudo.dobra.subheadline.texto}
         </p>
 
         <div className={`painel__acao w-full shrink-0 mt-4 tela-rasa:mt-2 ${ENTRA} [--atraso:80ms]`}>
-          <Botao params={params} posicao="dobra" rotulo="Quero o Lithium vitalício" />
+          <Botao posicao="dobra" rotulo={VERBO_CURTO} />
           <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
             {conteudo.mecanismo.semanas} semanas · condições na oferta abaixo
           </p>

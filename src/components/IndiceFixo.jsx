@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { doisDigitos } from "../ui.js";
 
 /**
  * Paginacao fixa "03 / 10", no canto.
@@ -74,8 +75,6 @@ export function IndiceFixo({ ids }) {
       window.removeEventListener("resize", aoRedimensionar);
     };
   }, [ids]);
-
-  const doisDigitos = (n) => String(n).padStart(2, "0");
 
   // Some com o aviso de cookies e em tela de 380px ou menos. A altura medida da
   // doca inclui quebra de linha e safe-area; o indice conserva um respiro acima dela.

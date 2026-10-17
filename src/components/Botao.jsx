@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { pulsar } from "../motion/index.js";
-import { registrarInicioCheckout, urlCheckout } from "../instrumentacao.js";
+import { registrarInicioCheckout, urlCheckout, useParametros } from "../instrumentacao.js";
 import { config, VERBO_ACAO } from "../config.js";
 import { useCondicaoOferta } from "../oferta.js";
 
@@ -49,8 +49,9 @@ const ROTULO =
   "motion-safe:group-hover/botao:-translate-y-full motion-safe:group-focus-visible/botao:-translate-y-full " +
   "motion-reduce:transition-none";
 
-export function Botao({ params, posicao, compacto = false, fantasma = false, larguraTotal = false, rotulo = VERBO_ACAO }) {
+export function Botao({ posicao, compacto = false, fantasma = false, larguraTotal = false, rotulo = VERBO_ACAO }) {
   const referencia = useRef(null);
+  const params = useParametros();
   const { disponivel, verificarDisponibilidade } = useCondicaoOferta(config.oferta, config.checkout);
 
   function aoClicar(event) {

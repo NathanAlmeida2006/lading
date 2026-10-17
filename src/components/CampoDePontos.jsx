@@ -5,22 +5,19 @@ import { aoMudarPausa, estaPausado } from "../motion/pausa.js";
 import { ligarCampo } from "../motion/campo.js";
 
 /**
- * O campo de pontos ao fundo da prova.
+ * O campo de pontos ao fundo das secoes.
  *
  * Vem da secao de fecho do Google Cloud x Team USA, lida ao vivo em
  * 07/09/2026: uma malha de pontos que desenha uma superficie ondulada, com
  * fios finos de grade por tras, deslizando devagar.
  *
- * DUAS VARIANTES, e a diferenca entre elas e o estudo de 07/09/2026 feito com
- * recortes ampliados do site de origem:
+ * DUAS VARIANTES:
  *
- *   `malha` (prova, o que se leva) - grade regular com deslocamento senoidal.
- *   Barata e discreta.
+ *   `malha` (o padrao: as capas e o que se leva) - grade regular com
+ *   deslocamento senoidal. Barata e discreta.
  *
- *   `fiel` (as tres perguntas) - a rede em perspectiva. E uma malha regular
- *   deformada por um relevo e projetada: ela se adensa nas cristas e volta a
- *   ser rede entre elas, varia de tamanho e brilho por profundidade, e uma
- *   minoria dos pontos e do acento. Custa mais, e por isso nao e o padrao.
+ *   `estelar` (as demais secoes) - pontos com profundidade, cada um na sua
+ *   deriva e na sua fase de cintilar, sem grade por tras.
  *
  * ATENCAO, e esta e a razao de o componente existir isolado: o `TR-03`
  * reprova peca com "faisca ou particula", e um campo de pontos animado cai
@@ -33,8 +30,8 @@ import { ligarCampo } from "../motion/campo.js";
  *   - nenhuma cor propria: o acento nao entra aqui, porque ele ja aparece uma
  *     vez por tela em outro lugar da secao.
  *
- * Reprovado o `TR-03`, o conserto e trocar este componente por `null` no
- * `Prova.jsx`: o layout inteiro continua de pe, so o fundo fica liso.
+ * Reprovado o `TR-03`, o conserto e este componente devolver `null`: o
+ * layout inteiro continua de pe, so o fundo fica liso.
  *
  * Quatro travas de custo, e nenhuma e opcional numa pagina que vende
  * performance:

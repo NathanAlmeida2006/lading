@@ -1,6 +1,6 @@
 import { config } from "./config.js";
 
-/** Ordem RF-L08. Espelho é continuação da etapa 2; ProvaSocial pertence a Prova. */
+/** Ordem RF-L08. Espelho é continuação da etapa 2. */
 export const secoes = [
   { id: "inicio", etapaCanonica: 1, rotulo: "Dobra", presente: true },
   { id: "reconhecimento", etapaCanonica: 2, rotulo: "Reconhecimento", presente: true },
@@ -9,8 +9,7 @@ export const secoes = [
   { id: "mapa", etapaCanonica: 4, rotulo: "Mapa do caminho", presente: config.secoes.mapa.ativo,
     justificativaAusencia: config.secoes.mapa.justificativaAusencia },
   { id: "prova", etapaCanonica: 5, rotulo: "Prova", presente: false,
-    justificativaAusencia: "Ainda não há depoimento autorizado nem dado de prova real para exibir; a seção volta quando houver lastro.",
-    complementos: [{ id: "prova-social", presente: config.depoimentos.length > 0 }] },
+    justificativaAusencia: "Ainda não há depoimento autorizado nem dado de prova real para exibir; a seção volta quando houver lastro." },
   { id: "amostra", etapaCanonica: 6, rotulo: "Amostra", presente: config.secoes.amostra.ativo,
     justificativaAusencia: config.secoes.amostra.justificativaAusencia },
   { id: "oferta", etapaCanonica: 7, rotulo: "Oferta", presente: true },

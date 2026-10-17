@@ -36,12 +36,20 @@ export const vazado = "text-transparent [-webkit-text-stroke:1.5px_var(--bone)]"
 /** Painel de tela cheia: a dobra e o fechamento. `min-h-svh`, nunca `vh` (RF-L09). */
 export const painel = "relative flex flex-col min-h-svh py-4 lg:py-8 bg-void text-bone overflow-clip";
 
-/** Os numeros crus do rodape de um painel (relative + bottom-4: o `position: relative` e o que vale). */
-export const painelRodape =
-  "painel__rodape relative bottom-4 z-1 flex items-end justify-between gap-4 text-silver tela-rasa:hidden";
-
 export const crus =
   "flex flex-wrap justify-end gap-x-4 gap-y-2 text-right font-terciaria text-mono-reg tabular-nums";
+
+/** Numeracao de dois digitos ("03"), a dos indices, cards e cronometros. */
+export const doisDigitos = (n) => String(n).padStart(2, "0");
+
+/**
+ * Palavra que acende com a rolagem (manifesto e titulo do que se leva): apagada e opacidade, e a da
+ * fronteira (`data-atual`) no acento.
+ */
+export const palavra =
+  "palavra inline-block transition-[opacity,color] duration-(--motion-fast) ease-(--ease-corte-2) " +
+  "js:opacity-[0.22] data-acesa:opacity-100 data-atual:text-acento " +
+  "motion-reduce:js:opacity-100 motion-reduce:data-atual:text-inherit";
 
 /**
  * Titulo com mascara de linha (`mascaraDeLinha`): o `splitText` do anime.js 4 marca cada linha

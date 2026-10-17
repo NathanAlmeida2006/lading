@@ -17,6 +17,9 @@
  * Precisa de `playwright-core` e de um Chromium. Nao entra em dependencies
  * porque nao vai para o build: e ferramenta de conferencia, nao da pagina.
  */
+import { conteudo } from "../src/conteudo.js";
+import { secoesPorId } from "../src/secoes.js";
+
 let chromium;
 try {
   ({ chromium } = await import("playwright-core"));
@@ -68,9 +71,10 @@ const linha = (id, ok, nota) => {
 // Uma passada so: a pagina NAO segue o tema do sistema (ver o comentario do index.html), e os dois
 // modos, Sigilo e Cartaz, estao na mesma pagina, entao uma leitura cobre os dois.
 //
-// ACEITOS: o acento (3,77:1) em dois termos de 18px da tese das semanas. Decisao do usuario
-// (02/10/2026): trocar a cor mudaria o desenho. Sai da lista no dia em que a cor mudar.
-const ACEITOS = ["Regra do 12", "portão da fase 3"];
+// ACEITOS: excecoes de contraste aceitas pelo usuario porque trocar a cor mudaria o desenho. Os dois
+// termos aceitos em 02/10/2026 ("Regra do 12", "portao da fase 3") sairam da pagina. Entra aqui so o
+// que o usuario aceitar de novo.
+const ACEITOS = [];
 {
   const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
   const p = await ctx.newPage();
@@ -314,10 +318,10 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
   await ctx.close();
 }
 
-// --- MAN-01 e SEM-01: manifesto e regua das doze semanas -------------------
+// --- MAN-01 e SEM-01: manifesto e regua do mapa ------------------------------
 // Os dois efeitos ligados a rolagem. O que se mede e o ESTADO FINAL, que e o
 // unico que nao pode falhar: palavra que nao acendeu e texto invisivel, e
-// regua que nao chegou a 12 e progresso medido errado (RF-L11b).
+// regua que nao chegou ao fim e progresso medido errado (RF-L11b).
 {
   const ctx = await nav.newContext({ viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true });
   const p = await ctx.newPage();
@@ -353,8 +357,9 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
   }));
 
   linha("MAN-01", r.apagadas === 0, `${r.apagadas} palavras do manifesto ainda apagadas depois de passar por ele`);
-  linha("SEM-01", r.acesas === 12 && r.semanas === 12 && r.slides === 5 && r.linhas === 0,
-    `${r.acesas} de ${r.semanas} semanas acesas, ${r.slides} cards, ${r.linhas} linhas de titulo presas`);
+  const passos = conteudo.mapa.estados.length;
+  linha("SEM-01", r.acesas === passos && r.semanas === passos && r.slides === passos && r.linhas === 0,
+    `${r.acesas} de ${r.semanas} passos acesos, ${r.slides} cards (esperados ${passos}), ${r.linhas} linhas de titulo presas`);
   await ctx.close();
 }
 
@@ -369,8 +374,10 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
     const s = document.getElementById("prova");
     return s ? s.offsetTop + s.offsetHeight - window.innerHeight : null;
   });
-  if (alvo === null) {
-    linha("PRV-01", false, "seção prova ausente: falta justificativa no contrato secoes.js; cenário não executável");
+  if (alvo === null && !secoesPorId.prova.presente && secoesPorId.prova.justificativaAusencia) {
+    console.log("  PRV-01  n/a      seção prova ausente por contrato (secoes.js, com justificativa)");
+  } else if (alvo === null) {
+    linha("PRV-01", false, "seção prova ausente do DOM, mas presente (ou sem justificativa) em secoes.js");
   } else {
   for (let y = 0; y <= alvo; y += 240) {
     await p.evaluate((v) => window.scrollTo({ top: v, behavior: "instant" }), y);
@@ -474,11 +481,11 @@ const ACEITOS = ["Regra do 12", "portão da fase 3"];
         ctaDepois: cta && cta.top >= boxes.at(-1).bottom - 1,
       };
     });
-    if (r.cards !== 5 || r.ctas !== 1 || r.overlap || r.overflow || !r.ordem || !r.ctaDepois) quebras.push(`${w}x${h}, texto200=${zoom}: ${JSON.stringify(r)}`);
+    if (r.cards !== conteudo.espelho.cartas.length || r.ctas !== 1 || r.overlap || r.overflow || !r.ordem || !r.ctaDepois) quebras.push(`${w}x${h}, texto200=${zoom}: ${JSON.stringify(r)}`);
     await ctx.close();
   }
   linha("ESP-01", quebras.length === 0,
-    quebras.length ? quebras.join("; ") : "5 cards sem sobreposição, CTA único após a lista, ordem preservada; telas baixas e texto 200%");
+    quebras.length ? quebras.join("; ") : `${conteudo.espelho.cartas.length} cards sem sobreposição, CTA único após a lista, ordem preservada; telas baixas e texto 200%`);
 }
 
 // --- INT-01: a cortina de introducao -----------------------------------------

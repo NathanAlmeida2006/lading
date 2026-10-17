@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Botao } from "./Botao.jsx";
+import { Cronometro } from "./Cronometro.jsx";
 import { config } from "../config.js";
-import { assinarConsentimento, lerConsentimento } from "../instrumentacao.js";
+import { useConsentimento } from "../instrumentacao.js";
 import { useCondicaoOferta } from "../oferta.js";
 import { pilhaApresentavel } from "../pilha.js";
-import { Cronometro } from "../sections/PilhaDeValor.jsx";
 
 /**
  * A doca de venda: barra fixa na base, com preco, Pix e o botao.
@@ -13,9 +13,10 @@ import { Cronometro } from "../sections/PilhaDeValor.jsx";
  * navegacao constante em troca de um CTA sempre visivel. Aqui nao ha
  * navegacao a sacrificar (RF-L01), entao a troca e so ganho.
  *
- * Ela e o CTA de quando nao ha CTA: so entra na janela do meio da pagina, com a dobra, o
- * fechamento e o rodape fora da tela E nenhum outro botao de venda a vista (dois botoes iguais
- * na mesma tela competem entre si), e nunca com o aviso de cookies aberto. Entra e sai deslizando, com
+ * Ela e o CTA de quando nao ha CTA: so entra na janela do meio da pagina, com a dobra, a regua do
+ * manifesto, a pilha de valor, o botao do fechamento e o rodape fora da tela, e nunca com o aviso de
+ * cookies aberto. Os botoes do espelho, do mapa e da oferta NAO sao observados: com eles a doca pode
+ * dividir a tela (pendencia B3, decisao do gerente). Entra e sai deslizando, com
  * ease suave de 500 ms. Tres coisas que ela NAO faz, cada uma uma trava: nenhuma barra
  * de progresso (o §3.5 proibe), o rotulo nao troca com a secao (RF-L10), e sem
  * JavaScript ela nao existe (`hidden js:flex`). Uma doca em CSS puro comeria
@@ -31,15 +32,16 @@ import { Cronometro } from "../sections/PilhaDeValor.jsx";
  * Inativa, ela e `inert`: so sai da tela por `translate`, e sem isso o Tab cairia
  * num botao que ninguem ve.
  */
-const avisoAbertoNoServidor = () => null;
+// O preco vem da pilha de valor (config estatica: conferida uma vez); `config.oferta.preco` segue nulo.
+const OFERTA = pilhaApresentavel(config.pilhaDeValor);
 
-export function Doca({ params }) {
+export function Doca() {
   const doca = useRef(null);
   const [livre, definirLivre] = useState(false); // nenhum alvo ocupa a tela
   // Os botoes de venda nascem e somem juntos, com a disponibilidade da oferta: e ela que
   // manda refazer a lista de alvos. Sem botao proprio, a doca tambem nao tem o que oferecer.
   const { disponivel } = useCondicaoOferta(config.oferta, config.checkout);
-  const avisoAberto = useSyncExternalStore(assinarConsentimento, lerConsentimento, avisoAbertoNoServidor) === null;
+  const avisoAberto = useConsentimento() === null;
   const ativa = livre && disponivel && !avisoAberto;
 
   useEffect(() => {
@@ -111,9 +113,6 @@ export function Doca({ params }) {
     return () => document.body.classList.remove("com-doca");
   }, [ativa]);
 
-  // O preco vem da pilha de valor (a oferta de R$ 79,99); `config.oferta.preco` segue nulo.
-  const oferta = pilhaApresentavel(config.pilhaDeValor);
-
   return (
     <aside
       ref={doca}
@@ -126,11 +125,11 @@ export function Doca({ params }) {
       <div className="flex flex-col gap-1 min-w-0 max-w-full text-silver">
         <span className="font-secundaria text-label uppercase text-bone">Protocolo 01</span>
         <div className="font-terciaria text-mono-reg tabular-nums whitespace-nowrap">
-          {oferta ? `${oferta.moeda} ${oferta.oferta.preco} · Pix à vista` : "Pix à vista · preço a definir"}
+          {OFERTA ? `${OFERTA.moeda} ${OFERTA.oferta.preco} · Pix à vista` : "Pix à vista · preço a definir"}
         </div>
       </div>
-      {oferta ? <Cronometro classe="ml-auto text-mono-reg [&>span]:hidden" /> : null}
-      <Botao params={params} posicao="doca" compacto />
+      {OFERTA ? <Cronometro classe="ml-auto text-mono-reg [&>span]:hidden" /> : null}
+      <Botao posicao="doca" compacto />
     </aside>
   );
 }

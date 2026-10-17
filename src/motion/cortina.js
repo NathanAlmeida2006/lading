@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { semMovimento } from "./tokens.js";
 
 /**
  * Cortina: a secao fica PINADA pela base enquanto a proxima sobe por cima dela (o efeito da
@@ -19,9 +20,13 @@ export function useCortina(ref) {
   useEffect(() => {
     const el = ref.current;
     const cobre = el?.parentElement?.children[[...el.parentElement.children].indexOf(el) + 1];
-    if (!el || !cobre || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el || !cobre || semMovimento()) return;
     let quadro = 0;
     let topo = 0;
+    // O ultimo valor escrito de cada estilo: a rolagem reescrevia os quatro a cada quadro, mesmo iguais.
+    let posicao;
+    let topoCss;
+    let mascara;
     const medir = () => {
       topo = Math.min(0, window.innerHeight - el.offsetHeight);
     };
@@ -30,13 +35,18 @@ export function useCortina(ref) {
       // Toda coberta: o pino sai (o layout nao muda, o `sticky` so desloca o desenho) e a secao
       // deixa de contar como "na tela" para os observadores (a doca, o alcance).
       const coberta = cobre.getBoundingClientRect().top <= 0;
-      el.style.position = coberta ? "relative" : "sticky";
-      el.style.top = coberta ? "" : `${topo}px`;
+      const novaPosicao = coberta ? "relative" : "sticky";
+      const novoTopo = coberta ? "" : `${topo}px`;
+      if (novaPosicao !== posicao) el.style.position = posicao = novaPosicao;
+      if (novoTopo !== topoCss) el.style.top = topoCss = novoTopo;
       // Posicao da borda de cima da que cobre, medida a partir do topo da pinada.
       const y = cobre.getBoundingClientRect().top - el.getBoundingClientRect().top;
       const m = y >= el.offsetHeight ? "" : `linear-gradient(to bottom, #000 ${Math.max(0, y - FADE)}px, transparent ${Math.max(0, y)}px)`;
-      el.style.maskImage = m;
-      el.style.webkitMaskImage = m;
+      if (m !== mascara) {
+        mascara = m;
+        el.style.maskImage = m;
+        el.style.webkitMaskImage = m;
+      }
     };
     const pedir = () => {
       if (!quadro) quadro = requestAnimationFrame(mascarar);

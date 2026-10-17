@@ -1,3 +1,5 @@
+import { reais } from "./pilha.js";
+
 /** Dados comerciais da instância. null indica informação ainda não confirmada. */
 export const config = {
   // Dados comerciais da seção de pilha de valor. null indica valor não confirmado. Só `confirmado`
@@ -22,10 +24,7 @@ export const config = {
     oferta: { rotulo: "por apenas:", preco: 79.99, subtexto: "pagamento único / acesso vitalício" },
   },
 
-  angulo: "teto-natural",
-  protocolo: "hipertrofia",
   campanha: "cmp-2026-10-teto-natural",
-  lastro: "dossie-hipertrofia §5.3 e §5.1",
 
   // RF-L08: o mapa existe; a amostra espera um trecho real do miolo.
   secoes: {
@@ -85,4 +84,7 @@ export const config = {
   depoimentos: [], // { id, texto, identificacao, contexto, origem, autorizacaoRef, aprovado }
 };
 
-export const VERBO_ACAO = "Quero o Lithium vitalício por R$ 79,99";
+// O verbo do CTA (RF-L10). O preço sai da pilha de valor, o mesmo número do recibo: mudou lá, muda aqui.
+// A dobra usa a forma curta, sem o preço.
+export const VERBO_CURTO = "Quero o Lithium vitalício";
+export const VERBO_ACAO = `${VERBO_CURTO} por ${config.pilhaDeValor.moeda} ${reais(config.pilhaDeValor.oferta.preco)}`;

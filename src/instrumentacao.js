@@ -9,6 +9,7 @@
  * O estado de mensuracao mora neste modulo, e nao em componente: sobrevive ao
  * StrictMode e a remontagem, e a pagina tem um dono so para "ja enviei isto?".
  */
+import { useSyncExternalStore } from "react";
 import { config } from "./config.js";
 
 const CHAVE_PARAMS = "fluor:params";
@@ -42,6 +43,29 @@ export function capturarParametros() {
   const juntos = { ...guardados, ...daUrl };
   if (Object.keys(daUrl).length) gravar(CHAVE_PARAMS, juntos);
   return juntos;
+}
+
+const SEM_PARAMS = {};
+let params; // capturados uma vez por carga, no primeiro pedido do navegador
+
+/** Os parametros da visita; o mesmo `{}` quando nao ha campanha, para ninguem re-renderizar a toa. */
+function lerParametros() {
+  if (params === undefined) {
+    const capturados = capturarParametros();
+    params = Object.keys(capturados).length ? capturados : SEM_PARAMS;
+  }
+  return params;
+}
+
+const semMudanca = () => () => {};
+const semParamsNoServidor = () => SEM_PARAMS;
+
+/**
+ * Os parametros para o `Botao`, lidos aqui e nao recebidos por prop: nada atravessa a arvore, e so os
+ * botoes re-renderizam quando a visita traz campanha. No servidor e na hidratacao, `{}`.
+ */
+export function useParametros() {
+  return useSyncExternalStore(semMudanca, lerParametros, semParamsNoServidor);
 }
 
 /**
@@ -107,6 +131,14 @@ export function assinarConsentimento(assinante) {
   return () => assinantes.delete(assinante);
 }
 
+// No servidor e na hidratacao vale "sem aviso e sem doca": a resposta real so se le no navegador.
+const respostaNoServidor = () => false;
+
+/** A resposta (true | false | null) para os componentes: o aviso e a doca leem daqui. */
+export function useConsentimento() {
+  return useSyncExternalStore(assinarConsentimento, lerConsentimento, respostaNoServidor);
+}
+
 /** A unica porta de entrada da resposta: grava, e quem assina (aviso, doca, alcance) reage. */
 export function responderConsentimento(aceitou) {
   consentimento = aceitou === true;
@@ -121,6 +153,7 @@ export function responderConsentimento(aceitou) {
    ------------------------------------------------------------------------- */
 
 let pixelInjetado = false; // o script que ESTE modulo pos na pagina; `window.fbq` alheio nao conta
+let pixelFalhou = false; // o script nao carregou (bloqueado): o stub enfileiraria para sempre, sem enviar
 let paginaVista = false;
 const enviadas = new Set(); // impressoes de secao ja enviadas nesta carga de pagina
 
@@ -132,7 +165,7 @@ const idDoPixel = () => String(config.pixel.id ?? "").trim();
  */
 function elegivel(paraEnvio = true) {
   if (typeof window === "undefined" || lerConsentimento() !== true || !idDoPixel()) return false;
-  return !paraEnvio || (pixelInjetado && typeof window.fbq === "function");
+  return !paraEnvio || (pixelInjetado && !pixelFalhou && typeof window.fbq === "function");
 }
 
 /** Idempotente: um script, um `init` e um PageView por carga de pagina. */
@@ -150,6 +183,7 @@ function carregarPixel() {
       const script = document.createElement("script");
       script.async = true;
       script.src = "https://connect.facebook.net/en_US/fbevents.js";
+      script.onerror = () => { pixelFalhou = true; };
       document.head.appendChild(script);
       pixelInjetado = true;
       fbq("init", idDoPixel());

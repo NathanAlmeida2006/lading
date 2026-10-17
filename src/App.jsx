@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import "lenis/dist/lenis.css";
 import "./styles/tokens/cor.css";
 import "./styles/tokens/forma-espaco.css";
@@ -18,28 +18,19 @@ import { Espelho } from "./sections/Espelho.jsx";
 import { Leva } from "./sections/Leva.jsx";
 import { Semanas } from "./sections/Semanas.jsx";
 import { Amostra } from "./sections/Amostra.jsx";
-import { Oferta } from "./sections/Oferta.jsx";
 import { Objecoes } from "./sections/Objecoes.jsx";
 import { Fechamento } from "./sections/Fechamento.jsx";
 import { RodapeLegal } from "./sections/RodapeLegal.jsx";
 
-import { capturarParametros, iniciarMensuracao } from "./instrumentacao.js";
+import { iniciarMensuracao } from "./instrumentacao.js";
 import { garantirVisibilidade, ligarLenis, useMovimento } from "./motion/index.js";
-import { conteudo } from "./conteudo.js";
 import { alcancePorId, idsDoIndice, secoesPorId } from "./secoes.js";
 
 /** O registro em secoes.js fixa ids, etapas e presença; a árvore preserva RF-L08. */
 export function App() {
-  const [params, definirParams] = useState({});
-
-  // Medicao: roda sempre, com ou sem `js` (nao e movimento). Sem parametro de campanha o estado
-  // fica como esta: `capturarParametros` devolve um `{}` NOVO a cada chamada, e `definirParams` com
-  // ele refazia a arvore inteira da pagina (todas as secoes recebem `params`) para nada.
-  useEffect(() => {
-    const capturados = capturarParametros();
-    if (Object.keys(capturados).length) definirParams(capturados);
-    return iniciarMensuracao(alcancePorId);
-  }, []);
+  // Medicao: roda sempre, com ou sem `js` (nao e movimento). Os parametros de campanha nao passam por
+  // aqui: o `Botao` os le direto de instrumentacao.js (`useParametros`).
+  useEffect(() => iniciarMensuracao(alcancePorId), []);
   useMovimento(garantirVisibilidade);
   useMovimento(ligarLenis);
 
@@ -69,27 +60,28 @@ export function App() {
       <Consentimento />
 
       <main id="conteudo">
-        <Dobra params={params} />
+        <Dobra />
         {/* Cortinas (`useCortina`): a secao de cima fica pinada e a de baixo sobe por cima. Cada par
             vive num conteiner proprio, onde o pino termina com a de cima toda coberta. */}
         <div>
           <Manifesto />
-          <PilhaDeValor params={params} />
-          <Espelho params={params} />
+          <PilhaDeValor />
+          <Espelho />
         </div>
         <Leva />
-        {secoesPorId.mapa.presente && <Semanas params={params} />}
+        {secoesPorId.mapa.presente && <Semanas />}
         <div>
           {secoesPorId.amostra.presente && <Amostra />}
-          <Oferta params={params} />
+          {/* A oferta e a mesma pilha de valor, com a ancora `#oferta` e a posicao `oferta` do CTA. */}
+          <PilhaDeValor id="oferta" posicao="oferta" />
         </div>
         <Objecoes />
-        <Fechamento params={params} />
+        <Fechamento />
       </main>
 
-      <RodapeLegal params={params} />
+      <RodapeLegal />
       <IndiceFixo ids={idsDoIndice} />
-      <Doca params={params} />
+      <Doca />
     </>
   );
 }

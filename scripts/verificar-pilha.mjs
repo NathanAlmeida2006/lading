@@ -10,6 +10,8 @@
  * Evidencias em output/playwright/pilha/. Precisa de playwright-core e de um Chromium.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { config } from "../src/config.js";
 let chromium;
 try {
   ({ chromium } = await import("playwright-core"));
@@ -21,7 +23,7 @@ try {
 const EXEC = process.env.CHROMIUM ?? null;
 const ALVO = process.argv[2] ?? "http://localhost:4181/";
 const origem = new URL(ALVO).origin;
-const OUT = "/home/alucard/Documentos/fluor-landing/output/playwright/pilha";
+const OUT = fileURLToPath(new URL("../output/playwright/pilha", import.meta.url));
 mkdirSync(OUT, { recursive: true });
 const nav = await chromium.launch(EXEC ? { executablePath: EXEC, headless: true } : { headless: true });
 
@@ -87,25 +89,30 @@ const contraste = (a, b) => {
 };
 
 // ---------- a) layout, 4 viewports ----------
+// Os numeros esperados saem da config (itens, total), nao de valores congelados.
+const ITENS = config.pilhaDeValor.itens.length;
+const TOTAL = config.pilhaDeValor.totalDeclarado;
 const MEDIR_PILHA = () => {
   const s = document.getElementById("pilha-de-valor");
   const r = s.getBoundingClientRect();
   const lista = s.querySelector(".pilha__lista");
   const oferta = s.querySelector(".pilha__oferta");
-  const itens = [...s.querySelectorAll(".pilha__itens > div")];
+  const itens = [...s.querySelectorAll(".pilha__itens > li")];
   const num = (t) => parseFloat(t.replace(/[^\d,]/g, "").replace(",", "."));
-  const dd = itens.map((d) => d.querySelector("dd").textContent.trim());
+  // Cada item: icone, nome e o valor riscado (o ultimo paragrafo).
+  const dd = itens.map((d) => d.querySelector("p:last-of-type").textContent.trim());
   const ctas = [...document.querySelectorAll('a[data-posicao="pilha"]')];
   const cta = ctas[0];
-  const preco = oferta.querySelector("p.font-extrabold");
-  const numeral = preco.lastElementChild;
+  const preco = oferta.querySelector("dd");
+  const numeral = preco.querySelector(".aberracao");
   const nr = numeral.getBoundingClientRect();
   const cr = oferta.getBoundingClientRect();
   return {
     innerWidth,
     larguraDoc: document.documentElement.scrollWidth,
     itens: itens.length,
-    bordas: itens.map((d) => `${getComputedStyle(d).borderBottomWidth} ${getComputedStyle(d).borderBottomStyle}`),
+    // O fio vai em cima de cada item, menos do primeiro (`not-first:border-t`).
+    bordas: itens.slice(1).map((d) => `${getComputedStyle(d).borderTopWidth} ${getComputedStyle(d).borderTopStyle}`),
     dd,
     somaDd: dd.reduce((a, t) => a + num(t), 0),
     tachado: num(s.querySelector("p s").textContent),
@@ -124,8 +131,8 @@ for (const [w, h] of [[360, 640], [390, 844], [1280, 720], [1440, 900]]) {
   const { ctx, p, erros } = await pagina({ viewport: { width: w, height: h } });
   await irPara(p);
   const m = await p.evaluate(MEDIR_PILHA);
-  const ok = m.larguraDoc <= m.innerWidth && m.itens === 6 && m.bordas.every((b) => parseFloat(b) > 0 && b.includes("solid")) &&
-    Math.abs(m.somaDd - 600) < 1e-9 && m.tachado === 600 && m.ctas === 1 && m.ctaAltura >= 48 &&
+  const ok = m.larguraDoc <= m.innerWidth && m.itens === ITENS && m.bordas.every((b) => parseFloat(b) > 0 && b.includes("solid")) &&
+    Math.abs(m.somaDd - TOTAL) < 1e-9 && m.tachado === TOTAL && m.ctas === 1 && m.ctaAltura >= 48 &&
     m.cardScroll <= m.cardClient && m.numeralDentroDoCard;
   registrar(`a-${w}x${h}`, ok, `docW=${m.larguraDoc}/${m.innerWidth}, itens=${m.itens}, soma=${m.somaDd}, tachado=${m.tachado}, CTA=${m.ctas}x${m.ctaAltura}px, card ${m.cardScroll}/${m.cardClient}, numeral ${m.numeral.fonte} ${m.numeral.largura}x${m.numeral.altura}px`, m);
   if (w === 390 || w === 1280) {
@@ -163,20 +170,20 @@ for (const [w, h] of [[360, 640], [390, 844], [1280, 720], [1440, 900]]) {
       const rc = el.getBoundingClientRect();
       return rc.width > 0 && rc.height > 0 && parseFloat(getComputedStyle(el).opacity) >= 0.99;
     };
-    const itens = [...s.querySelectorAll(".pilha__itens > div")];
+    const itens = [...s.querySelectorAll(".pilha__itens > li")];
     const cta = s.querySelector('a[data-posicao="pilha"]');
     return {
       existe: true,
       cabecalhoVisivel: vis(s.querySelector("h2")),
       itens: itens.length,
       itensVisiveis: itens.filter(vis).length,
-      precoVisivel: vis(s.querySelector(".pilha__oferta p.font-extrabold")),
+      precoVisivel: vis(s.querySelector(".pilha__oferta dd")),
       ctaVisivel: cta ? vis(cta) : false,
       ctaHref: cta ? cta.getAttribute("href") : null,
       opacidadesRevelar: [...s.querySelectorAll("[data-revelar]")].map((e) => getComputedStyle(e).opacity),
     };
   });
-  const ok = r.existe && r.cabecalhoVisivel && r.itens === 6 && r.itensVisiveis === 6 && r.precoVisivel && r.ctaVisivel && !!r.ctaHref;
+  const ok = r.existe && r.cabecalhoVisivel && r.itens === ITENS && r.itensVisiveis === ITENS && r.precoVisivel && r.ctaVisivel && !!r.ctaHref;
   registrar("c-sem-javascript", ok, `cabecalho=${r.cabecalhoVisivel}, itens=${r.itensVisiveis}/${r.itens}, preco=${r.precoVisivel}, CTA=${r.ctaVisivel} href=${r.ctaHref}`, r);
   await ctx.close();
 }
@@ -223,7 +230,7 @@ const LEIA_DOCA = () => {
     const rr = a.getBoundingClientRect();
     const st = getComputedStyle(a);
     return rr.bottom > 0 && rr.top < innerHeight && rr.right > 0 && rr.left < innerWidth &&
-      st.visibility !== "hidden" && st.display !== "none" && /Começar o protocolo/.test(a.textContent);
+      st.visibility !== "hidden" && st.display !== "none";
   }).map((a) => a.dataset.posicao);
   const banner = document.querySelector('[aria-label="Aviso de cookies"]');
   return {
@@ -269,10 +276,14 @@ for (const [w, h] of [[390, 844], [1280, 720]]) {
     const probe = document.createElement("div"); probe.style.backgroundColor = "var(--acento)"; document.body.appendChild(probe);
     const acento = rgbDe(getComputedStyle(probe).backgroundColor); probe.remove();
     // O tema Cartaz redefine --acento (residual.css): o acento do papel e outro valor, medido dentro dele.
+    // Sem bloco Cartaz na pagina (hoje nenhum e renderizado), so o acento do Sigilo conta.
     const cartaz = document.querySelector('[data-theme="cartaz"]');
-    const probeC = document.createElement("div"); probeC.style.backgroundColor = "var(--acento)"; cartaz.appendChild(probeC);
-    const acentoCartaz = rgbDe(getComputedStyle(probeC).backgroundColor); probeC.remove();
-    const igual = (c, a) => c[3] > 0 && c[0] === a[0] && c[1] === a[1] && c[2] === a[2];
+    let acentoCartaz = null;
+    if (cartaz) {
+      const probeC = document.createElement("div"); probeC.style.backgroundColor = "var(--acento)"; cartaz.appendChild(probeC);
+      acentoCartaz = rgbDe(getComputedStyle(probeC).backgroundColor); probeC.remove();
+    }
+    const igual = (c, a) => !!a && c[3] > 0 && c[0] === a[0] && c[1] === a[1] && c[2] === a[2];
     const achados = [];
     for (const el of document.querySelectorAll("body *")) {
       if (el.closest("#menu, .intro, [inert]")) continue;
@@ -343,18 +354,21 @@ for (const [w, h] of [[390, 844], [1280, 720]]) {
     const cta = s.querySelector('a[data-posicao="pilha"]');
     const fundo = (el) => { for (let n = el; n; n = n.parentElement) { const c = getComputedStyle(n).backgroundColor; if (c !== "rgba(0, 0, 0, 0)") return rgbDe(c); } return rgbDe("#ffffff"); };
     const textoDe = (el) => [...el.querySelectorAll("*")].find((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) ?? el;
-    const medir = (nome, el, fundoEl) => { const t = textoDe(el); return { nome, texto: t.textContent.trim().slice(0, 50), fg: rgbDe(getComputedStyle(t).color), bg: fundo(fundoEl), tamanho: getComputedStyle(t).fontSize }; };
+    const medir = (nome, el, fundoEl) => { const t = textoDe(el); const st = getComputedStyle(t); return { nome, texto: t.textContent.trim().slice(0, 50), fg: rgbDe(st.color), bg: fundo(fundoEl), tamanho: st.fontSize, peso: Number(st.fontWeight) }; };
     return [
       medir("Total (silver/surface-1)", lista.querySelector(":scope > p"), lista),
-      medir("Tachado <s> (silver/surface-1)", lista.querySelector(":scope > p s"), lista),
-      medir("Rotulo do card claro", oferta.querySelector(":scope > p"), oferta),
-      medir("Subtexto do card claro", oferta.querySelector(":scope > p.text-body"), oferta),
+      medir("Tachado <s> (acento/surface-1)", lista.querySelector(":scope > p s"), lista),
+      medir("Rotulo da oferta (dt)", oferta.querySelector("dt"), oferta),
+      medir("Subtexto da oferta", oferta.querySelector(":scope > div:last-child"), oferta),
       medir("Rotulo do CTA", cta, cta),
     ];
   })()`);
-  const linhas = cores.map((c) => ({ ...c, razao: contraste(c.fg, c.bg), alpha: c.fg[3] < 1 || c.bg[3] < 1 }));
-  const ok = linhas.every((l) => l.razao >= 4.5 && !l.alpha);
-  registrar("i-contraste", ok, linhas.map((l) => `${l.nome}: ${l.razao}:1 (${l.tamanho})`).join(" | "), linhas);
+  // WCAG AA, como no verificar.mjs: texto grande (>= 24px, ou >= 18,66px em negrito) pede 3:1; o resto, 4,5:1.
+  // E a regra do acento no design system (cor.css): so em texto >= 24px.
+  const grande = (l) => parseFloat(l.tamanho) >= 24 || (parseFloat(l.tamanho) >= 18.66 && l.peso >= 700);
+  const linhas = cores.map((c) => ({ ...c, razao: contraste(c.fg, c.bg), minimo: grande(c) ? 3 : 4.5, alpha: c.fg[3] < 1 || c.bg[3] < 1 }));
+  const ok = linhas.every((l) => l.razao >= l.minimo && !l.alpha);
+  registrar("i-contraste", ok, linhas.map((l) => `${l.nome}: ${l.razao}:1 (${l.tamanho}, minimo ${l.minimo})`).join(" | "), linhas);
   await ctx.close();
 }
 

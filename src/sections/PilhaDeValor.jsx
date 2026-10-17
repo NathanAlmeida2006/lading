@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Botao } from "../components/Botao.jsx";
+import { Cronometro, OfertaLimitada } from "../components/Cronometro.jsx";
 import { FundoCapa } from "../components/FundoCapa.jsx";
 import { CondicaoOferta } from "../components/CondicaoOferta.jsx";
 import { mascaraDeLinha, revelar, revelarEmCascata, useMovimento } from "../motion/index.js";
@@ -23,96 +24,21 @@ const ICONES = {
   app: ["M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z", "M12 18h.01"],
 };
 
-const DURACAO = 24 * 60 * 60 * 1000;
-const CHAVE = "promocao-fim";
-const dois = (n) => String(n).padStart(2, "0");
-
-/** Fim da promocao: 24 h a partir da primeira visita, guardado para o recarregar nao reiniciar. */
-function fimDaPromocao() {
-  try {
-    const salvo = Number(localStorage.getItem(CHAVE));
-    if (salvo > 0) return salvo;
-    const fim = Date.now() + DURACAO;
-    localStorage.setItem(CHAVE, String(fim));
-    return fim;
-  } catch {
-    return Date.now() + DURACAO; // ponytail: sem storage o relogio reinicia a cada visita
-  }
-}
-
-/** Contagem regressiva de 24 h; zerada, mostra o aviso de expiracao. Renderiza "24:00:00" no servidor. */
-export function Cronometro({ classe = "text-body text-center" }) {
-  const [restante, setRestante] = useState(DURACAO);
-  useEffect(() => {
-    const fim = fimDaPromocao();
-    let quadro;
-    const tic = () => {
-      // Arredonda para cima ao segundo: o estado so muda a cada segundo, no mesmo instante da `OfertaLimitada`.
-      setRestante(Math.ceil(Math.max(0, fim - Date.now()) / 1000) * 1000);
-      quadro = requestAnimationFrame(tic);
-    };
-    tic();
-    return () => cancelAnimationFrame(quadro);
-  }, []);
-
-  if (restante <= 0) {
-    return <p className="font-secundaria text-body uppercase text-center text-acento" role="status">PROMOÇÃO IRÁ EXPIRAR LOGO</p>;
-  }
-  const t = Math.ceil(restante / 1000);
-  return (
-    <p className={`font-terciaria ${classe} text-bone tabular-nums`}>
-      <span className="font-secundaria text-overline uppercase text-silver">a promoção acaba em </span>
-      <time className="font-bold text-acento">{dois(Math.floor(t / 3600))}:{dois(Math.floor(t / 60) % 60)}:{dois(t % 60)}</time>
-    </p>
-  );
-}
-
-/** Oferta limitada: mesmo fim do `Cronometro`, em "0d 23h 59min 59s 999ms" com os milesimos correndo. */
-function OfertaLimitada() {
-  const [restante, setRestante] = useState(DURACAO);
-  useEffect(() => {
-    const fim = fimDaPromocao();
-    let quadro;
-    const tic = () => {
-      setRestante(Math.max(0, fim - Date.now()));
-      quadro = requestAnimationFrame(tic);
-    };
-    tic();
-    return () => cancelAnimationFrame(quadro);
-  }, []);
-
-  if (restante <= 0) return null; // o `Cronometro` do recibo ja avisa a expiracao
-  const t = Math.ceil(restante / 1000); // mesmos segundos do `Cronometro` (arredonda para cima)
-  const d = Math.floor(t / 86400);
-  const h = Math.floor(t / 3600) % 24;
-  const min = Math.floor(t / 60) % 60;
-  const s = t % 60;
-  const ms = String(restante % 1000).padStart(3, "0");
-  return (
-    <div className="mt-10 text-center">
-      <p className="font-secundaria font-extrabold uppercase leading-none whitespace-nowrap text-acento text-[length:clamp(28px,9vw,56px)]">
-        Oferta limitada
-      </p>
-      <p className="mt-3 font-terciaria font-bold text-bone-pure tabular-nums text-[length:clamp(18px,5.5vw,30px)]" aria-hidden="true">
-        {d}d {h}h {min}min {dois(s)}s {ms}ms
-      </p>
-    </div>
-  );
-}
+// A config e estatica: o bloco e conferido e formatado uma vez, e nao a cada render.
+const DADOS = pilhaApresentavel(config.pilhaDeValor);
 
 /**
  * Pilha de valor: o que o protocolo entrega, somado, contra o preco de oferta.
- * Mesmo desenho do recibo da `Oferta`, em tema escuro (sem `data-theme="cartaz"`).
+ * Recibo em tema escuro (sem `data-theme="cartaz"`).
  *
  * Os dados vem de `config.pilhaDeValor` ja conferidos por `pilhaApresentavel`. Sem bloco
  * valido, a secao nao existe na pagina (devolve `null`).
  *
  * @param {object} props
- * @param {object} props.params Parametros de checkout repassados ao `Botao`.
- * @param {string} [props.id] Ancora da secao (a `Oferta` reusa a pilha com `oferta`).
+ * @param {string} [props.id] Ancora da secao (`App.jsx` reusa a pilha como `#oferta`).
  * @param {string} [props.posicao] Posicao do CTA para o checkout.
  */
-export function PilhaDeValor({ params, id = "pilha-de-valor", posicao = "pilha" }) {
+export function PilhaDeValor({ id = "pilha-de-valor", posicao = "pilha" }) {
   const raiz = useRef(null);
   const { condicao, estado, disponivel } = useCondicaoOferta(config.oferta, config.checkout);
 
@@ -127,9 +53,8 @@ export function PilhaDeValor({ params, id = "pilha-de-valor", posicao = "pilha" 
     revelar(no.querySelector(".chamada"));
   }, []);
 
-  const dados = pilhaApresentavel(config.pilhaDeValor);
-  if (!dados) return null;
-  const { cabecalho } = dados;
+  if (!DADOS) return null;
+  const { cabecalho } = DADOS;
 
   return (
     <section id={id} aria-labelledby={`${id}-titulo`} className={`${bloco} isolate py-16 md:py-24`} ref={raiz}>
@@ -146,7 +71,7 @@ export function PilhaDeValor({ params, id = "pilha-de-valor", posicao = "pilha" 
             </h2>
           </header>
 
-          <PilhaCartao dados={dados} />
+          <PilhaCartao dados={DADOS} />
 
           <CondicaoOferta condicao={condicao} estado={estado} />
 
@@ -154,7 +79,7 @@ export function PilhaDeValor({ params, id = "pilha-de-valor", posicao = "pilha" 
 
           {disponivel ? (
             <div className="chamada flex flex-col items-start lg:items-center mt-12" data-revelar>
-              <Botao params={params} posicao={posicao} />
+              <Botao posicao={posicao} />
             </div>
           ) : null}
         </div>
@@ -169,7 +94,7 @@ export function PilhaDeValor({ params, id = "pilha-de-valor", posicao = "pilha" 
  * @param {object} props
  * @param {object} props.dados Saida de `pilhaApresentavel`.
  */
-export function PilhaCartao({ dados }) {
+function PilhaCartao({ dados }) {
   const { itens, totalRotulo, total, moeda, conector, oferta } = dados;
   return (
     <article className={`pilha__lista relative my-1.5 p-6 lg:p-8 bg-surface-1 border-x border-line ${SERRILHA}`} data-revelar>

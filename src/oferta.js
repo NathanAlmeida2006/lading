@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
+import { textoReal as texto } from "./validacao.js";
 
-const texto = (valor) => typeof valor === "string" && valor.trim() !== "" && !/\[(?:A DEFINIR|A CONFIRMAR)\]|DEFINIR/i.test(valor);
 const absoluto = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})([+-])(\d{2}):(\d{2})$/;
 
 /** Datas de calendário reais, com offset explícito e relógio consistente com o fuso. */
@@ -66,7 +66,7 @@ function converterInstante(instante) {
 }
 
 /** Início inclusivo e fim exclusivo; sem relógio implícito ou estado de sessão. */
-export function estadoCondicaoOferta(condicao, instante) {
+function estadoCondicaoOferta(condicao, instante) {
   const agora = converterInstante(instante);
   if (condicao == null || errosEstrutura(condicao).length || !Number.isFinite(agora)) return "nao-informada";
   if (agora < Date.parse(condicao.inicio)) return "agendada";
@@ -74,7 +74,7 @@ export function estadoCondicaoOferta(condicao, instante) {
 }
 
 /** A Ticto decide o acesso comercial; esta regra apenas controla a chamada da landing. */
-export function ofertaDisponivel(oferta, checkout, instante) {
+function ofertaDisponivel(oferta, checkout, instante) {
   if (oferta.disponivel === true) return true;
   const { condicao } = validarCondicaoOferta(oferta.condicaoOferta, { checkout, referenciaComercial: oferta.referenciaComercial });
   return Boolean(condicao) && estadoCondicaoOferta(condicao, instante) === "vigente";

@@ -1,5 +1,5 @@
 import { animate, createDrawable, splitText, stagger, steps, utils } from "animejs";
-import { duracao, semMovimento } from "./tokens.js";
+import { aoMudarPreferencia, duracao, semMovimento } from "./tokens.js";
 import { abrirLeitura } from "./carregador.js";
 
 // Dispara na borda da tela, e nao 80px dentro: com rolagem rapida o elemento ja estaria no meio
@@ -251,13 +251,12 @@ export function acenderEmSequencia(alvos, contexto, { atributo = "data-acesa", a
   atualizar();
   window.addEventListener("scroll", pedir, { passive: true });
   window.addEventListener("resize", pedir);
-  const media = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-  media?.addEventListener?.("change", pedir);
+  const soltarPreferencia = aoMudarPreferencia(pedir);
   return () => {
     cancelAnimationFrame(quadro);
     window.removeEventListener("scroll", pedir);
     window.removeEventListener("resize", pedir);
-    media?.removeEventListener?.("change", pedir);
+    soltarPreferencia();
     for (const el of lista) {
       el.removeAttribute(atributoAtual ?? "data-atual");
       el.setAttribute(atributo, "");

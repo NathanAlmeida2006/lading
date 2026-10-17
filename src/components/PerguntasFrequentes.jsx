@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { doisDigitos } from "../ui.js";
 
 /**
  * FAQ em acordeao, no layout do Rep Republic: pergunta e marca de mais/menos numa linha com fio
@@ -39,7 +40,7 @@ export function PerguntasFrequentes({ itens }) {
               }}
             >
               <span className="hidden lg:block w-10 shrink-0 font-terciaria text-body tabular-nums opacity-60" aria-hidden="true">
-                {String(indice + 1).padStart(2, "0")}
+                {doisDigitos(indice + 1)}
               </span>
               {/* Mobile: uma linha so. A maior pergunta mede ~19x o corpo em px, entao o corpo encolhe com a largura (20px no maximo). */}
               <span className="whitespace-nowrap [font-size:min(20px,calc((100vw-68px)/19))] lg:whitespace-normal lg:[font-size:inherit] lg:flex-1">{pergunta}</span>
@@ -54,7 +55,7 @@ export function PerguntasFrequentes({ itens }) {
               inert={hidratado && !aqui}
             >
               <div className="min-h-0 overflow-clip">
-                <p className="max-w-[40ch] pb-5 pr-8 lg:max-w-[52ch] lg:pb-8 lg:pl-[72px] lg:pr-16 font-terciaria text-body wrap-anywhere">{resposta}</p>
+                <p className="max-w-[40ch] pb-5 pr-8 lg:max-w-[52ch] lg:pb-8 lg:pl-[72px] lg:pr-16 font-terciaria text-body text-justify wrap-anywhere">{resposta}</p>
               </div>
             </div>
           </details>

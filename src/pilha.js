@@ -30,7 +30,7 @@ export function errosPilha(bloco) {
 }
 
 /** Inteiro sai sem centavos; o resto com vírgula e duas casas. */
-const reais = (valor) => (Number.isInteger(valor) ? String(valor) : valor.toFixed(2).replace(".", ","));
+export const reais = (valor) => (Number.isInteger(valor) ? String(valor) : valor.toFixed(2).replace(".", ","));
 
 /** Forma pronta para a tela, com valores já formatados; `null` quando o bloco não pode ser exibido. */
 export function pilhaApresentavel(bloco) {

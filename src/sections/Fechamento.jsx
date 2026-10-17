@@ -8,9 +8,7 @@ import { conteudo } from "../conteudo.js";
 import { abrirPainel, useMovimento } from "../motion/index.js";
 import { config } from "../config.js";
 import { camada, crus, envelope, grao, linha, painel, vazado } from "../ui.js";
-
-// So o fechamento: a headline da dobra e da intro segue "Natural / Cresce.".
-const HEADLINE = ["Apenas", "Faça."];
+import { textoReal as texto } from "../validacao.js";
 
 /**
  * Fechamento: a segunda capa.
@@ -23,9 +21,8 @@ const HEADLINE = ["Apenas", "Faça."];
  * Sem argumento novo (RF-L08). O que muda em relacao a dobra sao os numeros
  * crus: la anunciam o programa, aqui anunciam a entrega.
  */
-export function Fechamento({ params }) {
+export function Fechamento() {
   const raiz = useRef(null);
-  const texto = (valor) => typeof valor === "string" && valor.trim().length > 0;
   const { garantiaDias: dias, garantiaCanal: canal } = config.oferta;
   const pendente = "a confirmar neste preview";
   const prazoConfirmado = Number.isInteger(dias) && dias > 0;
@@ -61,10 +58,10 @@ export function Fechamento({ params }) {
             data-revelar
           >
             <span className={linha}>
-              <span className={`linha__texto block ${camada} ${vazado}`}>{HEADLINE[0]}</span>
+              <span className={`linha__texto block ${camada} ${vazado}`}>{conteudo.fechamento.headline.linhas[0]}</span>
             </span>{" "}
             <span className={linha}>
-              <span className={`linha__texto block ${camada}`}>{HEADLINE[1]}</span>
+              <span className={`linha__texto block ${camada}`}>{conteudo.fechamento.headline.linhas[1]}</span>
             </span>
           </h2>
           <Fio />
@@ -76,7 +73,7 @@ export function Fechamento({ params }) {
 
         <div className="painel__acao w-full shrink-0 mt-4 relative z-1" data-revelar>
           <div className={`${envelope} flex flex-col items-center text-center`}>
-            <Botao params={params} posicao="fechamento" />
+            <Botao posicao="fechamento" />
             <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
               {prazoConfirmado ? `Garantia: ${dias} dias` : `Garantia: ${pendente}`}{canalGarantia} · condições acima
             </p>

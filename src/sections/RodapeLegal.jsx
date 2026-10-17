@@ -4,6 +4,7 @@ import { Rotulo } from "../components/Rotulo.jsx";
 import { Wordmark } from "../components/Wordmark.jsx";
 import { config } from "../config.js";
 import { envelope } from "../ui.js";
+import { emailReal, textoReal, urlDocumento } from "../validacao.js";
 
 /**
  * O rodape, na forma do rodape do Nakula.
@@ -50,35 +51,13 @@ const LINK =
   "inline-flex max-w-full flex-wrap items-center gap-2 min-h-12 min-w-12 wrap-anywhere text-bone no-underline font-secundaria text-h3 hover:text-silver " +
   "transition-[color] duration-(--motion-fast) ease-(--ease-default)";
 
-function textoLegal(valor) {
-  return typeof valor === "string" && valor.trim() !== "" && !/\[(?:A DEFINIR|A CONFIRMAR)\]|DEFINIR/i.test(valor)
-    ? valor.trim()
-    : null;
-}
+// O valor publicado, aparado, ou `null` (a regra e a mesma do `PUBLICAR=1`: src/validacao.js).
+const textoLegal = (valor) => (textoReal(valor) ? valor.trim() : null);
 
-function emailLegal(valor) {
-  const email = textoLegal(valor);
-  return email && /^[^\s@:<>()\[\]\\,;"]+@[a-z\d-]+(?:\.[a-z\d-]+)+$/i.test(email) ? email : null;
-}
-
-function urlDocumento(valor) {
-  const referencia = textoLegal(valor);
-  if (!referencia || referencia.includes("..") || /[\s\\]/.test(referencia)) return null;
-  if (/^\/(?!\/)[^?#]+$/.test(referencia)) return referencia;
-  try {
-    const url = new URL(referencia);
-    return url.protocol === "https:" && url.hostname && !url.username && !url.password
-      ? referencia
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-export function RodapeLegal({ params }) {
+export function RodapeLegal() {
   const responsavel = textoLegal(config.legal.responsavel);
   const documento = textoLegal(config.legal.documento);
-  const contato = emailLegal(config.legal.contato);
+  const contato = emailReal(config.legal.contato) ? config.legal.contato.trim() : null;
   const documentos = [
     ["Política de privacidade", urlDocumento(config.legal.politicaPrivacidade)],
     ["Termos de uso", urlDocumento(config.legal.termosDeUso)],
@@ -144,7 +123,7 @@ export function RodapeLegal({ params }) {
             nutricional. Se você tem alguma condição de saúde, procure um profissional antes de
             começar qualquer programa de treino ou mudança alimentar.
           </p>
-          <Botao params={params} posicao="rodape" fantasma larguraTotal />
+          <Botao posicao="rodape" fantasma larguraTotal />
         </div>
       </div>
 

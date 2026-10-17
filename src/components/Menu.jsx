@@ -1,11 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { idsDoIndice, secoesPorId } from "../secoes.js";
-import { envelope } from "../ui.js";
+import { doisDigitos, envelope } from "../ui.js";
 import { Wordmark } from "./Wordmark.jsx";
 
 const NOMES = { inicio: "Início" };
-const doisDigitos = (n) => String(n).padStart(2, "0");
 
 /**
  * Menu em tela cheia: botao na dobra, lista numerada das secoes presentes.

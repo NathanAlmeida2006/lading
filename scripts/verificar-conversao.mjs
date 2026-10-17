@@ -13,6 +13,9 @@ import { createServer } from 'vite';
 import { chromium } from 'playwright-core';
 
 const alvo = process.argv[2] ?? 'http://127.0.0.1:4186/';
+// Quantas perguntas o FAQ tem sai do contrato editorial, nao de um numero congelado.
+const { conteudo: copy } = await import(new URL('../src/conteudo.js', import.meta.url));
+const NFAQ = copy.objecoes.length;
 const pasta = path.resolve(process.env.ARTIFACT_DIR ?? 'output/playwright/t14/testes');
 const inicioExecucao = new Date().toISOString();
 await mkdir(pasta, { recursive: true });
@@ -37,7 +40,6 @@ import {config} from '/src/config.js';
 import * as instrumentacao from '/src/instrumentacao.js';
 import * as oferta from '/src/oferta.js';
 import {Botao} from '/src/components/Botao.jsx';
-import {ProvaSocial} from '/src/sections/ProvaSocial.jsx';
 import {PerguntasFrequentes} from '/src/components/PerguntasFrequentes.jsx';
 import {CondicaoOferta} from '/src/components/CondicaoOferta.jsx';
 import {conteudo} from '/src/conteudo.js';
@@ -54,10 +56,8 @@ function Fixture() {
  const estado=oferta.useCondicaoOferta(config.oferta,config.checkout);
  useEffect(()=>{setParams(instrumentacao.capturarParametros()); return instrumentacao.iniciarMensuracao(alcance);},[]);
  useEffect(()=>{document.documentElement.classList.add('fixture-pronta');},[]);
- const relatos=Array.from({length:dados.relatos},(_,i)=>({id:'fixture-'+i,texto:'FIXTURE relato sintético '+i,identificacao:'Pessoa sintética '+i,aprovado:true,origem:'fixture-t14',autorizacaoRef:'fixture'}));
  return h('main',null,
   h('section',{id:'instrumentos'},h('h1',null,'Fixture isolada T14'),h(Botao,{params,posicao:'fixture'}),h(CondicaoOferta,{condicao:estado.condicao,estado:estado.estado})),
-  h('section',{id:'relatos'},h(ProvaSocial,{depoimentos:relatos})),
   h('section',{id:'faq'},h(PerguntasFrequentes,{itens:conteudo.objecoes})),
   ...Object.keys(alcance).map(id=>h('section',{id,key:id,style:{minHeight:'1000px',paddingTop:'8px'}},h('h2',null,'FIXTURE seção '+id))),
   h('div',{style:{height:'1000px'}},'Fim fixture'));
@@ -113,7 +113,7 @@ async function abrir(url,{viewport={width:360,height:640},resposta=null,clock=ag
 }
 let fixtureUrl;
 function fixtureQuery(d={}) {
- return fixtureUrl+'?'+new URLSearchParams({relatos:String(d.relatos??3),condicao:d.condicao??'ausente',base:String(d.base??true),...(d.query??{})});
+ return fixtureUrl+'?'+new URLSearchParams({condicao:d.condicao??'ausente',base:String(d.base??true),...(d.query??{})});
 }
 async function comPagina(url,opcoes,fn) {const f=await abrir(url,opcoes);try{return await fn(f);}finally{await f.ctx.close();}}
 try {
@@ -123,9 +123,9 @@ try {
   configureServer(s){s.middlewares.use(async(req,res,next)=>{
    const u=new URL(req.url,'http://fixture.invalid');if(u.pathname!=='/__t14__/')return next();
    try{
-    const dados={relatos:Number(u.searchParams.get('relatos')??3),base:u.searchParams.get('base')!=='false',condicao:u.searchParams.get('condicao')==='datada'?condicao:null};
+    const dados={base:u.searchParams.get('base')!=='false',condicao:u.searchParams.get('condicao')==='datada'?condicao:null};
     const m=await s.ssrLoadModule('virtual:t14');
-    const html=`<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fixture T14</title><script>document.documentElement.classList.add('js')</script>${['tokens/cor','tokens/forma-espaco','tokens/movimento','fontes','tailwind'].map(f=>`<link rel="stylesheet" href="/src/styles/${f}.css?direct">`).join('')}<style>html{scroll-behavior:auto}body{margin:0}main{padding:16px}#instrumentos,#relatos,#faq{margin-bottom:32px}#instrumentos{min-height:180px}</style></head><body><div id="fixture">${m.renderizar(dados)}</div><script>window.__T14_DADOS__=${JSON.stringify(dados).replaceAll('<','\\u003c')}</script><script type="module">import 'virtual:t14'</script></body></html>`;
+    const html=`<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fixture T14</title><script>document.documentElement.classList.add('js')</script>${['tokens/cor','tokens/forma-espaco','tokens/movimento','fontes','tailwind'].map(f=>`<link rel="stylesheet" href="/src/styles/${f}.css?direct">`).join('')}<style>html{scroll-behavior:auto}body{margin:0}main{padding:16px}#instrumentos,#faq{margin-bottom:32px}#instrumentos{min-height:180px}</style></head><body><div id="fixture">${m.renderizar(dados)}</div><script>window.__T14_DADOS__=${JSON.stringify(dados).replaceAll('<','\\u003c')}</script><script type="module">import 'virtual:t14'</script></body></html>`;
     res.setHeader('Content-Type','text/html; charset=utf-8');res.end(await s.transformIndexHtml(req.url,html));
    }catch(e){res.statusCode=500;res.end(String(e.stack));}
   });}
@@ -181,70 +181,26 @@ try {
   return {href,...f.estado};
  }));
 
- for(const n of [0,1,3])await testar('T14-CARROSSEL-'+n,'integracao',['tarefa07','tarefa14'],'partição de relatos'+n,()=>comPagina(fixtureQuery({relatos:n}),{},async f=>{
-  assert.equal(await f.p.locator('#prova-social').count(),n===0?0:1);
-  if(n===0)return {relatos:0};
-  assert.equal(await f.p.locator('#prova-social li').count(),n);
-  assert.equal(await f.p.locator('#prova-social button').count(),n>1?2:0);
-  assert.equal(await f.p.locator('#prova-social [role=region]').count(),n>1?1:0);
-  if(n>1){
-   // Rótulos vêm da copy real; o cenário abaixo usa os rótulos DOM para teclado.
-   const botoes=f.p.locator('#prova-social button');await botoes.nth(1).focus();
-   await f.p.keyboard.press('Enter');await f.p.waitForFunction(()=>document.querySelector('#prova-social [aria-live]').textContent.includes('2 de 3'));
-   await f.p.keyboard.press('Enter');await f.p.waitForFunction(()=>document.querySelector('#prova-social [aria-live]').textContent.includes('3 de 3'));
-   await quadro(f.p); // useEffect que transfere foco vem depois do commit do índice
-   const foco=await f.p.evaluate(()=>({ativo:{tag:document.activeElement.tagName,label:document.activeElement.getAttribute('aria-label')},botoes:[...document.querySelectorAll('#prova-social button')].map(b=>({label:b.getAttribute('aria-label'),disabled:b.disabled,focado:b===document.activeElement}))}));
-   await writeFile(path.join(pasta,'carrossel-foco.json'),JSON.stringify(foco,null,2));
-   assert.equal(await botoes.nth(1).isDisabled(),true);assert.equal(await botoes.nth(0).evaluate(e=>e===document.activeElement),true,'foco após desabilitar último: '+JSON.stringify(foco));
-   await f.p.keyboard.press('Enter');await f.p.waitForFunction(()=>document.querySelector('#prova-social [aria-live]').textContent.includes('2 de 3'));
-   const regiao=f.p.locator('#prova-social [role=region]');await regiao.focus();const x=await regiao.evaluate(e=>e.scrollLeft);
-   await f.p.keyboard.press('ArrowRight');await f.p.waitForFunction(x=>document.querySelector('#prova-social [role=region]').scrollLeft>x,x);
+ await testar('T14-FAQ','integracao',['RF-L11','tarefa08'],'acordeão: todas fechadas com JS, uma aberta por vez; teclado abre e fecha',()=>comPagina(fixtureQuery(),{},async f=>{
+  // O <details> fica sempre `open` (sem JS as respostas se leem); com JS quem abre e fecha e `data-aberto`, e a
+  // resposta fechada e `inert` (fora do teclado e do leitor de tela).
+  const details=f.p.locator('#faq details');assert.equal(await details.count(),NFAQ);
+  const estado=i=>f.p.evaluate(i=>{const d=document.querySelectorAll('#faq details')[i];return {aberto:d.hasAttribute('data-aberto'),inerte:d.querySelector('.resposta').inert,abertos:document.querySelectorAll('#faq details[data-aberto]').length};},i);
+  for(let i=0;i<NFAQ;i++){
+   const item=details.nth(i),summary=item.locator('summary');assert.equal(await item.getAttribute('open'),'');
+   assert.deepEqual(await estado(i),{aberto:false,inerte:true,abertos:0});
+   await summary.focus();await f.p.keyboard.press('Enter');await f.p.waitForFunction(i=>document.querySelectorAll('#faq details')[i].hasAttribute('data-aberto'),i);
+   assert.deepEqual(await estado(i),{aberto:true,inerte:false,abertos:1});
+   await f.p.keyboard.press('Enter');await f.p.waitForFunction(i=>!document.querySelectorAll('#faq details')[i].hasAttribute('data-aberto'),i);
+   assert.deepEqual(await estado(i),{aberto:false,inerte:true,abertos:0});
   }
-  assert.deepEqual(f.estado.erros,[]);return {relatos:n,erros:f.estado.erros};
+  return {respostas:NFAQ};
  }));
 
- await testar('T14-CARROSSEL-toque','integracao',['tarefa07','tarefa14'],'swipe nativo horizontal e gesto vertical seguem livres',()=>comPagina(fixtureQuery(),{},async f=>{
-  const regiao=f.p.locator('#prova-social [role=region]');await regiao.scrollIntoViewIfNeeded();const box=await regiao.boundingBox();
-  const cdp=await f.ctx.newCDPSession(f.p);
-  async function gesto(dx,dy){const x=box.x+box.width*0.7,y=box.y+Math.min(box.height/2,100);
-   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
-   for(let i=1;i<=12;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+dx*i/12,y:y+dy*i/12}]});
-   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-  }
-  await gesto(-190,0);await f.p.waitForFunction(()=>document.querySelector('#prova-social [role=region]').scrollLeft>20);
-  const horizontal=await regiao.evaluate(e=>e.scrollLeft),antes=await f.p.evaluate(()=>scrollY);
-  await gesto(0,-150);await f.p.waitForFunction(y=>scrollY>y+20,antes);
-  const depois=await f.p.evaluate(()=>scrollY);assert(depois>antes+20);return {horizontal,antes,depois};
- }));
-
- await testar('T14-CARROSSEL-teclado','integracao',['tarefa07','RNF-L11'],'setas nativas e botão anterior navegam entre relatos',()=>comPagina(fixtureQuery(),{},async f=>{
-  const regiao=f.p.locator('#prova-social [role=region]');await regiao.focus();
-  await f.p.keyboard.press('ArrowRight');await f.p.waitForFunction(()=>document.querySelector('#prova-social [role=region]').scrollLeft>20);
-  const direita=await regiao.evaluate(e=>e.scrollLeft);
-  await f.p.keyboard.press('ArrowLeft');await f.p.waitForFunction(x=>document.querySelector('#prova-social [role=region]').scrollLeft<x,direita);
-  const botoes=f.p.locator('#prova-social button');await botoes.nth(1).focus();await f.p.keyboard.press('Enter');
-  await f.p.waitForFunction(()=>document.querySelector('#prova-social [aria-live]').textContent.includes('2 de 3'));
-  await botoes.nth(0).focus();await f.p.keyboard.press('Enter');
-  await f.p.waitForFunction(()=>document.querySelector('#prova-social [aria-live]').textContent.includes('1 de 3'));
-  return {direita,indice:'1 de 3'};
- }));
-
- await testar('T14-FAQ','integracao',['RF-L11','tarefa08'],'três respostas inicialmente expostas; toggle teclado restaura resposta',()=>comPagina(fixtureQuery(),{},async f=>{
-  const details=f.p.locator('#faq details');assert.equal(await details.count(),3);
-  for(let i=0;i<3;i++){
-   const item=details.nth(i),summary=item.locator('summary');assert.equal(await item.getAttribute('open'),'');assert(await item.locator('p').isVisible());
-   await summary.focus();await f.p.keyboard.press('Enter');await f.p.waitForFunction(i=>!document.querySelectorAll('#faq details')[i].open,i);assert.equal(await item.locator('p').isVisible(),false);
-   await f.p.keyboard.press('Enter');await f.p.waitForFunction(i=>document.querySelectorAll('#faq details')[i].open,i);assert(await item.locator('p').isVisible());
-  }
-  return {respostas:3};
- }));
-
- await testar('T14-COMPONENTES-nojs','integracao',['RNF-L16','RF-L11','tarefa07'],'carrossel nativo e três respostas legíveis sem JS; controles mortos ocultos',()=>comPagina(fixtureQuery(),{js:false},async f=>{
-  assert.equal(await f.p.locator('#prova-social li').count(),3);
-  for(const b of await f.p.locator('#prova-social button').all())assert.equal(await b.isVisible(),false);
-  assert.equal(await f.p.locator('#faq details[open]').count(),3);
+ await testar('T14-COMPONENTES-nojs','integracao',['RNF-L16','RF-L11'],'respostas legíveis sem JS',()=>comPagina(fixtureQuery(),{js:false},async f=>{
+  assert.equal(await f.p.locator('#faq details[open]').count(),NFAQ);
   for(const p of await f.p.locator('#faq details p').all())assert(await p.isVisible());
-  assert.equal(await f.p.locator('html').getAttribute('class'),null);return {relatos:3,respostas:3,controlesVisiveis:0};
+  assert.equal(await f.p.locator('html').getAttribute('class'),null);return {respostas:NFAQ};
  }));
 
  for(const [nome,clock,estado,cta] of [['vigente',agora,'vigente',1],['expirada',fim,'encerrada',0],['fronteira-inicio',inicio,'vigente',1],['antes-inicio',inicio-1,'agendada',0]])await testar('T14-OFERTA-'+nome,'integracao',['tarefa09','tarefa14'],'condição eCTA: '+nome,()=>comPagina(fixtureQuery({condicao:'datada',base:false}),{clock},async f=>{

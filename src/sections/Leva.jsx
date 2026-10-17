@@ -2,7 +2,8 @@ import { Fragment, useRef } from "react";
 import { CampoDePontos } from "../components/CampoDePontos.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { acenderEmSequencia, revelar, revelarEmCascata, useMovimento } from "../motion/index.js";
-import { bloco, envelope, grao } from "../ui.js";
+import { conteudo } from "../conteudo.js";
+import { bloco, doisDigitos, envelope, grao, palavra as PALAVRA } from "../ui.js";
 
 /**
  * O que voce leva, na forma da secao "Members' Words" do Rep Republic.
@@ -37,11 +38,6 @@ import { bloco, envelope, grao } from "../ui.js";
  * O `transform` de centralizacao fica na PROPRIA cabeca, que nao e ancestral
  * de nada grudado: a trava e sobre ancestrais.
  */
-const VOZES = [
-  { nome: "Protocolo Hipertrofia", governa: "Treino", onde: "12 semanas", fala: "Zero improviso: o mapa completo de 12 semanas no app, usando a Regra do 12 para extrair seu máximo crescimento natural." },
-  { nome: "Protocolo Dieta", governa: "Combustível", onde: "no app", fala: "Ajuste estratégico de combustível para construir massa densa e seca, sem passar fome e sem embaçar o shape com bulking sujo." },
-  { nome: "Protocolo Sono", governa: "Recuperação", onde: "no app", fala: "Sono profundo alinhado para manter sua testosterona no topo e acelerar a reconstrução muscular entre um treino e outro." },
-];
 
 /**
  * O ziguezague do monitor: um PAR (esquerda, e a direita nascendo 15vh mais
@@ -57,12 +53,6 @@ const ZIGUEZAGUE = [
   "lg:self-center lg:mt-32",
 ];
 
-// Mesma animacao da prova: a palavra apagada e opacidade, e a da fronteira (`data-atual`) no acento.
-const PALAVRA =
-  "palavra inline-block transition-[opacity,color] duration-(--motion-fast) ease-(--ease-corte-2) " +
-  "js:opacity-[0.22] data-acesa:opacity-100 data-atual:text-acento " +
-  "motion-reduce:js:opacity-100 motion-reduce:data-atual:text-inherit";
-const TITULO = "Cresça calado. Imponha respeito.";
 
 export function Leva() {
   const raiz = useRef(null);
@@ -100,18 +90,18 @@ export function Leva() {
           <h2
             className="titulo text-bone font-secundaria text-display [font-size:clamp(31px,13.08vw,89.9px)] lg:[font-size:clamp(89.9px,10.1vw,125.8px)] normal-case tracking-[-0.005em] leading-[1.02]"
           >
-            {TITULO.split(" ").map((palavra, indice) => (
+            {conteudo.leva.titulo.split(" ").map((palavra, indice) => (
               <Fragment key={`${palavra}-${indice}`}>
                 <span className={PALAVRA}>{palavra}</span>{" "}
                 {indice === 1 ? <br /> : null}
               </Fragment>
             ))}
           </h2>
-          <p className="max-w-[46ch] mt-4 text-silver font-terciaria text-body-lg">Três armas para você nunca mais pisar na academia perdido.</p>
+          <p className="max-w-[46ch] mt-4 text-silver font-terciaria text-body-lg">{conteudo.leva.sub}</p>
         </header>
 
         <ol className="relative z-1 flex flex-col gap-10 mt-[calc(140svh-140px)] motion-reduce:mt-16 lg:gap-0" role="list">
-          {VOZES.map((voz, indice) => {
+          {conteudo.leva.vozes.map((voz, indice) => {
             const posicao = indice === 0 ? "lg:self-start lg:mt-0" : ZIGUEZAGUE[indice % 3];
             return (
               <li
@@ -133,7 +123,7 @@ export function Leva() {
                   <p className="text-silver font-terciaria text-caption [font-size:15.6px]">{voz.governa}</p>
                 </div>
                 <span className="block pt-4 border-t border-line text-silver font-terciaria text-mono-reg [font-size:13.2px] tabular-nums">
-                  [{String(indice + 1).padStart(2, "0")} · {voz.onde}]
+                  [{doisDigitos(indice + 1)} · {voz.onde}]
                 </span>
               </li>
             );

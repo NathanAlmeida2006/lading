@@ -2,7 +2,7 @@
 
 Landing page do Projeto Flúor, um protocolo de hipertrofia com o ângulo `teto-natural`. Este documento descreve a implementação consultada em 10/10/2026, sem declarar aprovação comercial ou publicação.
 
-A fonte soberana é `~/Documentos/projetos/02-fluor/landing/requisitos-landing.md`. Em divergência, os requisitos prevalecem. Consulte o [relatório de validação](docs/validacao-rebranding.md) para resultados, evidências e lacunas.
+A fonte soberana é `~/Documentos/projetos/02-fluor/landing/requisitos-landing.md`. Em divergência, os requisitos prevalecem. O relatório de validação (`docs/validacao-rebranding.md`), com resultados, evidências e lacunas, é local: a pasta `docs/` fica fora do git.
 
 ## Executar localmente
 
@@ -30,8 +30,10 @@ As verificações usam `playwright-core` e precisam de Chromium disponível. A s
 | `npm run build` | Cliente, SSR, pré-renderização e orçamento; não sincroniza o design system. |
 | `npm run preview` | Servir o build local. |
 | `npm run size` | Conferir o orçamento do build existente. |
+| `npm run teste:dados` | Lógica pura da pilha de valor e preço citado no CTA e no FAQ (sem navegador). |
 | `npm run verificar` | Verificações de navegador da página e dos comportamentos presentes. |
 | `npm run verificar:conversao -- URL` | Integração de consentimento, eventos, oferta, componentes e CTA com fixtures isoladas. |
+| `npm run verificar:pilha -- URL` | Layout, teclado, contraste, doca e cortina da pilha de valor. |
 | `npm run sync:ds` | Sincronização explícita de recursos do bundle soberano. |
 
 ## Arquitetura implementada
@@ -41,18 +43,18 @@ React 19 hidrata o HTML produzido por SSR e pré-renderização no build Vite 6.
 | Ordem na árvore | Responsabilidade |
 | --- | --- |
 | `Dobra` | Promessa e CTA de abertura. |
-| `Manifesto` e `Espelho` | Reconhecimento do problema. |
+| `Manifesto` e `Espelho` | Reconhecimento do problema (entre os dois, a primeira `PilhaDeValor`). |
 | `Leva` | Apresentação do que o protocolo entrega. |
 | `Semanas` | Mapa do caminho, condicionado à configuração. |
 | `Amostra` | Trecho real, exibido somente quando habilitado. |
-| `Oferta` | Apresentação comercial e condição factual configurada. |
+| `PilhaDeValor` (`#oferta`) | Apresentação comercial e condição factual configurada. |
 | `Objecoes` | Respostas às objeções. |
 | `Fechamento` | CTA final. |
 | `RodapeLegal` | Identificação e referências legais. |
 
-A ordem efetiva está em [App.jsx](src/App.jsx); IDs, presença e etapas de eventos estão em [secoes.js](src/secoes.js). Na configuração consultada, o mapa está ativo, a amostra está desativada por falta de trecho aprovado e a prova está ausente da árvore. Componentes existentes como `ProvaSocial` e `Garantia` não comprovam integração na página. O relatório registra essa diferença entre o contrato e a árvore atual.
+A ordem efetiva está em [App.jsx](src/App.jsx); IDs, presença e etapas de eventos estão em [secoes.js](src/secoes.js). Na configuração consultada, o mapa está ativo, a amostra está desativada por falta de trecho aprovado e a prova está ausente da árvore. Os componentes da prova social (`ProvaSocial`, `CarrosselDepoimentos`) saíram em 17/10/2026 e voltam do histórico do git quando houver depoimento aprovado. O relatório registra essa diferença entre o contrato e a árvore atual.
 
-`Consentimento`, `IndiceFixo`, `Doca`, `Intro` e `PausaMovimento` são controles transversais. O CTA compartilha o verbo `Começar o protocolo`. A doca depende de JavaScript e de suas regras de visibilidade.
+`Consentimento`, `IndiceFixo`, `Doca`, `Intro` e `PausaMovimento` são controles transversais. O CTA usa `VERBO_ACAO` (`config.js`); a dobra usa a forma curta, sem o preço. A doca depende de JavaScript e de suas regras de visibilidade.
 
 ## Contratos e limites
 
@@ -68,4 +70,4 @@ O campo de pontos permanece em uso e sua decisão contra `TR-03` continua em abe
 
 ## Antes de publicar
 
-Resolver os dados comerciais e legais, as divergências normativas e os defeitos documentados; validar a campanha com Pixel real e atribuição de compra na Ticto. Testes locais de interface e desempenho não demonstram aumento de conversão. Consulte também o [backlog dos Testes de Fogo](docs/testes-de-fogo-tarefas.md).
+Resolver os dados comerciais e legais, as divergências normativas e os defeitos documentados; validar a campanha com Pixel real e atribuição de compra na Ticto. Testes locais de interface e desempenho não demonstram aumento de conversão. O backlog dos Testes de Fogo (`docs/testes-de-fogo-tarefas.md`) também é local.

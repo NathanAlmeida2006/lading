@@ -4,15 +4,11 @@ import { CampoDePontos } from "../components/CampoDePontos.jsx";
 import { useCortina } from "../motion/cortina.js";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { acenderEmSequencia, useMovimento } from "../motion/index.js";
-import { bloco, envelope } from "../ui.js";
+import { semMovimento } from "../motion/tokens.js";
+import { bloco, envelope, palavra as PALAVRA } from "../ui.js";
 
 // O texto vem do contrato editorial. O realce complementa a leitura: nenhuma
 // palavra depende da animação para ficar legível. Sem medição, tudo fica no fluxo.
-// Mesma convencao da prova: palavra apagada e opacidade, e a da fronteira (`data-atual`) no acento.
-const PALAVRA =
-  "palavra inline-block transition-[opacity,color] duration-(--motion-fast) ease-(--ease-corte-2) " +
-  "js:opacity-[0.22] data-acesa:opacity-100 data-atual:text-acento " +
-  "motion-reduce:js:opacity-100 motion-reduce:data-atual:text-inherit";
 
 // Palavras em vermelho (o acento do protocolo, ja vermelho) dentro do texto.
 const DESTAQUE = /^(verdadeiro|potencial)\W*$/i;
@@ -36,7 +32,6 @@ export function Manifesto() {
     sonda.setAttribute("aria-hidden", "true");
     sonda.style.cssText = "position:fixed;top:0;height:100svh;width:0;visibility:hidden;pointer-events:none";
     no.appendChild(sonda);
-    const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)");
     const medir = () => {
       quadro = 0;
       if (!ativo) return;
@@ -46,7 +41,7 @@ export function Manifesto() {
       const altura = sonda.getBoundingClientRect().height;
       const movimentoDisponivel = documento.classList.contains("movimento-pronto") &&
         !documento.classList.contains("movimento-falhou");
-      const cabe = movimentoDisponivel && !reduzido.matches && Number.isFinite(topo) &&
+      const cabe = movimentoDisponivel && !semMovimento() && Number.isFinite(topo) &&
         texto.getBoundingClientRect().height + topo * 2 <= altura + 1;
       if (no.hasAttribute("data-cabe") !== cabe) no.toggleAttribute("data-cabe", cabe);
     };

@@ -1,36 +1,31 @@
 import { CampoDePontos } from "../components/CampoDePontos.jsx";
-import { Fragment, useEffect, useRef } from "react";
+import { Fragment, useRef } from "react";
 import { Botao } from "../components/Botao.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { conteudo } from "../conteudo.js";
 import { revelar, revelarEmCascata, subirLinhas, useMovimento } from "../motion/index.js";
+import { useReguaDoTrilho } from "../motion/regua.js";
 import { bloco, camada, envelope, linha } from "../ui.js";
 
 /**
- * As doze semanas, na forma da secao "Lenis runs the web" do lenis.dev.
+ * O mapa do caminho, na forma da secao "Lenis runs the web" do lenis.dev.
  *
  * Lida ao vivo em 07/09/2026: um fio vertical a esquerda, o titulo gigante em
- * tres linhas quebradas a mao ao lado dele, e o paragrafo de tese deslocado
- * para a direita E para baixo, com um termo em acento no meio. Abaixo, a
- * grade de cards com capa, nome e legenda, em ziguezague vertical: nenhum
- * card alinha com o vizinho. Fecha com uma pergunta curta e o CTA.
+ * linhas quebradas a mao ao lado dele, e o paragrafo de tese deslocado para a
+ * direita E para baixo. Abaixo, a grade de cards com capa, nome e legenda, em
+ * ziguezague vertical: nenhum card alinha com o vizinho. Fecha com a grade de
+ * numeros e o CTA.
  *
- * O que substitui o que: o odometro travado saiu. O numero grande dele nao
- * se perdeu, mudou de lugar - agora e a CAPA de cada card, que e o analogo do
- * preview de video do showcase. Um numero por card, cinco cards.
+ * A capa de cada card e um numero grande, o analogo do preview de video do
+ * showcase: um numero por card, um card por item de `conteudo.mapa.estados`.
  *
- * Conteudo canonico, nao inventado (RF-L11a): as tres fases sao as do capitulo
- * do programa do draft de hipertrofia; as 12 semanas com 3 sessoes
- * obrigatorias e 1 opcional sao o RF-T02. O capitulo 3 atual define o portao
- * por competencia em cada exercicio. Cinco etapas, nao cinco fases.
- *
- * A regua das doze semanas continua acendendo e apagando com a posicao da
- * pagina (RF-L11b), neste mapa. O trilho em fluxo mede os cards; a regua
+ * A regua acende e apaga com a posicao da pagina (RF-L11b): um passo por card,
+ * e nao as doze semanas do protocolo. O trilho em fluxo mede os cards; a regua
  * sticky apenas exibe. Sob movimento reduzido ela nasce inteira acesa, porque
  * informa o caminho e informacao nao depende de animacao.
  */
-// So os tres primeiros cards; a regua acompanha: um passo por card (1 a 3), e nao as doze semanas.
-const ESTADOS = conteudo.mapa.estados.slice(0, 3);
+const ESTADOS = conteudo.mapa.estados;
+// Passos da regua (um por card). O nome e o das classes `regua12__semana`, de quando eram doze semanas.
 const SEMANAS = ESTADOS.length;
 const LINHAS = conteudo.mapa.linhas;
 
@@ -55,206 +50,10 @@ const SEMANA =
  */
 const DESCE = ["", "lg:mt-24", "lg:mt-48"];
 
-function topoEmFluxo(elemento) {
-  let topo = 0;
-  for (let no = elemento; no; no = no.offsetParent) topo += no.offsetTop;
-  return topo;
-}
-
-function marcosDasSemanas(trilho, altura) {
-  const origem = topoEmFluxo(trilho);
-  const marcos = Array.from(trilho.children, (card) => ({
-    topo: topoEmFluxo(card) - origem,
-    semana: Number(card.dataset.semana),
-  }));
-  // Se a grade alinhar cards, o grupo ocupa o seu trecho natural de leitura.
-  // A ordem editorial permanece explícita, sem transformar colunas em novas etapas.
-  for (let inicio = 0; inicio < marcos.length;) {
-    let fim = inicio + 1;
-    while (fim < marcos.length && marcos[fim].topo === marcos[inicio].topo) fim += 1;
-    const topo = marcos[inicio].topo;
-    const limite = marcos[fim]?.topo ?? trilho.offsetHeight;
-    for (let indice = inicio + 1; indice < fim; indice += 1) {
-      marcos[indice].topo = topo + (limite - topo) * (indice - inicio) / (fim - inicio);
-    }
-    inicio = fim;
-  }
-  const ultimo = marcos.at(-1);
-  // O caminho está lido quando o fim do último card entra na tela, antes do CTA.
-  marcos.push({ topo: Math.max(ultimo.topo, trilho.offsetHeight - altura / 2), semana: SEMANAS });
-  return marcos;
-}
-
-function semanaNoTrilho(posicao, marcos) {
-  if (posicao < marcos[0].topo) return 0;
-  for (let indice = 0; indice < marcos.length - 1; indice += 1) {
-    const inicio = marcos[indice];
-    const fim = marcos[indice + 1];
-    if (posicao >= fim.topo) continue;
-    const proporcao = (posicao - inicio.topo) / (fim.topo - inicio.topo);
-    return Math.floor(inicio.semana + proporcao * (fim.semana - inicio.semana));
-  }
-  return SEMANAS;
-}
-
-/**
- * Chegou na semana 12: o retangulo vermelho da ultima semana cresce ate engolir a propria regua
- * (so ela, o elemento de 1 a 12), o texto sobe em tinta no meio e, passada a leitura, a cortina se
- * ergue e devolve os numeros. E imagem, nao interface: a regua ja e `aria-hidden`. Devolve a
- * limpeza (cancela e remove, se a secao sair antes do fim).
- */
-const FRASE = "Apenas faça";
-const EXPO_IN_OUT = "cubic-bezier(0.76, 0, 0.24, 1)";
-const EXPO_OUT = "cubic-bezier(0.16, 1, 0.3, 1)";
-
-function engolirRegua(semana) {
-  const regua = semana.parentElement;
-  const o = regua.getBoundingClientRect();
-  const r = semana.getBoundingClientRect();
-  // A origem e a marca de 6px da ultima semana, em coordenadas da propria regua.
-  const esq = r.left - o.left;
-  const dir = o.right - r.right;
-  const topo = r.top - o.top;
-  const base = o.height - topo - 6;
-  const cobertura = document.createElement("div");
-  cobertura.className = "absolute inset-0 z-1 flex items-center justify-center bg-acento text-void pointer-events-none overflow-clip";
-  cobertura.setAttribute("aria-hidden", "true");
-  const texto = document.createElement("p");
-  // O corpo da frase cabe na regua: pela altura dela e, no celular, pela largura.
-  const corpo = Math.min(o.height * 0.5, o.width / (FRASE.length * 0.62));
-  texto.className = "flex justify-center gap-[0.3em] font-secundaria font-extrabold uppercase leading-none tracking-[0.02em] whitespace-nowrap";
-  texto.style.fontSize = `${corpo}px`;
-  const letras = [];
-  for (const palavra of FRASE.split(" ")) {
-    const bloco = document.createElement("span");
-    bloco.className = "inline-flex overflow-clip pb-[0.2em] -mb-[0.2em]";
-    for (const letra of palavra) {
-      const el = document.createElement("span");
-      el.className = "inline-block";
-      el.textContent = letra;
-      bloco.append(el);
-      letras.push(el);
-    }
-    texto.append(bloco);
-  }
-  cobertura.append(texto);
-  regua.append(cobertura);
-
-  const fill = "both";
-  const entra = cobertura.animate(
-    [{ clipPath: `inset(${topo}px ${dir}px ${base}px ${esq}px)` }, { clipPath: "inset(0px 0px 0px 0px)" }],
-    { duration: 800, easing: EXPO_IN_OUT, fill },
-  );
-  const anims = [entra];
-  letras.forEach((el, i) => {
-    anims.push(el.animate(
-      [{ transform: "translateY(120%)" }, { transform: "translateY(0)" }],
-      { duration: 650, delay: 550 + i * 40, easing: EXPO_OUT, fill },
-    ));
-  });
-  const sai = 550 + letras.length * 40 + 650 + 1100; // a ultima letra assenta e a frase fica lida
-  const fim = cobertura.animate(
-    [{ clipPath: "inset(0px 0px 0px 0px)" }, { clipPath: "inset(0px 0px 100% 0px)" }],
-    { duration: 700, delay: sai, easing: EXPO_IN_OUT, fill: "forwards" },
-  );
-  anims.push(fim);
-  fim.onfinish = () => cobertura.remove();
-  return () => { anims.forEach((a) => a.cancel()); cobertura.remove(); };
-}
-
-/** Estado local de leitura, medido no trilho que permanece no fluxo. */
-function useSemanasDoTrilho(raiz, trilho) {
-  useEffect(() => {
-    const no = trilho.current;
-    if (!no) return;
-    const semanas = Array.from(raiz.current?.querySelectorAll(".regua12__semana") ?? []);
-    const documento = document.documentElement;
-    const viewport = window.visualViewport;
-    const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let ativo = true;
-    let quadro = 0;
-    let ultimo = null;
-    // Semana lida na medicao anterior; o engolir so dispara ao CHEGAR na 12 rolando, nunca ao
-    // carregar a pagina ja depois dela, e so uma vez por visita.
-    let anterior = null;
-    let limparEngolir = null;
-    const escrever = (acesas, atual) => {
-      const estado = `${acesas}:${atual}`;
-      if (estado === ultimo) return;
-      ultimo = estado;
-      for (const [indice, semana] of semanas.entries()) {
-        semana.toggleAttribute("data-acesa", indice < acesas);
-        semana.toggleAttribute("data-atual", indice === atual);
-      }
-    };
-    const atualizar = () => {
-      quadro = 0;
-      if (!ativo) return;
-      const leituraCompleta = reduzido.matches || documento.hasAttribute("data-pausado") ||
-        !documento.classList.contains("movimento-pronto") ||
-        documento.classList.contains("movimento-falhou");
-      const caixa = no.getBoundingClientRect();
-      if (leituraCompleta || caixa.height <= 0) {
-        escrever(semanas.length, -1);
-        anterior = SEMANAS;
-        return;
-      }
-      const altura = Math.min(window.innerHeight, viewport?.height ?? window.innerHeight);
-      const linhaDeLeitura = (viewport?.offsetTop ?? 0) + altura / 2;
-      // Marcos reais: F1 começa em 1, F2 em 3, sessão opcional em 5,
-      // portão e F3 em 9. A posição acompanha a leitura, nunca o calendário.
-      const acesas = semanaNoTrilho(linhaDeLeitura - caixa.top, marcosDasSemanas(no, altura));
-      escrever(acesas, acesas - 1);
-      if (anterior !== null && anterior < SEMANAS && acesas >= SEMANAS && !limparEngolir) {
-        limparEngolir = engolirRegua(semanas.at(-1));
-      }
-      anterior = acesas;
-    };
-    const agendar = () => {
-      if (ativo && !quadro) quadro = requestAnimationFrame(atualizar);
-    };
-    const tamanho = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(agendar);
-    tamanho?.observe(no);
-    const movimento = typeof MutationObserver === "undefined" ? null : new MutationObserver(agendar);
-    movimento?.observe(documento, { attributes: true, attributeFilter: ["class", "data-pausado"] });
-    window.addEventListener("scroll", agendar, { passive: true });
-    window.addEventListener("resize", agendar);
-    window.addEventListener("orientationchange", agendar);
-    window.addEventListener("pageshow", agendar);
-    viewport?.addEventListener("resize", agendar);
-    viewport?.addEventListener("scroll", agendar, { passive: true });
-    reduzido.addEventListener("change", agendar);
-    document.fonts?.ready.then(agendar);
-    atualizar();
-    return () => {
-      ativo = false;
-      cancelAnimationFrame(quadro);
-      tamanho?.disconnect();
-      movimento?.disconnect();
-      window.removeEventListener("scroll", agendar);
-      window.removeEventListener("resize", agendar);
-      window.removeEventListener("orientationchange", agendar);
-      window.removeEventListener("pageshow", agendar);
-      viewport?.removeEventListener("resize", agendar);
-      viewport?.removeEventListener("scroll", agendar);
-      reduzido.removeEventListener("change", agendar);
-      limparEngolir?.();
-      escrever(semanas.length, -1);
-    };
-  }, [raiz, trilho]);
-}
-
-const NUMEROS = [
-  { valor: 1, rotulo: "APP" },
-  { valor: 3, rotulo: "PROTOCOLOS" },
-  { valor: 12, rotulo: "SEMANAS" },
-  { valor: 1, rotulo: "OBJETIVO" },
-];
-
-export function Semanas({ params }) {
+export function Semanas() {
   const raiz = useRef(null);
   const trilho = useRef(null);
-  useSemanasDoTrilho(raiz, trilho);
+  useReguaDoTrilho(raiz, trilho, SEMANAS, conteudo.mapa.frase);
 
   useMovimento(() => {
     const no = raiz.current;
@@ -354,7 +153,7 @@ export function Semanas({ params }) {
             no topo de cada coluna. */}
         <div className="semanas__mais flex flex-col gap-8 mt-16 pt-8 border-t border-line" data-revelar>
           <ul className="grid grid-cols-2 lg:grid-cols-4" role="list">
-            {NUMEROS.map(({ valor, rotulo }) => (
+            {conteudo.mapa.numeros.map(({ valor, rotulo }) => (
               <li className="relative flex flex-col gap-8 border-l border-line px-6 pt-10 pb-6" key={rotulo}>
                 {/* Regua de 13 marcas no topo da coluna. */}
                 <span
@@ -368,7 +167,7 @@ export function Semanas({ params }) {
           </ul>
 
           <div className="self-start">
-            <Botao params={params} posicao="mapa" />
+            <Botao posicao="mapa" />
           </div>
         </div>
       </div>

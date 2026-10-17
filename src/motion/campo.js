@@ -22,7 +22,7 @@
  *   `pausado` - o visitante pediu pausa (WCAG 2.2.2): fica no ultimo quadro;
  *   `reduzido`- `prefers-reduced-motion`: um quadro unico e nunca anda.
  */
-export const LADRILHO = 320;
+const LADRILHO = 320;
 const ESPACO = 26; // distancia entre pontos, em px de layout
 const MAX_PONTOS = 2600; // teto de pontos por quadro
 const GRADE = 160; // distancia entre os fios da grade
@@ -42,20 +42,16 @@ function semearEstrelas(n) {
   return estrelas;
 }
 
-export class Campo {
+class Campo {
   /**
    * @param {HTMLElement} raiz onde os ladrilhos entram (sem caixa; os ladrilhos sao `absolute` e se posicionam pela secao)
    * @param {{ variante: string, cores: { ponto: string, fio: string, acento: string }, reduzido: boolean }} opcoes
    */
-  constructor(raiz, { variante, cores, reduzido }, ambiente = {}) {
+  constructor(raiz, { variante, cores, reduzido }) {
     this.raiz = raiz;
-    this.fiel = variante === "fiel";
     this.estelar = variante === "estelar";
     this.cores = cores;
     this.reduzido = reduzido;
-    this.agendar = ambiente.agendar ?? ((f) => requestAnimationFrame(f));
-    this.cancelar = ambiente.cancelar ?? ((id) => cancelAnimationFrame(id));
-    this.agora = ambiente.agora ?? (() => performance.now());
 
     this.largura = 0;
     this.altura = 0;
@@ -66,7 +62,6 @@ export class Campo {
     this.colunas = 0;
     this.linhas = 0;
     this.estrelas = [];
-    this.rede = [];
     this.lad = [];
     this.quadro = 0;
     this.vivo = false;
@@ -74,50 +69,12 @@ export class Campo {
     // O quadro do ultimo instante pintado: o ladrilho que acorda com o laco parado (pausa) nasce na
     // mesma fase dos outros, e nao num `t = 0` que emendaria com eles num degrau de fase.
     this.ultimoT = 0;
-    // Pontos projetados do quadro (estelar e fiel), calculados UMA vez por quadro e nao por ladrilho.
+    // Pontos projetados do quadro (estelar), calculados UMA vez por quadro e nao por ladrilho.
     this.prep = null;
     this.tPrep = NaN;
   }
 
-  /**
-   * A REDE da variante fiel.
-   *
-   * O estudo com recortes ampliados do site de origem (07/09/2026) corrigiu
-   * uma leitura errada minha. Os pontos de la NAO sao aleatorios: nas areas
-   * calmas aparece uma rede regular, de linhas e colunas uniformes, e o
-   * adensamento so acontece nas cristas. A primeira tentativa sorteou os
-   * pontos, e o resultado leu como estrela espalhada - porque randomizar
-   * destroi exatamente o que faz a crista ser legivel.
-   *
-   * Entao a rede e regular em (u, v): `u` de lado, `v` de profundidade. O
-   * relevo desloca cada ponto e a perspectiva comprime o que esta longe. A
-   * crista aparece onde a superficie dobra e varias linhas de `v` caem quase
-   * no mesmo ponto da tela; entre elas, a rede volta a ser rede.
-   *
-   * O `jitter` pequeno tira o ar de papel milimetrado sem apagar a
-   * estrutura. Semente fixa: o campo e o mesmo em toda carga.
-   */
-  semear(cols, linhasZ) {
-    let s = 20260907;
-    const rnd = () => {
-      s = (s * 1664525 + 1013904223) % 4294967296;
-      return s / 4294967296;
-    };
-    const rede = [];
-    for (let i = 0; i < cols; i += 1) {
-      for (let j = 0; j < linhasZ; j += 1) {
-        rede.push({
-          u: (i / (cols - 1)) * 2 - 1 + (rnd() - 0.5) * (1.6 / cols),
-          v: j / (linhasZ - 1) + (rnd() - 0.5) * (0.7 / linhasZ),
-          j: 0.75 + rnd() * 0.5,
-          acento: rnd() < 0.09,
-        });
-      }
-    }
-    this.rede = rede;
-  }
-
-  /** O que depende da area da secao: densidade dos pontos, estrelas, rede. */
+  /** O que depende da area da secao: densidade dos pontos e estrelas. */
   densidade() {
     const { largura, altura } = this;
     // Densidade por area, com teto: o espaco cresce se a tela for grande
@@ -133,18 +90,6 @@ export class Campo {
       if (this.estrelas.length !== alvo) this.estrelas = semearEstrelas(alvo);
     }
 
-    if (this.fiel) {
-      // Densidade por area, com teto, pela mesma razao da malha: num monitor
-      // grande a rede nao pode multiplicar o trabalho de cada quadro.
-      const cols = Math.max(20, Math.min(64, Math.round(largura / 24)));
-      let rows = Math.max(14, Math.min(34, Math.round(Math.min(altura, 1100) / 36)));
-      // Histerese: uma secao que cresce ou encolhe um pouco (o acordeao da FAQ) nao pode trocar a rede
-      // de lugar, senao o relevo salta e volta a cada abrir/fechar.
-      if (this.cols === cols && Math.abs(this.rows - rows) < 4) rows = this.rows;
-      if (this.rede.length !== cols * rows) this.semear(cols, rows);
-      this.cols = cols;
-      this.rows = rows;
-    }
   }
 
   /** Cria, remove e reposiciona os ladrilhos para a altura atual. */
@@ -233,21 +178,6 @@ export class Campo {
     }
     ctx.stroke();
 
-    if (this.fiel) {
-      this.preparar(t);
-      const { x, y, a, d, c, n } = this.prep;
-      for (let i = 0; i < n; i += 1) {
-        if (a[i] === 0) continue;
-        const yr = y[i];
-        if (yr + d[i] <= y0 || yr >= yMax) continue;
-        ctx.globalAlpha = a[i];
-        ctx.fillStyle = c[i] ? corAcento : corPonto;
-        ctx.fillRect(x[i], yr, d[i], d[i]);
-      }
-      ctx.globalAlpha = 1;
-      return;
-    }
-
     // A superficie: duas senoides cruzadas deslocam o ponto no eixo Y, e a
     // mesma conta manda na opacidade. E o que faz a malha ler como relevo em
     // vez de chuvisco - ponto alto aparece, ponto baixo some.
@@ -271,15 +201,15 @@ export class Campo {
   }
 
   /**
-   * Os pontos das variantes `estelar` e `fiel`, projetados UMA vez por quadro: cada ladrilho so
-   * escolhe os seus. A conta de cada ponto e a de antes; `a` (opacidade) 0 e o ponto descartado.
+   * Os pontos da variante `estelar`, projetados UMA vez por quadro: cada ladrilho so escolhe os
+   * seus. A conta de cada ponto e a de antes; `a` (opacidade) 0 e o ponto descartado.
    * Float64, e nao Float32: o `Math.round` das posicoes tem de cair onde sempre caiu.
    */
   preparar(t) {
     if (this.tPrep === t) return;
     this.tPrep = t;
     const { largura, alturaGeo: altura } = this;
-    const fonte = this.estelar ? this.estrelas : this.rede;
+    const fonte = this.estrelas;
     const n = fonte.length;
     if (!this.prep || this.prep.x.length < n) {
       this.prep = { x: new Float64Array(n), y: new Float64Array(n), a: new Float64Array(n), d: new Float64Array(n), c: new Uint8Array(n), n };
@@ -287,57 +217,18 @@ export class Campo {
     const p = this.prep;
     p.n = n;
 
-    if (this.estelar) {
-      for (let i = 0; i < n; i += 1) {
-        const st = fonte[i];
-        const x = ((st.x + t * 0.000015 * st.z) % 1) * largura;
-        const y = ((st.y + t * 0.000009 * st.z) % 1) * altura;
-        const alpha = Math.min(1, (0.12 + st.z * 0.6) * (0.6 + Math.sin(t * 0.0018 + st.fase) * 0.4));
-        if (alpha < 0.04) {
-          p.a[i] = 0;
-          continue;
-        }
-        p.a[i] = alpha;
-        p.c[i] = st.acento ? 1 : 0;
-        p.d[i] = st.z > 0.75 ? 2 : st.z > 0.45 ? 1.5 : 1;
-        p.x[i] = Math.round(x);
-        p.y[i] = Math.round(y);
-      }
-      return;
-    }
-
-    // UMA ONDA, no plano, ocupando a secao inteira.
-    //
-    // A rede (u, v) vira uma unica fita: `u` percorre a largura toda e `v` (0 a 1) e a posicao na
-    // espessura. A curva e longa e a espessura respira devagar. A escala vertical e LIMITADA (a
-    // secao pode ter 2600px) pela mesma razao de antes: sem isso a fita viraria listra.
-    const vis = Math.min(altura, 900);
-    const amp = vis * 0.16;
     for (let i = 0; i < n; i += 1) {
-      const pt = fonte[i];
-      const s = pt.v;
-      const h =
-        Math.sin(pt.u * 2.2 + t * 0.00032) * 0.6 +
-        Math.sin(pt.u * 0.9 - t * 0.0002) * 0.4;
-      const espessura = vis * (0.38 + 0.12 * Math.sin(pt.u * 1.7 + t * 0.00025));
-      const x = largura / 2 + pt.u * largura * 0.5;
-      const y = altura / 2 + h * amp + (s - 0.5) * espessura;
-      if (x < -8 || x > largura + 8 || y < -8 || y > altura + 8) {
+      const st = fonte[i];
+      const x = ((st.x + t * 0.000015 * st.z) % 1) * largura;
+      const y = ((st.y + t * 0.000009 * st.z) % 1) * altura;
+      const alpha = Math.min(1, (0.12 + st.z * 0.6) * (0.6 + Math.sin(t * 0.0018 + st.fase) * 0.4));
+      if (alpha < 0.04) {
         p.a[i] = 0;
         continue;
       }
-
-      // Miolo da fita = mais claro e maior; borda e pontas esmaecem. Sem brilho, sem halo (TR-03).
-      const miolo = 1 - Math.abs(s - 0.5) * 1.4;
-      const ponta = 1 - Math.abs(pt.u) ** 3;
-      const alpha = (0.15 + miolo * 0.6) * ponta * pt.j;
-      if (alpha < 0.05) {
-        p.a[i] = 0;
-        continue;
-      }
-      p.a[i] = Math.min(0.9, alpha);
-      p.c[i] = pt.acento ? 1 : 0;
-      p.d[i] = miolo > 0.6 ? 1.4 : 1;
+      p.a[i] = alpha;
+      p.c[i] = st.acento ? 1 : 0;
+      p.d[i] = st.z > 0.75 ? 2 : st.z > 0.45 ? 1.5 : 1;
       p.x[i] = Math.round(x);
       p.y[i] = Math.round(y);
     }
@@ -352,7 +243,7 @@ export class Campo {
   laco = (t) => {
     if (!this.vivo) return;
     this.pintar(t);
-    this.quadro = this.agendar(this.laco);
+    this.quadro = requestAnimationFrame(this.laco);
   };
 
   // Sob movimento reduzido fica no quadro unico: o campo e ornamento e nao
@@ -364,10 +255,10 @@ export class Campo {
     const deve = !this.reduzido && !this.pausado && this.lad.some((lad) => lad.ativo && lad.naTela);
     if (deve && !this.vivo) {
       this.vivo = true;
-      this.quadro = this.agendar(this.laco);
+      this.quadro = requestAnimationFrame(this.laco);
     } else if (!deve && this.vivo) {
       this.vivo = false;
-      this.cancelar(this.quadro);
+      cancelAnimationFrame(this.quadro);
     }
   }
 
@@ -425,23 +316,23 @@ export class Campo {
       lad.novo = false;
       if (i > 0 && this.lad[i - 1].ativo) this.perto(lad, true);
     }
-    // `estelar` e `fiel` desenham pela geometria, que so muda com `mudouGeo`: crescer um pouco (o
-    // acordeao) so recorta mais ou menos do mesmo desenho, e repintar tudo a cada quadro da animacao
-    // dobrava o trabalho do laco e engasgava a abertura de respostas grandes. A `malha` conta
-    // linhas pela altura, entao ela repinta.
-    if (!mudouGeo && (this.fiel || this.estelar)) return;
+    // A `estelar` desenha pela geometria, que so muda com `mudouGeo`: crescer um pouco (o acordeao)
+    // so recorta mais ou menos do mesmo desenho, e repintar tudo a cada quadro da animacao dobrava o
+    // trabalho do laco e engasgava a abertura de respostas grandes. A `malha` conta linhas pela
+    // altura, entao ela repinta.
+    if (!mudouGeo && this.estelar) return;
     for (const lad of this.lad) {
       if (!lad.ativo) continue;
       this.medirLadrilho(lad);
       // Pinta ja, no mesmo tick: com o laco vivo, esperar o proximo quadro deixava um quadro em branco
       // (o buffer foi limpo) a cada mudanca de altura, e o fundo piscava enquanto a FAQ animava.
-      this.pintarLadrilho(lad, this.vivo ? this.ultimoT : this.agora());
+      this.pintarLadrilho(lad, this.vivo ? this.ultimoT : performance.now());
     }
   }
 
   parar() {
     this.vivo = false;
-    this.cancelar(this.quadro);
+    cancelAnimationFrame(this.quadro);
   }
 
   soltar() {

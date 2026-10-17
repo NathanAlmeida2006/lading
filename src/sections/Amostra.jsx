@@ -4,7 +4,7 @@ import { bloco, envelope } from "../ui.js";
 /**
  * Amostra: a unica secao opcional da sequencia (RF-L08).
  *
- * Fica desligada em `config.mostrarAmostra` ate o Marco 4 do Lithium entregar
+ * Fica desligada em `config.secoes.amostra.ativo` ate o Marco 4 do Lithium entregar
  * os protocolos finalizados. Ate la nao ha miolo real para mostrar, e amostra
  * inventada quebraria a continuidade de promessa que a pagina inteira defende.
  */

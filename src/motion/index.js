@@ -107,7 +107,6 @@ export const revelar = (...args) => chamar("revelar", args);
 export const revelarEmCascata = (...args) => chamar("revelarEmCascata", args);
 export const mascaraDeLinha = (alvo, opcoes = {}) => chamar("mascaraDeLinha", [alvo, opcoes]);
 export const subirLinhas = (...args) => chamar("subirLinhas", args);
-export const desenhar = (...args) => chamar("desenhar", args);
 export const acenderEmSequencia = (...args) => chamar("acenderEmSequencia", args);
 export const pulsar = (...args) => chamar("pulsar", args);
 export const abrirPainel = (...args) => chamar("abrirPainel", args);

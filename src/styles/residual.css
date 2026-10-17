@@ -18,16 +18,10 @@
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Os painéis usam a viewport pequena quando disponível. */
+/* Reserva para navegador sem `svh`: onde ha suporte, vence o `min-h-svh` do painel (ui.js). */
 @layer components {
   .painel-capa {
     min-height: 100vh;
-  }
-
-  @supports (min-height: 100svh) {
-    .painel-capa {
-      min-height: 100svh;
-    }
   }
 }
 
@@ -41,12 +35,9 @@ html:has(body.com-doca) {
    Dente de 4px, altura 6px (micro-registro do §7). E `background-image`, e NAO
    `mask`: a mascara promove o recibo a camada composta, o texto de tudo o que vem
    depois perde o antialiasing por subpixel e fica cinza. A cor do papel (o
-   `--surface-1` do Cartaz, #f6f4ef) vai escrita dentro do SVG porque um SVG
+   `--surface-1` do Sigilo, #121215) vai escrita dentro do SVG porque um SVG
    embutido nao enxerga custom property. */
 :root {
-  --serrilha-sup: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 6 L4 0 L8 6 Z' fill='%23f6f4ef'/%3E%3C/svg%3E");
-  --serrilha-inf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0 L4 6 L8 0 Z' fill='%23f6f4ef'/%3E%3C/svg%3E");
-  /* Mesmo dente com o `--surface-1` do Sigilo (#121215), para o recibo em tema escuro. */
   --serrilha-escura-sup: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 6 L4 0 L8 6 Z' fill='%23121215'/%3E%3C/svg%3E");
   --serrilha-escura-inf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0 L4 6 L8 0 Z' fill='%23121215'/%3E%3C/svg%3E");
 }
@@ -79,9 +70,6 @@ html:has(body.com-doca) {
     background: var(--acento);
     color: var(--void);
   }
-
-  /* A coreografia esconde cada alvo somente depois de o chunk carregar e o
-     IntersectionObserver estar registrado. O HTML permanece legivel se a rede falhar. */
 }
 
 /* Sem o chunk, as palavras não podem ficar no estado apagado do utilitário js:. */
@@ -223,19 +211,7 @@ html:has(body.com-doca) {
   .cor-viva [data-line] { animation: none; background: none; color: var(--bone-pure); }
 }
 
-/* ---- 9. O pulso do preco ----------------------------------------------------
-   Diferente do "Vitalicio": a cor inteira respira entre branco e acento, com um
-   brilho que cresce junto. Sem movimento fica branco e parado. */
-@keyframes preco-pulso {
-  0%, 100% { color: var(--bone-pure); text-shadow: 0 0 0 transparent; }
-  50% { color: var(--acento); text-shadow: 0 0 .25em color-mix(in srgb, var(--acento) 55%, transparent); }
-}
-.preco-pulso { animation: preco-pulso 2.4s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) {
-  .preco-pulso { animation: none; }
-}
-
-/* ---- 10. O brilho varrido do "Vitalicio" -------------------------------------
+/* ---- 9. O brilho varrido do "Vitalicio" -------------------------------------
    Texto em acento com uma faixa fina de luz que o cruza e descansa; sem movimento
    fica em acento, parado. */
 @keyframes brilho-varrido {
@@ -253,44 +229,11 @@ html:has(body.com-doca) {
   .brilho-varrido { animation: none; background: none; color: var(--acento); }
 }
 
-/* ---- 11. O neon do preco -----------------------------------------------------
-   Branco com halo vermelho que respira devagar, em curva suave e sem apagoes. Sem
-   movimento fica com o halo medio e parado. */
-@keyframes neon-preco {
-  0%, 100% { color: var(--cor-realce); text-shadow: 0 0 .05em color-mix(in srgb, var(--acento) 45%, transparent), 0 0 .2em color-mix(in srgb, var(--acento) 30%, transparent), 0 0 .45em color-mix(in srgb, var(--acento) 15%, transparent); }
-  50% { color: color-mix(in srgb, var(--cor-realce) 88%, var(--acento)); text-shadow: 0 0 .06em var(--acento), 0 0 .24em var(--acento), 0 0 .55em color-mix(in srgb, var(--acento) 70%, transparent); }
-}
-.neon-preco { animation: neon-preco 6s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) {
-  .neon-preco { animation: none; color: var(--cor-realce); text-shadow: 0 0 .06em var(--acento), 0 0 .22em var(--acento); }
-}
+/* A cor de realce do brilho varrido: branco puro no escuro, o osso do tema no cartaz. */
+.brilho-varrido { --cor-realce: var(--bone-pure); }
+[data-theme="cartaz"] .brilho-varrido { --cor-realce: var(--bone); }
 
-/* A cor de realce das animacoes acima: branco puro no escuro, o osso do tema no cartaz. */
-.neon-preco, .brilho-varrido { --cor-realce: var(--bone-pure); }
-[data-theme="cartaz"] :is(.neon-preco, .brilho-varrido) { --cor-realce: var(--bone); }
-
-/* ---- 12. O enchimento do preco ----------------------------------------------
-   O numero se enche de acento de baixo para cima, como liquido, segura e esvazia.
-   Sem movimento fica no tom de realce, parado. */
-@keyframes enchimento {
-  0%, 10% { background-position: 0 100%; }
-  50%, 60% { background-position: 0 0; }
-  100% { background-position: 0 100%; }
-}
-.enchimento {
-  background: linear-gradient(to top, var(--acento) 50%, var(--cor-realce) 50%) 0 100% / 100% 200%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: enchimento 5s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .enchimento { animation: none; background: none; color: var(--cor-realce); }
-}
-.enchimento { --cor-realce: var(--bone-pure); }
-[data-theme="cartaz"] .enchimento { --cor-realce: var(--bone); }
-
-/* ---- 13. A aberracao do preco -------------------------------------------------
+/* ---- 10. A aberracao do preco -------------------------------------------------
    Duas copias em acento se abrem para os lados do numero e voltam, em curva suave,
    como desalinhamento de cor de impressao. Sem movimento fica alinhado e parado. */
 @keyframes aberracao {

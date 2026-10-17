@@ -8,9 +8,7 @@
  */
 const PADROES = {
   "--motion-fast": 120,
-  "--motion-base": 180,
   "--motion-slow": 280,
-  "--motion-celebracao": 320,
 };
 
 let cache = null;
@@ -33,19 +31,31 @@ export function duracao(nome) {
   return cache[nome];
 }
 
+// Uma curva do CSS (o `--ease-expo` das revelacoes), para o WAAPI usar a mesma do resto da pagina.
+const CURVAS = { "--ease-expo": "cubic-bezier(0.16, 1, 0.3, 1)" };
+
+export function curva(nome) {
+  if (typeof window === "undefined") return CURVAS[nome];
+  return getComputedStyle(document.documentElement).getPropertyValue(nome).trim() || CURVAS[nome];
+}
+
+// Uma consulta so para a pagina inteira: `.matches` e vivo, e ha quem leia a cada quadro de rolagem.
+let consulta = null;
+const preferencia = () => (consulta ??= window.matchMedia("(prefers-reduced-motion: reduce)"));
+
 /**
  * Movimento nunca comunica sozinho (mestre §10). Com a preferencia ligada,
  * tudo vira opacidade: sem deslocamento, sem corte, sem desenho.
  */
 export function semMovimento() {
   if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return preferencia().matches;
 }
 
 /** Reexecuta efeitos quando a preferência muda sem deixar um listener órfão. */
 export function aoMudarPreferencia(ouvinte) {
   if (typeof window === "undefined" || !window.matchMedia) return () => {};
-  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const media = preferencia();
   media.addEventListener?.("change", ouvinte);
   return () => media.removeEventListener?.("change", ouvinte);
 }

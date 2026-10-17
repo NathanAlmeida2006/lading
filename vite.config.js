@@ -12,7 +12,10 @@ export default defineConfig({
   // pre-renderizado na virada do ano e quebraria a hidratacao.
   define: { __ANO__: JSON.stringify(new Date().getFullYear()) },
   build: {
-    target: "es2020",
+    // O piso real ja e o do Tailwind v4 (Safari 16.4, Chrome 111, Firefox 128): abaixo dele o esbuild
+    // so transpilava a toa. O CSS segue minificado como antes (`cssTarget`), byte a byte.
+    target: ["chrome111", "edge111", "firefox128", "safari16.4"],
+    cssTarget: "es2020",
     assetsInlineLimit: 2048,
     // `scripts/check-size.mjs` ja mede o gzip contra o teto do RNF-L04, e a
     // conta do Vite refaz a mesma compressao em cada arquivo, so para imprimir.

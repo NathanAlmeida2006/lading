@@ -4,12 +4,12 @@ import { CampoDePontos } from "../components/CampoDePontos.jsx";
 import { Botao } from "../components/Botao.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { mascaraDeLinha, revelar, useMovimento } from "../motion/index.js";
-import { bloco, envelope, mascara } from "../ui.js";
+import { bloco, doisDigitos, envelope, mascara } from "../ui.js";
 
 // Situação e comportamento do protocolo; não são relatos nem antes/depois corporal.
 const CARTAS = conteudo.espelho.cartas;
 
-export function Espelho({ params }) {
+export function Espelho() {
   const raiz = useRef(null);
   const lista = useRef(null);
 
@@ -38,10 +38,14 @@ export function Espelho({ params }) {
       largura = window.innerWidth;
       medir();
     };
+    let ativo = true;
     medir();
-    document.fonts?.ready.then(medir);
+    document.fonts?.ready.then(() => { if (ativo) medir(); });
     window.addEventListener("resize", aoRedimensionar);
-    return () => window.removeEventListener("resize", aoRedimensionar);
+    return () => {
+      ativo = false;
+      window.removeEventListener("resize", aoRedimensionar);
+    };
   }, []);
 
   return (
@@ -73,7 +77,7 @@ export function Espelho({ params }) {
               style={{ "--ordem": indice }}
             >
               <span className="text-silver font-terciaria text-mono-reg tabular-nums" aria-hidden="true">
-                {String(indice + 1).padStart(2, "0")}
+                {doisDigitos(indice + 1)}
               </span>
               <h3 className="text-bone font-secundaria text-h3 uppercase [font-size:24px] tracking-normal lg:text-h2 lg:[font-size:28.8px]">
                 {carta.titulo}
@@ -90,7 +94,7 @@ export function Espelho({ params }) {
           ))}
         </ol>
         <div className="mt-8">
-          <Botao params={params} posicao="espelho" />
+          <Botao posicao="espelho" />
         </div>
         </div>
       </div>

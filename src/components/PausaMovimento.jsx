@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { definirPausa } from "../motion/pausa.js";
+import { useSyncExternalStore } from "react";
+import { aoMudarPausa, definirPausa, estaPausado } from "../motion/pausa.js";
+
+const semPausaNoServidor = () => false;
 
 /**
  * Pausar e retomar o movimento (WCAG 2.2.2).
@@ -11,19 +13,15 @@ import { definirPausa } from "../motion/pausa.js";
  * navega por teclado ou leitor de tela o encontra logo no inicio.
  */
 export function PausaMovimento() {
-  const [pausado, definirPausado] = useState(false);
-
-  function alternar() {
-    definirPausa(!pausado);
-    definirPausado(!pausado);
-  }
+  // O estado mora em motion/pausa.js (o laco dos campos tambem o le); aqui so se le e se alterna.
+  const pausado = useSyncExternalStore(aoMudarPausa, estaPausado, semPausaNoServidor);
 
   return (
     <button
       type="button"
       className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-10 focus:inline-flex focus:items-center focus:min-h-12 focus:px-4 focus:py-3 focus:bg-bone focus:text-void font-secundaria text-label uppercase cursor-pointer"
       aria-pressed={pausado}
-      onClick={alternar}
+      onClick={() => definirPausa(!pausado)}
     >
       {pausado ? "Retomar animações" : "Pausar animações"}
     </button>
