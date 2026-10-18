@@ -21,14 +21,15 @@ const PONTAS = [
 ];
 
 /**
- * O fundo animado dos paineis de tela cheia: malha de pontos e as pontas soltas por cima.
+ * As dez pontas soltas, sozinhas: triangulos que surgem, vagam e somem, cada um no seu tempo. `camada` e a classe do z-index
+ * (por cima de tudo na dobra, por baixo do conteudo em outras secoes). Pausam fora da tela (ver abaixo).
  *
  * As pontas (e a seta da dobra) sao animacoes de CSS infinitas, e o Chrome reavalia o estilo de cada
  * uma a cada quadro em que a thread principal desenha QUALQUER coisa (medido: ~0,9 ms por quadro so
  * por elas, a pagina inteira, inclusive a 16.000 px de distancia). Fora da tela, a secao ganha
  * `data-fora` e o CSS (residual.css) pausa as duas; ao voltar, elas seguem de onde pararam.
  */
-export function FundoCapa() {
+export function Pontas({ camada = "z-3" }) {
   const primeira = useRef(null);
 
   useMovimento(() => {
@@ -44,20 +45,25 @@ export function FundoCapa() {
     };
   }, []);
 
+  return PONTAS.map((classe, indice) => (
+    <svg
+      key={classe}
+      ref={indice === 0 ? primeira : undefined}
+      className={`ponta absolute ${camada} opacity-0 pointer-events-none fill-acento motion-reduce:hidden ${classe}`}
+      viewBox="0 0 200 200"
+      aria-hidden="true"
+    >
+      <path d="M71.6 12.5L128.4 12.5L100.0 58.0Z" />
+    </svg>
+  ));
+}
+
+/** O fundo animado dos paineis de tela cheia: malha de pontos e as pontas soltas por cima. */
+export function FundoCapa() {
   return (
     <>
       <CampoDePontos />
-      {PONTAS.map((classe, indice) => (
-        <svg
-          key={classe}
-          ref={indice === 0 ? primeira : undefined}
-          className={`ponta absolute z-3 opacity-0 pointer-events-none fill-acento motion-reduce:hidden ${classe}`}
-          viewBox="0 0 200 200"
-          aria-hidden="true"
-        >
-          <path d="M71.6 12.5L128.4 12.5L100.0 58.0Z" />
-        </svg>
-      ))}
+      <Pontas />
     </>
   );
 }

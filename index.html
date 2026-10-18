@@ -42,6 +42,16 @@
       // depois da hora, a classe NAO volta: a pagina fica aberta, sem movimento.
       (function () {
         try {
+          // F5 sempre abre no topo (na dobra). A restauracao de rolagem do navegador depende de a pagina ja ter a altura
+          // final no instante em que ela roda, e aqui a altura muda depois (os trechos sticky das cortinas, o video), entao
+          // ele pousava em outra secao; e um `#secao` esquecido na URL (do indice fixo, do menu) levava a ela a cada recarga.
+          // So na recarga: voltar e avancar, e links com `#`, seguem como o navegador faz.
+          var nav = performance.getEntriesByType("navigation")[0];
+          if (nav && nav.type === "reload") {
+            if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+            if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+            scrollTo(0, 0);
+          }
           var raiz = document.documentElement;
           if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
             raiz.classList.add("intro-pendente");

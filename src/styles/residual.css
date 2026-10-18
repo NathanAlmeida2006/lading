@@ -130,6 +130,65 @@ html:has(body.com-doca) {
   @keyframes vagar-10 { 0%, 100% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 11% { opacity: .5; } 50% { opacity: .68; transform: translate(-10vw, 6vh) rotate(-50deg); } 89% { opacity: .32; } }
 }
 
+/* ---- 5b. O anel do play ----------------------------------------------------
+   Um anel que sai do botao e some, devagar. Ornamento: parado (e invisivel) sob movimento reduzido. */
+@theme {
+  --animate-anel: anel 2.8s ease-out infinite;
+  /* O corte do video: um circulo que nasce no centro e cobre a secao (75% = a meia diagonal, com folga). */
+  --animate-empurra: empurra 1600ms linear both; /* a camera empurra devagar numa capa */
+  /* Os takes finais do video (sections/Takes.jsx). */
+  --animate-placa: placa 320ms var(--ease-expo) both; /* uma anilha cai na barra */
+  --animate-bate: bate 280ms var(--ease-expo) both;
+  --animate-cresce: cresce 1000ms var(--ease-expo) both;
+  --animate-entra-lado: entra-lado 450ms var(--ease-expo) both;
+  --animate-roleta: roleta 800ms cubic-bezier(0.12, 0.8, 0.2, 1) both;
+  --animate-marca: marca 320ms var(--ease-expo) both;
+  --animate-dedo: dedo 480ms cubic-bezier(0.25, 0.6, 0.35, 1) infinite; /* o dedo que arrasta */
+  --animate-glitch-a: glitch-a 130ms steps(4) both;
+  --animate-glitch-b: glitch-b 130ms steps(4) both;
+  --animate-batida: batida 260ms var(--ease-expo) both; /* a logo a cada quadro */
+  --animate-corte: corte 450ms var(--ease-expo) both;
+  /* A letra da capa digitada: some ate o atraso (inline) e aparece de uma vez. */
+  --animate-digitar: digitar 1ms steps(1) both;
+  /* O triangulo do play vira um L enorme (Big Shoulders): 6 pontos nos dois, e o clip-path interpola ponto a ponto. */
+  --animate-letra: letra 800ms var(--ease-expo) 1500ms both;
+  /* O "ithium" vertical aparece sobre a perna do L, subindo (a palavra le de baixo para cima). */
+  --animate-ithium: ithium 600ms var(--ease-expo) 750ms both;
+  --animate-ithium-letra: ithium 380ms var(--ease-expo) both; /* uma letra do "ithium"; o atraso de cada uma vai inline */
+  /* A onda que sai do play ao clique. */
+  --animate-onda: onda 750ms var(--ease-expo) both;
+
+  /* `--u` (definida no botao) e a unidade do conjunto: o menor entre 1% da altura e 1,7% da largura da tela. */
+  @keyframes letra {
+    from { width: 50%; height: 50%; clip-path: polygon(35% 17%, 62% 33.5%, 89% 50%, 62% 66.5%, 35% 83%, 35% 50%); }
+    to { width: calc(30 * var(--u)); height: calc(62 * var(--u)); clip-path: polygon(0 0, 38% 0, 38% 85%, 100% 85%, 100% 100%, 0 100%); }
+  }
+  @keyframes onda { from { transform: scale(1); opacity: 0.8; } to { transform: scale(2.6); opacity: 0; } }
+  @keyframes ithium {
+    from { opacity: 0; clip-path: inset(0 0 100% 0); }
+    to { opacity: 1; clip-path: inset(0); }
+  }
+  @keyframes digitar { from { opacity: 0; } }
+  @keyframes empurra { to { transform: scale(1.045); } }
+  @keyframes placa { from { opacity: 0; transform: translateY(-45%) scale(1.25); } }
+  @keyframes bate { from { opacity: 0; transform: scale(1.45); } }
+  @keyframes cresce { from { transform: scale(0.12); } }
+  @keyframes entra-lado { from { opacity: 0; transform: translateX(calc(var(--lado, -1) * 40%)); } }
+  @keyframes roleta { to { transform: translateY(calc(var(--final) * -1em)); } }
+  @keyframes marca { from { opacity: 0; transform: scale(0.6); background-color: var(--acento); } 55% { transform: scale(1.12); } }
+  @keyframes dedo {
+    0% { transform: translateY(0) scale(0.6); opacity: 0; }
+    15% { transform: translateY(0) scale(1); opacity: 1; }
+    80% { transform: translateY(-28svh) scale(1); opacity: 1; }
+    100% { transform: translateY(-32svh) scale(0.85); opacity: 0; }
+  }
+  @keyframes glitch-a { from { transform: translateX(-3.5%); } }
+  @keyframes glitch-b { from { transform: translateX(3.5%); } }
+  @keyframes batida { from { transform: scale(1.06); } }
+  @keyframes corte { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(75% at 50% 50%); } }
+  @keyframes anel { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.35); opacity: 0; } }
+}
+
 /* ---- 6. A cortina de introducao -------------------------------------------
    Valores lidos do CSS de producao do lenis.dev: letras em
    `translateY(100% + indice * 5%)`, 1,5 s expo-out com 75 ms por indice; a
@@ -245,3 +304,5 @@ html:has(body.com-doca) {
 @media (prefers-reduced-motion: reduce) {
   .aberracao { animation: none; }
 }
+
+@media (prefers-reduced-motion: reduce) { .ithium-letra { animation-delay: 0ms !important; } }

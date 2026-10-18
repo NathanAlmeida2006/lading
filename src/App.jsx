@@ -17,6 +17,7 @@ import { PilhaDeValor } from "./sections/PilhaDeValor.jsx";
 import { Espelho } from "./sections/Espelho.jsx";
 import { Leva } from "./sections/Leva.jsx";
 import { Semanas } from "./sections/Semanas.jsx";
+import { Video } from "./sections/Video.jsx";
 import { Amostra } from "./sections/Amostra.jsx";
 import { Objecoes } from "./sections/Objecoes.jsx";
 import { Fechamento } from "./sections/Fechamento.jsx";
@@ -65,6 +66,7 @@ export function App() {
             vive num conteiner proprio, onde o pino termina com a de cima toda coberta. */}
         <div>
           <Manifesto />
+          <Video />
           <PilhaDeValor />
           <Espelho />
         </div>
