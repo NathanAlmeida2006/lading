@@ -29,6 +29,10 @@ const topoEm = (no, el) => {
  * Para o corte ser um zoom (punch-in / punch-out) sobre esse cartao, a primeira leva `zoomSaida` e a segunda `zoomEntrada`
  * ({ escala, ms }, ZOOM): a primeira se aproxima do cartao nos ultimos ms da rolagem, a segunda nasce aproximada e se afasta.
  *
+ * `inicioEm` (ms, no relogio de `performance.now()`): a hora em que o estagio devia entrar. A rolagem com `ate` conta dele, e nao do primeiro
+ * quadro depois de montar: se o React monta tarde (celular, CPU carregada), a tela chega ao cartao-alvo e ao zoom na hora do corte seguinte, e
+ * nao depois dele. Sem `inicioEm`, conta do primeiro quadro.
+ *
  * Um dedo (toque translucido) arrasta para cima sobre a tela, em loop, enquanto ela rola.
  *
  * `mascarar`: a tela vira o recheio de uma forma (ver `MASCARA_DA_LOGO`): uma mascara que comeca tao grande que a forma
@@ -36,7 +40,7 @@ const topoEm = (no, el) => {
  * escura e a forma sumiria no fundo preto: junto com a mascara, as cores se invertem (`invert` + `hue-rotate`, que mantem os
  * matizes), e a forma fica clara, com o app em tinta dentro, e se encaixa na logo branca do quadro seguinte.
  */
-export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidade = VELOCIDADE, aoMedir, zoomSaida, zoomEntrada, mascarar }) {
+export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidade = VELOCIDADE, aoMedir, zoomSaida, zoomEntrada, mascarar, inicioEm }) {
   const raiz = useRef(null);
   const moldura = useRef(null);
   const rolo = useRef(null);
@@ -67,16 +71,30 @@ export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidad
     const fim = Math.min(maximo, ate ? posicao(ate) : inicio + (velocidade * duracao) / 1000);
     const v = ate ? Math.max(0, fim - inicio) / (duracao / 1000) : velocidade;
     aoMedir?.(v);
-    let quadro = 0, vivo = true, t0 = null, zoomou = false;
+    let quadro = 0, vivo = true, t0 = inicioEm ?? null, zoomou = false, y = inicio;
+    const andar = (agora) => {
+      y = Math.min(fim, inicio + (Math.max(0, agora - t0) / 1000) * v);
+      no.scrollTop = y;
+      if (zoomSaida && !zoomou && fim - y <= (v * zoomSaida.ms) / 1000) {
+        zoomou = true;
+        const zoom = mold.animate([{ transform: "scale(1)" }, { transform: `scale(${zoomSaida.escala})` }], { duration: zoomSaida.ms, easing: EASE_SAIDA, fill: "forwards" });
+        zoom.currentTime = Math.min(zoomSaida.ms, Math.max(0, zoomSaida.ms - ((fim - y) / v) * 1000)); // montou tarde: o zoom entra ja no ponto certo
+      }
+    };
+    // Com `inicioEm`, o primeiro quadro ja sai no lugar em que a tela devia estar nesta hora.
+    if (t0 != null) andar(performance.now());
+    // O que ja esta na tela entra pronto, sem o fade de 600 ms do `data-revelar` (que nasce em opacity 0 e so liberaria no 1o callback do
+    // IntersectionObserver, um ou dois quadros depois): num corte de video isso era a tela quase vazia, que enchia aos poucos.
+    const caixa = no.getBoundingClientRect();
+    const naTela = [...itens].filter((i) => { const r = i.getBoundingClientRect(); return r.bottom > caixa.top && r.top < caixa.bottom - caixa.height * 0.08; });
+    naTela.forEach((i) => { i.style.transition = "none"; i.setAttribute("data-visto", ""); });
+    void no.offsetWidth; // consolida o estilo sem transicao; so depois ela volta
+    naTela.forEach((i) => i.style.removeProperty("transition"));
     const passo = (agora) => {
       if (!vivo) return;
       t0 ??= agora;
-      no.scrollTop = Math.min(fim, inicio + ((agora - t0) / 1000) * v);
-      if (zoomSaida && !zoomou && fim - no.scrollTop <= (v * zoomSaida.ms) / 1000) {
-        zoomou = true;
-        mold.animate([{ transform: "scale(1)" }, { transform: `scale(${zoomSaida.escala})` }], { duration: zoomSaida.ms, easing: EASE_SAIDA, fill: "forwards" });
-      }
-      if (no.scrollTop < fim) quadro = requestAnimationFrame(passo);
+      andar(agora);
+      if (y < fim) quadro = requestAnimationFrame(passo);
     };
     quadro = requestAnimationFrame(passo);
     return () => { vivo = false; cancelAnimationFrame(quadro); obs.disconnect(); };

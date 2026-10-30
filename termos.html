@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Termos de uso · Lithium</title>
+    <meta name="description" content="As regras de compra, acesso, uso e reembolso do Lithium: protocolos de hipertrofia, dieta e sono, e o app." />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      @font-face { font-family: "Big Shoulders Display"; src: url("/fonts/big-shoulders-display-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+      @font-face { font-family: "IBM Plex Sans"; src: url("/fonts/ibm-plex-sans-latin.woff2") format("woff2"); font-weight: 100 700; font-display: swap; }
+      :root { color-scheme: dark; --void: #09090b; --surface: #121215; --line: #2c2c33; --silver: #8e8e9a; --bone: #ededf0; --rubro: #d2202c; --acento: var(--rubro); }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; scroll-padding-top: 1rem; background: var(--void); }
+      body { margin: 0; color: var(--bone); font: 400 0.956rem/1.65 "IBM Plex Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+      main { max-width: 44rem; margin: 0 auto; padding: 1.5rem max(1.25rem, env(safe-area-inset-right)) 5rem max(1.25rem, env(safe-area-inset-left)); overflow-wrap: anywhere; }
+      a { color: var(--bone); text-underline-offset: 0.2em; }
+      a:focus-visible { outline: 2px solid var(--bone); outline-offset: 3px; }
+      .voltar { display: inline-flex; align-items: center; min-height: 3rem; min-width: 3rem; }
+      main { container-type: inline-size; }
+      h1, h2 { white-space: nowrap; font-family: "Big Shoulders Display", Impact, sans-serif; text-transform: uppercase; letter-spacing: 0.01em; margin: 0; }
+      h1 { font-size: min(4.275rem, 17cqw); font-weight: 800; line-height: 0.95; padding-top: 1.5rem; border-top: 3px solid var(--rubro); margin-top: 0.5rem; }
+      h2 { font-size: min(1.6875rem, 6.5cqw); font-weight: 700; line-height: 1.05; margin-top: 3rem; }
+      h2 span { color: var(--silver); margin-right: 0.4em; }
+      p, ul, ol, dl { margin: 0.75rem 0 0; }
+      h1 + p { margin-top: 1.25rem; }
+      ul, ol { padding-left: 1.25rem; }
+      li + li { margin-top: 0.4rem; }
+      .resumo { background: var(--surface); border: 1px solid var(--line); padding: 1.25rem 1.25rem 1.5rem; margin-top: 2rem; }
+      .resumo h2 { font-size: 1.2375rem; margin-top: 0; }
+      .indice { columns: 16rem; column-gap: 2rem; padding-left: 1.5rem; }
+      .indice a { display: inline-block; min-height: 2rem; }
+      dl.dado { border-left: 1px solid var(--line); padding-left: 1rem; margin-top: 0.75rem; }
+      dl.dado dt { color: var(--silver); font-size: 0.7875rem; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.75rem; }
+      dl.dado dt:first-child { margin-top: 0; }
+      dl.dado dd { margin: 0.1rem 0 0; }
+      .consentimento { background: var(--surface); border: 1px solid var(--bone); padding: 0.25rem 1.25rem 1.5rem; margin-top: 1rem; }
+      .aviso { border-top: 1px solid var(--line); margin-top: 3rem; padding-top: 1.5rem; }
+      .aviso p { color: var(--silver); font-size: 0.844rem; }
+      footer { border-top: 1px solid var(--line); margin-top: 2rem; padding-top: 1rem; color: var(--silver); font-size: 0.844rem; }
+      /* O campo de pontos (motion/campo.js) fica fixo atrás do texto: só a tela é desenhada. */
+      .fundo { position: fixed; inset: 0; z-index: -1; overflow: clip; pointer-events: none; }
+      .campo { position: absolute; left: 0; width: 100%; pointer-events: none; }
+      main :is(p, li, dd) { text-align: justify; text-justify: inter-word; hyphens: auto; }
+      main .indice li { text-align: left; hyphens: manual; white-space: nowrap; }
+      .pausa { position: absolute; left: 1rem; top: 0.5rem; z-index: 10; min-height: 3rem; padding: 0 1rem; border: 0; background: var(--bone); color: var(--void); font: 600 0.844rem "Big Shoulders Display", Impact, sans-serif; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer; }
+      .pausa:not(:focus) { width: 1px; height: 1px; min-height: 0; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+      .pausa:focus-visible { outline: 2px solid var(--bone); outline-offset: 3px; }
+    </style>
+  </head>
+  <body>
+    <button type="button" class="pausa" aria-pressed="false" hidden>Pausar animações</button>
+    <div class="fundo" aria-hidden="true"><div class="campos"></div></div>
+    <main>
+      <a class="voltar" href="/">Voltar para a página</a>
+
+      <h1>Termos de uso</h1>
+      <p>
+        Estas são as regras para comprar o Lithium, acessar o app e usar o conteúdo. Leia antes de comprar. Ao comprar ou
+        usar, você concorda com elas. Se não concorda, não compre.
+      </p>
+
+      <section class="resumo" aria-labelledby="resumo">
+        <h2 id="resumo">Em resumo</h2>
+        <ul>
+          <li>Você paga uma vez e recebe acesso vitalício, sem mensalidade, aos protocolos e ao app.</li>
+          <li>O material é educativo. Não substitui médico, nutricionista nem educador físico.</li>
+          <li>Não prometemos corpo nem prazo. O resultado depende de você e do seu ponto de partida.</li>
+          <li>Você tem até 7 dias para pedir o reembolso integral, sem justificar e sem retenção.</li>
+          <li>O que você anota sobre treino, sono, dieta e peso é dado de saúde. Ao aceitar estes termos, você consente com o tratamento, na cláusula 10.</li>
+          <li>O acesso é pessoal. Não compartilhe o seu link.</li>
+          <li>Dúvidas e pedidos: <a href="mailto:suportelithiumbr@gmail.com">suportelithiumbr@gmail.com</a>.</li>
+        </ul>
+      </section>
+
+      <nav aria-label="Nestes termos">
+        <h2>Nestes termos</h2>
+        <ol class="indice">
+          <li><a href="#quem">Quem somos</a></li>
+          <li><a href="#produto">O que você compra</a></li>
+          <li><a href="#saude">Material educativo e saúde</a></li>
+          <li><a href="#resultado">Sem promessa de resultado</a></li>
+          <li><a href="#compra">Compra e pagamento</a></li>
+          <li><a href="#acesso">Acesso e entrega</a></li>
+          <li><a href="#reembolso">Reembolso</a></li>
+          <li><a href="#uso">Uso e propriedade intelectual</a></li>
+          <li><a href="#registros">Seus registros no app</a></li>
+          <li><a href="#consentimento">Consentimento para dados de saúde</a></li>
+          <li><a href="#suspensao">Suspensão do acesso</a></li>
+          <li><a href="#responsabilidade">Disponibilidade e responsabilidade</a></li>
+          <li><a href="#privacidade">Privacidade</a></li>
+          <li><a href="#mudancas">Mudanças nestes termos</a></li>
+          <li><a href="#foro">Lei aplicável e foro</a></li>
+          <li><a href="#contato">Contato</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="quem"><span>1</span>Quem somos</h2>
+      <p>
+        O Lithium é o produto e o app descritos aqui. Suporte e qualquer pedido:
+        <a href="mailto:suportelithiumbr@gmail.com">suportelithiumbr@gmail.com</a>.
+      </p>
+      <p>
+        A compra é para maiores de 18 anos. Quem tem menos de 18 só pode comprar com a participação de um responsável legal.
+      </p>
+
+      <h2 id="produto"><span>2</span>O que você compra</h2>
+      <p>
+        O acesso ao Lithium: os protocolos de hipertrofia, dieta e sono e as ferramentas do app, como o Social Vibe e o
+        Checklist Integrado, conforme a oferta descrita na página no momento da compra. O app é um Web App (PWA): roda no
+        navegador do celular e pode ser instalado na tela inicial.
+      </p>
+      <p>
+        Os protocolos e o app podem receber melhorias e correções. O Social Vibe reúne links de notícias, vídeos e músicas
+        de terceiros, muda com frequência, e não controlamos esses sites nem as opiniões deles.
+      </p>
+
+      <h2 id="saude"><span>3</span>Material educativo e saúde</h2>
+      <p>
+        O Lithium é um material educativo. Não é consulta, diagnóstico, tratamento nem prescrição individual, e não
+        substitui acompanhamento médico ou nutricional.
+      </p>
+      <ul>
+        <li>Se você tem alguma condição de saúde, lesão, usa medicação ou está em situação especial, como a gestação, procure um profissional antes de começar qualquer programa de treino ou mudança alimentar.</li>
+        <li>Pare e procure atendimento se sentir dor forte, tontura, falta de ar ou qualquer sinal fora do normal.</li>
+        <li>Adaptar carga, volume e alimentação ao seu corpo é responsabilidade sua, com orientação profissional quando for o caso.</li>
+      </ul>
+
+      <h2 id="resultado"><span>4</span>Sem promessa de resultado</h2>
+      <p>
+        Nenhum corpo, ganho ou prazo é garantido. Genética, sono, alimentação, constância e histórico de treino mudam o
+        resultado de cada pessoa. Os números citados na página vêm de estudos com populações específicas e descrevem o que
+        foi medido nelas, não o que você vai conseguir.
+      </p>
+
+      <h2 id="compra"><span>5</span>Compra e pagamento</h2>
+      <ul>
+        <li>O pagamento é único e acontece no checkout da Hotmart. Ela processa o pagamento, e o Lithium não vê os dados do seu cartão.</li>
+        <li>Valem o preço, as formas de pagamento e as condições mostrados no checkout no momento da compra. Condição por tempo limitado só existe quando a página mostra a data de início e a de fim, e a Hotmart confirma a disponibilidade no checkout.</li>
+        <li>Informe um e-mail que você acessa, porque o link de acesso vai para ele.</li>
+        <li>Não há mensalidade nem cobrança recorrente no Lithium.</li>
+      </ul>
+
+      <h2 id="acesso"><span>6</span>Acesso e entrega</h2>
+      <ul>
+        <li><strong>Como chega:</strong> depois que o pagamento é aprovado, o link de acesso é enviado ao e-mail da compra. Se não aparecer, olhe o spam e escreva para o suporte, que reenvia.</li>
+        <li><strong>Pessoal e intransferível:</strong> o acesso é para você. Não compartilhe, revenda nem empreste o link. O app pode limitar o número de instalações por compra.</li>
+        <li><strong>Vitalício:</strong> vale por todo o tempo em que o Lithium for mantido. Não significa a vida da pessoa nem um prazo sem fim. Se o Lithium for descontinuado, avisamos por e-mail com antecedência e você poderá exportar seus registros (no app, “Exportar cópia local”).</li>
+        <li><strong>Internet:</strong> o app foi feito para funcionar sem conexão depois de carregado, mas precisa de internet para abrir pela primeira vez, atualizar e sincronizar a cópia na conta.</li>
+        <li><strong>Aparelho:</strong> você precisa de um celular e de um navegador atual. Não respondemos por aparelho ou navegador incompatível.</li>
+      </ul>
+
+      <h2 id="reembolso"><span>7</span>Reembolso</h2>
+      <ul>
+        <li>
+          Você pode pedir o reembolso em até 7 dias corridos, a contar da data da compra, como garante o art. 49 do Código
+          de Defesa do Consumidor. Devolvemos tudo o que você pagou, sem pedir justificativa e sem retenção. Passados os 7
+          dias, o pedido de reembolso por arrependimento não vale mais, e seguem valendo os direitos que a lei garante ao
+          consumidor.
+        </li>
+        <li>
+          <strong>Como pedir:</strong> escreva para <a href="mailto:suportelithiumbr@gmail.com">suportelithiumbr@gmail.com</a>
+          com o e-mail da compra, ou peça pela Hotmart. O dinheiro volta pela mesma forma de pagamento. O tempo
+          para aparecer na sua conta ou na fatura depende do meio de pagamento e do banco.
+        </li>
+        <li>
+          <strong>O que muda:</strong> com o reembolso, o acesso é encerrado. O app pode levar até 24 horas para deixar de
+          abrir. Estorno ou contestação do pagamento (chargeback) também encerra o acesso. Antes de contestar no banco, fale
+          com o suporte: é mais rápido.
+        </li>
+      </ul>
+
+      <h2 id="uso"><span>8</span>Uso e propriedade intelectual</h2>
+      <p>
+        Você recebe uma licença pessoal, não exclusiva e intransferível para usar o conteúdo e o app, só para uso pessoal e
+        não comercial. O conteúdo, o app, a marca Lithium e o desenho do site são protegidos pela Lei nº 9.610/1998 (direitos
+        autorais) e pela Lei nº 9.609/1998 (programa de computador).
+      </p>
+      <p>Não é permitido:</p>
+      <ul>
+        <li>copiar, publicar, revender ou distribuir o conteúdo dos protocolos, no todo ou em parte;</li>
+        <li>compartilhar o acesso ou o link com outras pessoas;</li>
+        <li>usar o Lithium para atender clientes ou vender serviços a terceiros;</li>
+        <li>contornar o controle de acesso, extrair o conteúdo por programa automático ou tentar derrubar o serviço;</li>
+        <li>desmontar o app para copiar o código, fora do que a lei permitir.</li>
+      </ul>
+
+      <h2 id="registros"><span>9</span>Seus registros no app</h2>
+      <p>
+        O que você anota continua sendo seu. A licença que damos ao Lithium é só a necessária para guardar, mostrar e
+        sincronizar esses registros para você. O app é uma ferramenta de anotação: não faz diagnóstico e não avalia sua saúde.
+        Anote com dados verdadeiros. Você pode exportar e apagar seus registros pelo app. Como tratamos esses dados está na
+        <a href="/privacidade.html">Política de privacidade</a>.
+      </p>
+
+      <h2 id="consentimento"><span>10</span>Consentimento para dados de saúde</h2>
+      <div class="consentimento">
+        <p>
+          <strong>
+            Ao aceitar estes termos, você consente, de forma específica e destacada, que o Lithium trate os dados de saúde
+            que você anota no app.
+          </strong>
+        </p>
+        <ul>
+          <li><strong>Quais:</strong> treinos (exercícios, séries, cargas e repetições), noites de sono, refeições, peso e medidas (cintura, quadril, peito, braço e coxa), anotações e metas.</li>
+          <li><strong>Para quê:</strong> mostrar seu histórico, seu calendário e sua evolução, e manter tudo igual entre seus aparelhos por uma cópia na sua conta.</li>
+          <li><strong>Onde ficam:</strong> no seu aparelho e, se você entrou pelo link de acesso, numa cópia na sua conta, hospedada na Cloudflare, que pode tratar dados fora do Brasil. As fotos do corpo ficam só no seu aparelho, e nós não as recebemos.</li>
+          <li><strong>Com quem:</strong> esses dados não vão para a Hotmart nem para a Meta e não são usados em anúncios.</li>
+          <li><strong>Se você não quiser consentir:</strong> não use as funções de registro (treino, noite, dieta e peso). O acesso aos protocolos continua.</li>
+          <li><strong>Como revogar:</strong> a qualquer momento, por “Apagar registros” no app, que remove no aparelho e na conta, ou pelo e-mail <a href="mailto:suportelithiumbr@gmail.com">suportelithiumbr@gmail.com</a>. Revogar não desfaz o que foi tratado antes.</li>
+        </ul>
+        <p>Detalhes de como esses dados são tratados estão na <a href="/privacidade.html">Política de privacidade</a>.</p>
+      </div>
+
+      <h2 id="suspensao"><span>11</span>Suspensão do acesso</h2>
+      <p>
+        Podemos suspender ou encerrar o acesso em caso de fraude, compartilhamento do acesso, chargeback ou descumprimento
+        destes termos, avisando por e-mail quando for possível. Encerrar por descumprimento não gera reembolso, ressalvado o
+        direito de desistir dentro de 7 dias e o que a lei garantir.
+      </p>
+
+      <h2 id="responsabilidade"><span>12</span>Disponibilidade e responsabilidade</h2>
+      <p>
+        Fazemos o possível para manter o app no ar e funcionando, mas pode haver manutenção, falha ou instabilidade, inclusive
+        de serviços de terceiros, como hospedagem, e-mail e a Hotmart. Não respondemos por dano causado por uso
+        em desacordo com as orientações, por informação falsa que você der ou por falha fora do nosso controle, na medida em
+        que a lei permitir. Nada nestes termos afasta os direitos que o Código de Defesa do Consumidor garante a você.
+      </p>
+
+      <h2 id="privacidade"><span>13</span>Privacidade</h2>
+      <p>
+        Os dados pessoais são tratados como diz a <a href="/privacidade.html">Política de privacidade</a>, que faz parte
+        destes termos.
+      </p>
+
+      <h2 id="mudancas"><span>14</span>Mudanças nestes termos</h2>
+      <p>
+        Podemos atualizar estes termos, e vale a versão publicada nesta página. Se a mudança afetar seus direitos, avisamos
+        por e-mail ou na página. O que você já comprou não perde direito por causa de uma mudança.
+      </p>
+
+      <h2 id="foro"><span>15</span>Lei aplicável e foro</h2>
+      <p>
+        Valem as leis do Brasil. Qualquer disputa vai ao foro do domicílio do consumidor (art. 101, I, do Código de Defesa do
+        Consumidor). Antes disso, escreva para o suporte: a maioria dos casos se resolve por e-mail.
+      </p>
+
+      <h2 id="contato"><span>16</span>Contato</h2>
+      <p>
+        Suporte, reembolso e dúvidas: <a href="mailto:suportelithiumbr@gmail.com">suportelithiumbr@gmail.com</a>.
+      </p>
+
+      <div class="aviso">
+        <p>
+          Este material é <strong>educativo</strong> e não substitui acompanhamento médico ou nutricional. Se você tem alguma
+          condição de saúde, procure um profissional antes de começar qualquer programa de treino ou mudança alimentar.
+        </p>
+      </div>
+      <footer>&copy; 2026 Lithium. Todos os direitos reservados.</footer>
+    </main>
+    <script type="module" src="/src/documento.js"></script>
+  </body>
+</html>

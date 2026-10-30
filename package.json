@@ -7,7 +7,7 @@
   "scripts": {
     "sync:ds": "node scripts/sync-ds.mjs",
     "dev": "vite",
-    "build": "vite build && vite build --ssr src/entry-server.jsx --outDir dist-ssr && node scripts/prerender.mjs && node scripts/check-size.mjs",
+    "build": "vite build && vite build -c vite.documentos.config.js && vite build --ssr src/entry-server.jsx --outDir dist-ssr && node scripts/prerender.mjs && node scripts/check-size.mjs",
     "preview": "vite preview",
     "size": "node scripts/check-size.mjs"
   },

@@ -233,6 +233,10 @@ html:has(body.com-doca) {
   --animate-seta: seta 1800ms cubic-bezier(0.45, 0, 0.55, 1) calc(1400ms + var(--base, 0ms)) infinite backwards;
 }
 
+/* Voltando de uma pagina legal (classe escrita no <html> pelo script do index.html): o heroi ja abre parado. A seta
+   (`animate-seta`) segue pulsando; ela e ornamento, nao entrada. */
+html.sem-entrada :is(.animate-revelar, .animate-subir, .animate-tracar, .animate-tracar-fio) { animation: none; }
+
 /* So `transform`: nenhum texto nem CTA da dobra nasce invisivel, ou o Chrome so conta o LCP no fim da animacao. */
 @keyframes revelar {
   from { transform: translateY(12px); }

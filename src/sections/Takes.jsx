@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Botao } from "../components/Botao.jsx";
 import { CampoDePontos } from "../components/CampoDePontos.jsx";
+import { FundoFluido } from "../components/FundoFluido.jsx";
 import { Modelo3D } from "../components/Modelo3D.jsx";
 import { Moldura } from "../components/Moldura.jsx";
 import { VERBO_CURTO } from "../config.js";
 import { conteudo } from "../conteudo.js";
 import { vazado } from "../ui.js";
-import { BATIDA } from "./tempo.js";
+import { BATIDA, atraso } from "./tempo.js";
 
 /**
  * Os takes que fecham o video, depois da logo (cada um dura um numero inteiro de batidas: o manifesto 8, os numeros 6, o
@@ -18,6 +19,9 @@ import { BATIDA } from "./tempo.js";
 const PAGINA = "absolute inset-0 z-4 overflow-clip [--respiro:24px] md:[--respiro:48px] font-secundaria font-extrabold uppercase";
 const MIOLO = "relative mx-auto flex h-full w-full max-w-[1080px] flex-col justify-center px-(--respiro)";
 
+/** A malha de pontos sobre o vermelho do take: pontos e fio num tom abaixo do --acento, e o ponto raro em preto. */
+const MALHA_VERMELHA = { ponto: "#7d0e18", fio: "#a5121e", acento: "#09090b" };
+
 /** Uma pancada: a palavra chega grande e assenta, no `atraso` ms. */
 const bate = (atraso) => ({ className: "block motion-safe:animate-bate", style: { animationDelay: `${atraso}ms` } });
 
@@ -25,16 +29,17 @@ const bate = (atraso) => ({ className: "block motion-safe:animate-bate", style: 
  * Take 1, o manifesto, em dois quadros: o preto, com "O feed esconde quem usa bomba." batendo palavra a palavra, e a
  * "bomba" em vermelho; e, em corte seco aos 1,3 s, o vermelho, com "Natural" e "Cresce." crescendo do pequeno ao tamanho cheio.
  */
-export function TakeManifesto() {
+export function TakeManifesto({ inicioEm }) {
   const [quadro, setQuadro] = useState(0);
   useEffect(() => {
-    const t = setTimeout(() => setQuadro(1), 4 * BATIDA);
+    const t = setTimeout(() => setQuadro(1), atraso(inicioEm, 4 * BATIDA));
     return () => clearTimeout(t);
   }, []);
 
   if (quadro === 0) {
     return (
       <div className={`${PAGINA} bg-void text-bone`} aria-hidden="true">
+        <FundoFluido />
         <div className={`${MIOLO} text-[length:min(calc((100vw-48px)/3.7),calc((100svh-160px)/4.3),200px)] leading-[1.04] tracking-[0.01em]`}>
           <p {...bate(0)}>O feed</p>
           <p {...bate(BATIDA / 2)}>esconde</p>
@@ -48,6 +53,7 @@ export function TakeManifesto() {
   }
   return (
     <div className={`${PAGINA} bg-acento text-void`} aria-hidden="true">
+      <CampoDePontos cores={MALHA_VERMELHA} />
       <div className={MIOLO}>
         <p className="text-[length:min(calc((100vw-48px)/3.6),calc((100svh-200px)/2.8),220px)] leading-[1.04] tracking-[0.01em]">
           <span {...bate(0)}>Natural</span>
@@ -110,6 +116,7 @@ const LEGENDA = [["Treino", "var(--rubro)"], ["Dieta", "var(--praga)"], ["Sono",
 export function TakeCalendario() {
   return (
     <div className={`${PAGINA} bg-void text-bone`} aria-hidden="true">
+      <CampoDePontos />
       <div className={`${MIOLO} gap-4`}>
         <p className="font-secundaria text-overline tracking-[0.08em] text-silver">(disciplina visível)</p>
         <h2 className="text-[length:min(calc((100vw-48px)/4.2),calc((100svh-120px)/10.5),110px)] leading-[1.04] tracking-[0.01em]">
@@ -156,10 +163,10 @@ const ARSENAL = [
 const ARSENAL_PASSO = BATIDA;
 
 /** Take 4, o arsenal: os seis itens em seis pancadas, uma por tela, em cortes secos. */
-export function TakeArsenal() {
+export function TakeArsenal({ inicioEm }) {
   const [i, setI] = useState(0);
   useEffect(() => {
-    const relogios = ARSENAL.slice(1).map((_, k) => setTimeout(() => setI(k + 1), (k + 1) * ARSENAL_PASSO));
+    const relogios = ARSENAL.slice(1).map((_, k) => setTimeout(() => setI(k + 1), atraso(inicioEm, (k + 1) * ARSENAL_PASSO)));
     return () => relogios.forEach(clearTimeout);
   }, []);
   const { rotulo, linhas, fundo, tinta } = ARSENAL[i];
@@ -189,8 +196,10 @@ export function TakeFaca({ aoRepetir, replayEm }) {
   const [primeira, segunda] = conteudo.fechamento.headline.linhas;
   return (
     <div className={`${PAGINA} bg-void text-bone`}>
-      <CampoDePontos />
+      <FundoFluido />
       <Moldura entrada="css" />
+      <p className="absolute left-(--respiro) top-6 font-secundaria text-overline tracking-[0.08em] text-silver motion-safe:animate-revelar">(o caminho começa aqui)</p>
+      <p className="absolute bottom-6 left-(--respiro) font-secundaria text-overline tracking-[0.08em] text-silver motion-safe:animate-revelar [--atraso:600ms]">(12 semanas · treino, dieta e sono · app exclusivo)</p>
       <div className={`${MIOLO} items-start`}>
         <h2 className="text-[length:min(calc((100vw-48px)/3.3),calc((100svh-260px)/2.4),240px)] leading-[1.04] tracking-[0.01em]">
           <span {...bate(0)} className={`block ${vazado} motion-safe:animate-bate`}>{primeira}</span>
@@ -223,11 +232,11 @@ const girar = (t) => [0, t < 0.25 ? 0 : Math.pow(t - 0.25, 1.7) * 3.2, 0];
  * arestas, de frente, que comeca a girar; da batida 2 em diante, a cada meia batida, o objeto troca pelos outros 3D do app (raio,
  * engrenagem, espada, medalha, relogio, perfil, cruz), todos no mesmo giro, e a ultima batida e o "lithium" em 3D, que fica ate o corte.
  */
-export function TakeL3D() {
+export function TakeL3D({ inicioEm }) {
   const [i, setI] = useState(0);
   const inicio = useRef(performance.now()); // o giro e um so, do inicio do take: segue de um objeto para o outro
   useEffect(() => {
-    const t = [0, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5].map((b, k) => k && setTimeout(() => setI(k), b * BATIDA)).filter(Boolean);
+    const t = [0, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5].map((b, k) => k && setTimeout(() => setI(k), atraso(inicioEm, b * BATIDA))).filter(Boolean);
     return () => t.forEach(clearTimeout);
   }, []);
   return (
@@ -257,7 +266,7 @@ export function TakeCarga() {
   let x = 0;
   const placas = ANILHAS.map((a, k) => { const dx = x; x += a.w + 3; return { ...a, k, dx }; });
   return (
-    <div className={`${PAGINA} bg-void text-bone`} aria-hidden="true">
+    <div className={`${PAGINA} text-bone`} aria-hidden="true">
       <div className={`${MIOLO} gap-6`}>
         <p className="font-secundaria text-overline tracking-[0.08em] text-silver">(sessão 05 · hipertrofia)</p>
         <h2 className="text-[length:min(calc((100vw-48px)/4.6),calc((100svh-340px)/5.6),150px)] leading-[1.04] tracking-[0.01em]">

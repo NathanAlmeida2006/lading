@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AppRegistro } from "../components/AppRegistro.jsx";
 import { AppTrilha } from "../components/AppTrilha.jsx";
+import { CampoDePontos } from "../components/CampoDePontos.jsx";
 import { Pontas } from "../components/FundoCapa.jsx";
 import { CapaDaSessao } from "../components/CapaDaSessao.jsx";
 import { LogoLithium } from "../components/LogoLithium.jsx";
@@ -55,6 +56,7 @@ export function Video() {
   const relogios = useRef([]);
   const origem = useRef(0);
   const som = useRef(null);
+  const agenda = useRef({}); // a hora (performance.now) em que cada estagio devia entrar: quem anima por dentro conta dela, e nao de quando montou
   const velocidade = useRef(undefined); // a da rolagem da Trilha: o Registro anda igual (o match cut)
   const secao = useRef(null);
   useEffect(() => () => { relogios.current.forEach(clearTimeout); som.current?.parar(200); }, []);
@@ -80,11 +82,14 @@ export function Video() {
     setTocando(true);
     // Cada estagio entra na sua batida, no relogio do clique (nenhum depende de a rolagem acabar).
     const t0 = performance.now();
+    LINHA.forEach(([b, estagio]) => { agenda.current[estagio] = t0 + batida(b); });
     relogios.current = LINHA.map(([b, estagio]) => setTimeout(() => setCorte(estagio), batida(b) - (performance.now() - t0)));
   };
 
   return (
     <section id="video" ref={secao} className={`${bloco} flex flex-col justify-center min-h-svh py-16 md:py-24`}>
+      {/* A malha de pontos do player, atras de tudo; as pontas e o circulo do clique ficam por cima dela. */}
+      <CampoDePontos />
       {/* Os triangulos que surgem e somem, atras do play (z-1); o circulo vermelho do clique (z-2) os cobre. */}
       <Pontas camada="z-1" />
       <div className={envelope}>
@@ -116,17 +121,24 @@ export function Video() {
 
       {tocando && <div className="absolute inset-0 z-2 pointer-events-none bg-acento motion-safe:animate-corte" aria-hidden="true" key={rodada} />}
 
-      {corte === E.l3d && <TakeL3D />}
+      {corte === E.l3d && <TakeL3D inicioEm={agenda.current[E.l3d]} />}
+      {/* Um unico fundo (preto + malha de pontos) para a carga e as seis capas: ele nao remonta nos cortes, so a frente troca.
+          Remontar o canvas a cada corte dava um piscar de um quadro e reiniciava a onda. As frentes abaixo sao transparentes. */}
+      {corte >= E.carga && corte < E.trilha && (
+        <div className="absolute inset-0 z-4 bg-void" aria-hidden="true">
+          <CampoDePontos />
+        </div>
+      )}
       {corte === E.carga && <TakeCarga />}
       {corte >= E.capa && corte < E.trilha && <CapaDaSessao {...CORTES[corte - E.capa]} origem={origem.current} key={corte} />}
-      {corte === E.trilha && <AppTrilha duracao={2 * BATIDA} aoMedir={(v) => { velocidade.current = v; }} />}
+      {corte === E.trilha && <AppTrilha duracao={2 * BATIDA} inicioEm={agenda.current[E.trilha]} aoMedir={(v) => { velocidade.current = v; }} />}
       {corte >= E.mascara && corte < E.manifesto && <div className="absolute inset-0 z-4 bg-void" aria-hidden="true" />}
       {corte >= E.registro && corte < E.manifesto && <AppRegistro velocidade={velocidade.current} duracao={4 * BATIDA} mascarar={corte >= E.mascara} />}
       {corte >= E.logo && corte < E.manifesto && <LogoLithium quadro={(corte - E.logo) % 2} batida={corte} />}
-      {corte === E.manifesto && <TakeManifesto />}
+      {corte === E.manifesto && <TakeManifesto inicioEm={agenda.current[E.manifesto]} />}
       {corte === E.numeros && <TakeNumeros />}
       {corte === E.calendario && <TakeCalendario />}
-      {corte === E.arsenal && <TakeArsenal />}
+      {corte === E.arsenal && <TakeArsenal inicioEm={agenda.current[E.arsenal]} />}
       {corte === E.faca && <TakeFaca aoRepetir={() => tocar(true)} replayEm={batida(FIM_DA_MUSICA.batida) + FIM_DA_MUSICA.duracao + REPLAY_APOS - batida(BATIDA_FACA)} />}
     </section>
   );

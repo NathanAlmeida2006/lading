@@ -6,25 +6,30 @@
   [data-revelar]:not([data-visto]) { opacity: 0; transform: translateY(24px); }
   .app-rolo { scrollbar-width: none; }
   .app-rolo::-webkit-scrollbar { display: none; }
-  :scope { --void: #09090b; --surface-1: #121215; --surface-2: #1b1b20; --line: #2c2c33; --line-strong: #45454f; --silver: #8e8e9a; --bone: #ededf0; --bone-pure: #ffffff; --rubro: #d2202c; --praga: #12a150; --vigilia: #8b5cf6; --success: #35c46a; --warning: #e8a317; --danger: #ff5a5a; --acento: var(--rubro); --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px; --space-9: 96px; --radius: 0; --radius-touch: 2px; --hairline: 1px; --grain-opacity: 0.10; --motion-fast: 120ms; --motion-base: 180ms; --motion-slow: 280ms; --motion-celebracao: 320ms; --ease-default: cubic-bezier(0.2, 0, 0, 1); --ease-corte-2: steps(2); --ease-corte-3: steps(3); --font-marca: "ArtDystopia II", "Grenze Gotisch", "UnifrakturCook", Georgia, serif; --font-principal: "Grenze Gotisch", "UnifrakturCook", Georgia, serif; --font-secundaria: "Big Shoulders Display", "Oswald", "Arial Narrow", sans-serif; --font-terciaria: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --peso-regular: 400; --peso-medio: 500; --peso-semi: 600; --peso-bold: 700; --peso-black: 800; --min-marca: 32px; --min-principal: 28px; --min-corpo: 16px; --medida-max: 65ch; --nav-largura: 216px; --conteudo-largura: 1320px; --alvo: 48px; --fio: 1px solid var(--line); --titulo-tela: clamp(34px, 4vw, 52px); --dado-tamanho: clamp(36px, 4vw, 54px); --texto-pequeno: 14px; --texto-normal: 16px; --texto-medio: 18px; --fundo-modal: #000b; --altura-barra-superior: 76px; --altura-barra-inferior: 0px; --respiro-lateral: var(--space-7); --nav-largura: 184px; --respiro-lateral: var(--space-6); --altura-barra-superior: calc(65px + env(safe-area-inset-top, 0px)); --altura-barra-inferior: calc(72px + max(var(--space-2), env(safe-area-inset-bottom, 0px))); --respiro-lateral: var(--space-5); --respiro-lateral: var(--space-4); --ease-expo: cubic-bezier(0.16, 1, 0.3, 1); --motion-layout: 780ms; --motion-escalonamento: 75ms; color: var(--bone); background: var(--void); font: var(--texto-normal)/1.55 var(--font-terciaria); font-variant-numeric: tabular-nums; }
+  :scope { --void: #09090b; --surface-1: #121215; --surface-2: #1b1b20; --line: #2c2c33; --line-strong: #45454f; --silver: #8e8e9a; --bone: #ededf0; --bone-pure: #ffffff; --rubro: #d2202c; --praga: #12a150; --vigilia: #8b5cf6; --success: #35c46a; --warning: #e8a317; --danger: #ff5a5a; --acento: var(--rubro); }
+  :scope { --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px; --space-9: 96px; --radius: 0; --radius-touch: 2px; --hairline: 1px; --grain-opacity: 0.10; }
   * { box-shadow: none; text-shadow: none; }
+  :scope { --motion-fast: 120ms; --motion-base: 180ms; --motion-slow: 280ms; --motion-celebracao: 320ms; --ease-default: cubic-bezier(0.2, 0, 0, 1); --ease-corte-2: steps(2); --ease-corte-3: steps(3); }
+  :scope { --font-marca: "ArtDystopia II", "Grenze Gotisch", "UnifrakturCook", Georgia, serif; --font-principal: "Grenze Gotisch", "UnifrakturCook", Georgia, serif; --font-secundaria: "Big Shoulders Display", "Oswald", "Arial Narrow", sans-serif; --font-terciaria: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --peso-regular: 400; --peso-medio: 500; --peso-semi: 600; --peso-bold: 700; --peso-black: 800; --min-marca: 32px; --min-principal: 28px; --min-corpo: 16px; --medida-max: 65ch; }
   [class*="marca-"] { font-family: var(--font-marca); font-synthesis: none; font-weight: 400; text-transform: uppercase; letter-spacing: 0.03em; }
+  :scope { --nav-largura: 216px; --conteudo-largura: 1320px; --alvo: 48px; --fio: 1px solid var(--line); --titulo-tela: clamp(34px, 4vw, 52px); --dado-tamanho: clamp(36px, 4vw, 54px); --texto-pequeno: 14px; --texto-normal: 16px; --texto-medio: 18px; --fundo-modal: #000b; }
   *, ::before, ::after { box-sizing: border-box; }
+  :scope { color-scheme: dark; background: var(--void); scroll-padding-top: var(--space-5); }
+  :scope { margin: 0px; color: var(--bone); background: var(--void); font: var(--texto-normal)/1.55 var(--font-terciaria); font-variant-numeric: tabular-nums; }
   a { -webkit-tap-highlight-color: transparent; }
   a { color: inherit; text-decoration: none; }
   svg { flex-shrink: 0; }
   img { max-width: 100%; }
-  h1, h2, p { margin: 0px; }
-  h1, h2 { font-family: var(--font-secundaria); line-height: 1.1; }
+  h1, p { margin: 0px; }
+  h1 { font-family: var(--font-secundaria); line-height: 1.1; }
   h1 { font-size: var(--titulo-tela); font-weight: var(--peso-black); text-transform: uppercase; letter-spacing: 0.02em; }
-  h2 { font-size: 28px; font-weight: 650; }
   strong { font-weight: 600; }
-  :focus-visible { outline: 2px solid var(--bone); outline-offset: 4px; }
   h1:focus, main:focus { outline: none; }
   a { touch-action: manipulation; }
   a { transition: background-color 150ms ease 0s, border-color 150ms ease 0s, color 150ms ease 0s; }
   .pular { position: fixed; top: var(--space-3); left: -9999px; z-index: 100; background: var(--acento-interface); color: var(--sobre-acento); padding: var(--space-3) var(--space-5); }
   .pular:focus { left: var(--space-3); }
+  :scope { --altura-barra-superior: 76px; --altura-barra-inferior: 0px; --respiro-lateral: var(--space-7); }
   .app-shell { --acento-interface: var(--rubro); --acento: var(--rubro); --sobre-acento: #fff; min-height: 100dvh; }
   .app-shell[data-pilar="hipertrofia"] { --acento-interface: var(--rubro); --sobre-acento: #fff; --acento: var(--rubro); }
   .navegacao-lateral { width: var(--nav-largura); height: 100dvh; position: fixed; inset: 0px auto 0px 0px; border-right: var(--fio); display: flex; flex-direction: column; padding: var(--space-6) var(--space-5); background: var(--void); z-index: 20; }
@@ -47,27 +52,17 @@
   .texto-secundario { color: var(--silver); font-size: var(--texto-pequeno); line-height: 1.6; }
   .botao { min-height: var(--alvo); display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-3) var(--space-5); border: var(--fio); font: 700 16px/1.1 var(--font-secundaria); letter-spacing: 0.04em; text-transform: uppercase; text-align: center; }
   .primario { background: var(--acento-interface); border-color: var(--acento-interface); color: var(--sobre-acento); }
+  .primario:hover:not(:disabled) { background: var(--silver); border-color: var(--silver); }
   .botao-icone { width: var(--alvo); height: var(--alvo); display: inline-grid; place-items: center; background: transparent; border: 0px; flex-shrink: 0; }
   .botao-icone:hover { background: var(--surface-2); }
   .abas-pilares { display: flex; border-bottom: var(--fio); margin-bottom: var(--space-6); gap: var(--space-5); }
   .abas-pilares a { flex: 1 1 0px; min-width: 0px; min-height: 60px; display: flex; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-3) var(--space-5); border-bottom: 2px solid transparent; color: var(--silver); }
   .abas-pilares a[aria-current] { border-color: var(--acento-interface); color: var(--bone); }
-  .mapa-legenda { display: flex; gap: var(--space-4); flex-wrap: wrap; padding-bottom: var(--space-5); border-bottom: var(--fio); }
-  .mapa-legenda > span { display: flex; gap: var(--space-2); align-items: center; color: var(--silver); font-size: 12px; }
-  .roadmap { list-style: none; padding: var(--space-7) 0; margin: 0px; position: relative; display: flex; flex-direction: column; gap: var(--space-6); }
-  .roadmap::before { content: ""; position: absolute; inset: var(--space-7) 50%; border-left: 1px dashed var(--line-strong); }
-  .roadmap-passo { width: 85%; position: relative; }
-  .roadmap-passo:nth-child(2n) { align-self: flex-end; }
-  .roadmap-no { background: var(--surface-1); border: var(--fio); padding: var(--space-4); display: flex; gap: var(--space-3); align-items: center; min-height: 108px; position: relative; }
-  .roadmap-no:hover { border-color: var(--line-strong); background: var(--surface-2); }
-  .roadmap-texto { flex: 1 1 0%; min-width: 0px; }
-  .roadmap-texto > span { display: block; }
-  .roadmap-texto > strong { display: block; font: 600 24px/1.15 var(--font-secundaria); margin: var(--space-2) 0; }
-  .roadmap-indice { font: 500 28px/1 var(--font-secundaria); color: var(--silver); align-self: flex-start; padding-top: var(--space-1); }
-  .roadmap-passo.proxima .roadmap-no { border-color: var(--acento-interface); border-left-width: 3px; }
   .aviso-flutuante { position: fixed; right: var(--space-5); bottom: var(--space-5); max-width: calc(100% - 48px); z-index: 30; }
+  :scope { --nav-largura: 184px; --respiro-lateral: var(--space-6); }
   main { padding: var(--space-6) var(--respiro-lateral); }
   .barra-superior { padding-inline: var(--space-6); }
+  :scope { --altura-barra-superior: calc(65px + env(safe-area-inset-top, 0px)); --altura-barra-inferior: calc(72px + max(var(--space-2), env(safe-area-inset-bottom, 0px))); --respiro-lateral: var(--space-5); }
   .navegacao-lateral { inset: auto 0px 0px; height: auto; width: 100%; padding: var(--space-2) var(--space-4) max(var(--space-2), env(safe-area-inset-bottom)); border-right: 0px; border-top: var(--fio); }
   .assinatura { display: none; }
   .assinatura + .nav-principal { margin-top: 0px; }
@@ -80,19 +75,11 @@
   .barra-acoes { gap: var(--space-2); }
   main { padding: var(--space-6) var(--respiro-lateral); }
   .aviso-flutuante { bottom: calc(var(--altura-barra-inferior) + var(--space-4)); }
+  :scope { --respiro-lateral: var(--space-4); }
   main { padding: var(--space-5) var(--respiro-lateral); }
   .barra-superior { padding-inline: var(--space-4); }
   .abas-pilares { gap: var(--space-2); margin-bottom: var(--space-5); }
   .abas-pilares a { flex: 1 1 0%; padding: var(--space-3) var(--space-2); gap: var(--space-2); font-size: 14px; }
-  .mapa-legenda { gap: var(--space-3); }
-  .mapa-legenda > span { font-size: 12px; gap: var(--space-1); }
-  .roadmap { gap: var(--space-5); padding-block: var(--space-5); }
-  .roadmap::before { left: 18px; right: auto; }
-  .roadmap-passo { width: 100%; }
-  .roadmap-no { padding: var(--space-3); gap: var(--space-3); min-height: 100px; }
-  .roadmap-texto > strong { font-size: 23px; }
-  .roadmap-texto .texto-secundario { font-size: 13px; }
-  .roadmap-indice { font-size: 24px; }
   .wordmark { display: block; width: 142px; height: auto; }
   main:has(> .hoje-tela) { max-width: none; width: 100%; padding: 0px; }
   .hoje-tela { display: flex; flex-direction: column; }
@@ -113,8 +100,6 @@
   .regua-bloco > .campo-pontos { z-index: 0; }
   .regua-bloco > :not(.campo-pontos) { position: relative; z-index: 1; }
   .regua-grade { width: 100%; max-width: 1080px; margin-inline: auto; padding-inline: var(--respiro-lateral); }
-  .regua-cabeca { margin-bottom: var(--space-6); }
-  .regua-cabeca h2 { margin-top: var(--space-3); max-width: 12ch; font: var(--peso-black) clamp(40px, 9vw, 64px) / 1 var(--font-secundaria); text-transform: uppercase; }
   .modelo-3d { position: relative; width: 100%; overflow: clip; }
   .modelo-3d > .campo-pontos { z-index: 0; }
   .modelo-3d-palco { position: absolute; inset: 0px; z-index: 1; }
@@ -122,11 +107,12 @@
   .modelo-3d-palco canvas:active { cursor: grabbing; }
   .modelo-3d-palco canvas[data-pronto] { opacity: 1; }
   .hoje-haltere { height: clamp(280px, 50vw, 440px); max-width: 1080px; margin: var(--space-6) auto; }
+  .hoje-haltere-faixa { --palco: clamp(280px, 50vw, 440px); height: calc(var(--palco) * 1.25); max-width: none; margin: 0px; border-block: var(--fio); }
+  .hoje-haltere-faixa > .modelo-3d-palco { inset: 50% 0px auto; height: var(--palco); translate: 0px -50%; }
+  .hoje-haltere-faixa + .hoje-rodape { border-top: 0px; }
   .hoje-rodape { border-top: var(--fio); color: var(--silver); }
   .hoje-rodape-faixa { max-width: none; display: flex; flex-direction: column; gap: var(--space-6); padding-block: var(--space-8); background: var(--acento-interface); color: var(--void); }
   .hoje-rodape-tagline { align-self: flex-end; max-width: 14ch; text-align: right; font: 600 clamp(32px, 6vw, 64px)/1.02 var(--font-secundaria); }
-  .registro-intro { max-width: 32ch; margin-block: var(--space-5) var(--space-3); color: var(--silver); }
-  .registro-intro { margin-top: var(--space-4); max-width: 44ch; }
   .anotacao-envelope { width: 100%; max-width: 1080px; margin-inline: auto; padding-inline: var(--respiro-lateral); }
   .anotacao-capa { position: relative; isolation: isolate; overflow: clip; margin: 0px; border-bottom: var(--fio); }
   .anotacao-capa > .campo-pontos { z-index: -1; }
@@ -143,25 +129,36 @@
   .trilha-continuar > span { min-width: 0px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .trilha-kit-nome { font: var(--peso-black) clamp(72px, 24vw, 200px)/.86 var(--font-secundaria); text-transform: uppercase; letter-spacing: 0.01em; }
   .trilha-kit .hoje-rodape-tagline svg { vertical-align: -0.1em; }
-  .trilha-kit:focus-visible { outline-color: var(--void); outline-offset: -8px; }
-  .mapa-painel .registro-intro { max-width: 32ch; margin-block: var(--space-6) var(--space-5); color: var(--silver); line-height: 1.7; }
-  .mapa-legenda { border: 0px; padding: 0px; gap: var(--space-5); }
+  .trilha-tela .mapa-painel { padding-top: var(--space-6); }
   .mapa-miolo { min-width: 0px; }
-  .mapa-painel .roadmap { padding-top: var(--space-2); gap: var(--space-7); }
-  .mapa-painel .roadmap::before { inset-block: var(--space-2) var(--space-7); }
-  .mapa-painel .roadmap-no { border-color: var(--line-strong); padding: var(--space-6); gap: var(--space-4); }
-  .mapa-painel .roadmap-texto .texto-secundario { line-height: 1.7; }
-  .mapa-painel .roadmap-passo:nth-child(2n) .roadmap-no { background: var(--surface-2); }
-  .mapa-painel .roadmap-no:hover { border-color: var(--acento-interface); }
-  .mapa-painel .roadmap-passo:is(.proxima, .andamento) .roadmap-no { border-top-color: ; border-right-color: ; border-bottom-color: ; border-left: 2px solid var(--acento-interface); }
-  .mapa-painel .roadmap-indice { color: var(--acento-interface); font-style: ; font-variant-ligatures: ; font-variant-caps: ; font-variant-east-asian: ; font-variant-alternates: ; font-variant-position: ; font-weight: ; font-stretch: ; font-size: ; line-height: ; font-family: ; font-optical-sizing: ; font-kerning: ; font-feature-settings: ; font-variation-settings: ; font-variant-numeric: tabular-nums; }
-  .mapa-painel .roadmap-texto > strong { margin-block: var(--space-3); font: 700 clamp(24px, 3vw, 32px)/1.05 var(--font-secundaria); text-transform: uppercase; }
-  .mapa-painel .roadmap-passo.bloqueada .roadmap-no { border-style: dashed; pointer-events: none; }
-  .mapa-painel .roadmap-passo.bloqueada :is(.roadmap-indice, .roadmap-texto > strong) { color: var(--silver); }
-  .trilha-tela .regua-bloco { padding-block: var(--space-7); }
-  .trilha-tela .regua-cabeca { margin-bottom: var(--space-6); }
-  .mapa-painel .roadmap { gap: var(--space-6); }
-  .mapa-painel .roadmap-no { padding: var(--space-5); }
+  .mapa-painel .roadmap { --marco: 11px; --pad: var(--space-6); --marco-y: calc(var(--pad) + 2.5px + 4px); --vao: var(--space-5); --num: 64px; position: relative; list-style: none; margin: 0px; padding: 0px; display: flex; flex-direction: column; gap: var(--vao); }
+  .mapa-painel .roadmap::before { content: ""; position: absolute; left: calc(var(--marco) / 2); top: var(--marco-y); bottom: 0px; border-left: 1px dashed var(--line-strong); }
+  .mapa-painel .roadmap-passo { position: relative; container-type: inline-size; padding-left: calc(var(--marco) + var(--space-5)); }
+  .mapa-painel .roadmap-passo > .mapa-marco { position: absolute; left: 0px; top: var(--marco-y); z-index: 1; }
+  .mapa-marco { display: inline-block; flex: 0 0 auto; width: 11px; height: 11px; border: 1px solid var(--bone); background: var(--void); }
+  .mapa-marco:is([data-estado="proxima"], [data-estado="andamento"]) { border-color: var(--acento-interface); background: var(--acento-interface); outline: 1px solid var(--acento-interface); outline-offset: 3px; }
+  .mapa-marco[data-estado="bloqueada"] { border-style: dashed; border-color: var(--line-strong); }
+  .mapa-painel .roadmap-no { display: grid; grid-template-columns: var(--num) minmax(0, 1fr) auto; grid-template-rows: auto auto auto auto; column-gap: var(--space-5); align-items: start; padding: calc(var(--pad) + 2.5px) var(--pad); background: var(--surface-1); border: 1px solid var(--line); color: var(--bone); transition: border-color var(--motion-fast) var(--ease-corte-2); }
+  .mapa-painel .roadmap-indice { grid-area: 1 / 1 / -1; font-variant-numeric: tabular-nums; color: transparent; -webkit-text-stroke: 1px var(--silver); transition: -webkit-text-stroke-color var(--motion-fast) var(--ease-corte-2); }
+  .mapa-painel .roadmap-estado { grid-column: 2; color: var(--silver); font: 500 13px/1.4 var(--font-terciaria); }
+  .mapa-painel .roadmap-nome { grid-column: 2; margin-block: var(--space-2); font: 700 clamp(24px, 3vw, 32px)/1.05 var(--font-secundaria); text-transform: uppercase; }
+  .mapa-painel .roadmap-nome { --fora: calc(var(--marco) + var(--space-5) + 2 * var(--pad) + var(--num) + 24px + 2 * var(--space-5)); font-size: min(clamp(24px, 3vw, 32px), (100cqi - var(--fora)) * .082); white-space: nowrap; }
+  .mapa-painel .roadmap-detalhe { grid-column: 2; display: block; overflow: hidden; color: var(--silver); line-height: 1.6; white-space: nowrap; text-overflow: ellipsis; }
+  .mapa-painel .roadmap-no > svg { grid-area: 1 / 3 / -1; align-self: center; color: var(--silver); }
+  .mapa-painel :is(.proxima, .andamento) .roadmap-indice { -webkit-text-stroke-color: var(--acento-interface); }
+  .mapa-painel :is(.proxima, .andamento) .roadmap-estado { color: var(--bone); }
+  .mapa-painel :is(.proxima, .andamento) .roadmap-no { border-color: var(--line-strong); }
+  .mapa-painel .bloqueada .roadmap-no { border-style: dashed; pointer-events: none; }
+  .mapa-painel .bloqueada .roadmap-indice { -webkit-text-stroke-color: var(--line-strong); }
+  .mapa-painel .bloqueada .roadmap-nome { color: var(--silver); }
+  .trilha-tela .regua-bloco { padding-block: var(--space-5) var(--space-7); }
+  .mapa-painel .roadmap { --pad: var(--space-5); --num: 44px; }
+  .mapa-painel .roadmap-no { grid-template-columns: minmax(0px, 1fr) auto; grid-template-rows: none; }
+  .mapa-painel .roadmap-indice { grid-area: 1 / 1; margin-bottom: var(--space-3); }
+  .mapa-painel .roadmap-no > svg { grid-area: 1 / 2; align-self: start; }
+  .mapa-painel :is(.roadmap-estado, .roadmap-nome, .roadmap-detalhe, .roadmap-regua) { grid-column: 1 / -1; }
+  .mapa-painel .roadmap-nome { --fora: calc(var(--marco) + var(--space-5) + 2 * var(--pad)); }
+  :scope { --ease-expo: cubic-bezier(0.16, 1, 0.3, 1); --motion-layout: 780ms; --motion-escalonamento: 75ms; }
   .app-corpo { overflow-x: clip; }
   .roadmap::before { transform-origin: center top; animation: fio-desce 1100ms var(--ease-expo) 150ms both; }
   .abas-pilares a { transition-property: background-color, border-color, color; transition-timing-function: var(--ease-corte-2); transition-duration: var(--motion-fast); }
@@ -170,10 +167,12 @@
   :is(.botao:not(:disabled), .botao-texto, .kit-lista a, .roadmap-no):hover > svg:last-child { transform: translateX(var(--space-1)); }
   .nav-principal a:hover > svg { transform: translateY(-2px); }
   .botao { position: relative; }
+  .botao:not(:disabled):hover::after { transform: translateX(var(--space-1)); }
   .botao-icone { border: var(--fio); }
   .botao-icone:hover { border-color: var(--line-strong); }
-  .roadmap-no:hover .roadmap-indice { color: var(--bone); transition: color var(--motion-fast) var(--ease-corte-2); }
   .campo-pontos { position: absolute; inset: 0px; width: 100%; height: 100%; pointer-events: none; }
+  .cz-lista :is(button, a):focus-visible span { color: var(--destaque); }
+  .cz-lista :is(button, a):focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
 }
 @keyframes carimbo { 
   0% { opacity: 0; transform: scale(1.14); }

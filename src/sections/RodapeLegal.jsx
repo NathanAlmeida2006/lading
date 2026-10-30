@@ -4,7 +4,7 @@ import { Rotulo } from "../components/Rotulo.jsx";
 import { Wordmark } from "../components/Wordmark.jsx";
 import { config } from "../config.js";
 import { envelope } from "../ui.js";
-import { emailReal, textoReal, urlDocumento } from "../validacao.js";
+import { emailReal, urlDocumento } from "../validacao.js";
 
 /**
  * O rodape, na forma do rodape do Nakula.
@@ -18,7 +18,7 @@ import { emailReal, textoReal, urlDocumento } from "../validacao.js";
  *
  * Aqui entra o que a pagina tem de verdade, e nada inventado:
  *
- *   - `(e-mail)` e `(responsavel)`, porque nao ha telefone (RNF-L24).
+ *   - `(e-mail)`, porque nao ha telefone (RNF-L24).
  *   - `(secoes)` em vez de links de rota: uma pagina, um destino (RF-L01), e
  *     toda ancora aponta para uma secao da propria pagina. Cinco, o teto do
  *     TR-14.
@@ -51,12 +51,7 @@ const LINK =
   "inline-flex max-w-full flex-wrap items-center gap-2 min-h-12 min-w-12 wrap-anywhere text-bone no-underline font-secundaria text-h3 hover:text-silver " +
   "transition-[color] duration-(--motion-fast) ease-(--ease-default)";
 
-// O valor publicado, aparado, ou `null` (a regra e a mesma do `PUBLICAR=1`: src/validacao.js).
-const textoLegal = (valor) => (textoReal(valor) ? valor.trim() : null);
-
 export function RodapeLegal() {
-  const responsavel = textoLegal(config.legal.responsavel);
-  const documento = textoLegal(config.legal.documento);
   const contato = emailReal(config.legal.contato) ? config.legal.contato.trim() : null;
   const documentos = [
     ["Política de privacidade", urlDocumento(config.legal.politicaPrivacidade)],
@@ -105,7 +100,8 @@ export function RodapeLegal() {
               <li key={nome}>
                 {href ? (
                   <a className={LINK} href={href}>
-                    {nome} <span aria-hidden="true">&#8599;</span>
+                    {/* Um item de flex so, com o espaco inseparavel: a seta acompanha a ultima palavra e nao quebra sozinha. */}
+                    <span>{nome}&nbsp;<span aria-hidden="true">&#8599;</span></span>
                   </a>
                 ) : (
                   <span className="inline-flex min-h-12 max-w-full flex-wrap items-center wrap-anywhere font-secundaria text-h3">
@@ -129,9 +125,6 @@ export function RodapeLegal() {
 
       <div className={`${envelope} relative z-1 flex flex-wrap justify-between gap-x-6 gap-y-2 py-6 border-t border-line`}>
         <p className="font-terciaria text-mono-reg tabular-nums">&copy; {ano} Lithium. Todos os direitos reservados.</p>
-        <p className="font-terciaria text-caption">
-          {responsavel ?? "Responsável a confirmar"} &middot; <span className="tabular-nums">{documento ?? "Documento a confirmar"}</span>
-        </p>
       </div>
 
       {/* A faixa: acento inundando, tinta por cima. O wordmark e SVG em currentColor; a

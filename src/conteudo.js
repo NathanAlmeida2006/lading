@@ -33,22 +33,21 @@ export const conteudo = {
   },
   mecanismo: MECANISMO,
   espelho: {
-    rotuloSituacao: "situação",
     titulo: "Cansado de passar despercebido?",
-    sub: "É hora de decretar o fim da frustração e ver o que muda quando você entra no protocolo Lithium:",
+    sub: "Veja o que muda quando você entra no Lithium.",
     cartas: [
-      { titulo: "Do ebook genérico ao protocolo estruturado", hoje: "PDF genérico de influenciador: serve para todo mundo na teoria, mas não constrói um grama de músculo em ninguém na prática.", depois: `${MECANISMO.semanas} semanas já escritas, com ${MECANISMO.sessoesObrigatorias} sessões obrigatórias por semana e 36 treinos cirúrgicos no total. Você só abre e executa.`, lastro: "Protocolo estruturado", origem: MECANISMO.origem },
-      { titulo: "Do app confuso ao app que guia", hoje: "Aplicativo poluído onde você gasta mais energia montando ficha do que levantando ferro.", depois: "Evolua calado: o protocolo já chega mastigado no app em 3 fases exatas: Aprender, Construir e Consolidar.", lastro: "App que guia", origem: MECANISMO.origem },
-      { titulo: "Da semana perdida ao plano de retorno", hoje: "Faltou uma semana por imprevisto, perdeu o ritmo e abandonou o projeto no meio do caminho.", depois: "Protocolo anti-abandono: um capítulo inteiro dedicado a voltar aos trilhos com Semana Verde e Semana Amarela, porque o que constrói carcaça é a semana fechada.", lastro: "Plano de retorno", origem: `${DRAFT}/13-cap-07-plano-de-retorno.md` },
+      { titulo: "Do ebook genérico ao protocolo", imagem: "ebook genérico × protocolo Lithium", depois: `${MECANISMO.semanas} semanas prontas. ${MECANISMO.sessoesObrigatorias} sessões por semana. ${SESSOES} treinos. Você só abre e executa.`, lastro: "Protocolo estruturado", origem: MECANISMO.origem },
+      { titulo: "Do app confuso ao app que guia", imagem: "tela do app Lithium", src: "/image1.webp", pos: "object-[50%_44%]", depois: "O protocolo já vem pronto. Três fases: Aprender, Construir e Consolidar.", lastro: "App que guia", origem: MECANISMO.origem },
+      { titulo: "Da semana perdida ao plano de retorno", imagem: "Semana Verde e Semana Amarela", src: "/image2.webp", depois: "Perdeu uma semana? Tem Plano de Retorno, com Semana Verde e Semana Amarela. Você volta e segue.", lastro: "Plano de retorno", origem: `${DRAFT}/13-cap-07-plano-de-retorno.md` },
     ],
   },
   mapa: {
     linhas: ["Fim da", "frustração"],
-    sub: "Abra o celular, veja a missão de hoje e puxe o ferro. O planejamento já está decidido: a sua única obrigação é executar.",
+    sub: "Abra o app. Veja a missão do dia. Treine. O plano já está pronto.",
     estados: [
-      { capa: "01", leitura: "App Exclusivo (PWA)", faixa: "Tudo num lugar só", nome: "App Exclusivo (PWA)", texto: "Tudo o que o Lithium entrega reunido em um só lugar, direto na tela do seu celular, rápido, sem travar e com o plano de retorno sempre à mão.", origem: "config.entrega" },
-      { capa: "02", leitura: "Social Vibe", faixa: "Mentalidade", nome: "Social Vibe", texto: "Treine com contexto e mentalidade blindada, não sozinho contra a futilidade do feed. Um espaço interno focado na cultura do treino sério para manter sua cabeça no jogo enquanto você evolui em silêncio.", origem: "config.pilhaDeValor" },
-      { capa: "03", leitura: "Checklist Integrado", faixa: "Disciplina", nome: "Checklist Integrado", texto: "A disciplina visível na sua tela: você bate o olho, marca o que já executou no dia e vê exatamente o que falta para fechar a missão sem furar o plano.", origem: "config.pilhaDeValor" },
+      { capa: "01", imagem: "tela inicial do app", src: "/image6.webp", pos: "object-[50%_10%]", leitura: "App Exclusivo (PWA)", faixa: "Tudo num lugar só", nome: "App Exclusivo (PWA)", texto: "Tudo num só lugar, no seu celular. Rápido e sem travar.", origem: "config.entrega" },
+      { capa: "02", imagem: "tela do Social Vibe", src: "/image7.webp", pos: "object-[50%_10%]", leitura: "Social Vibe", faixa: "Mentalidade", nome: "Social Vibe", texto: "Um espaço para quem treina sério. Cabeça no jogo, evolução em silêncio.", origem: "config.pilhaDeValor" },
+      { capa: "03", imagem: "tela do Checklist Integrado", src: "/image8.webp", leitura: "Checklist Integrado", faixa: "Disciplina", nome: "Checklist Integrado", texto: "Marque o que já fez no dia. Veja o que falta para fechar a missão.", origem: "config.pilhaDeValor" },
     ],
     origem: MECANISMO.origem,
     // O texto que sobe quando a regua chega ao fim (motion, nao marcacao).
@@ -64,9 +63,9 @@ export const conteudo = {
     titulo: "Cresça calado. Imponha respeito.",
     sub: "Três armas para você nunca mais pisar na academia perdido.",
     vozes: [
-      { nome: "Protocolo Hipertrofia", governa: "Treino", onde: "12 semanas", fala: "Zero improviso: o mapa completo de 12 semanas no app, usando a Regra do 12 para extrair seu máximo crescimento natural." },
-      { nome: "Protocolo Dieta", governa: "Combustível", onde: "no app", fala: "Ajuste estratégico de combustível para construir massa densa e seca, sem passar fome e sem embaçar o shape com bulking sujo." },
-      { nome: "Protocolo Sono", governa: "Recuperação", onde: "no app", fala: "Sono profundo alinhado para manter sua testosterona no topo e acelerar a reconstrução muscular entre um treino e outro." },
+      { nome: "Protocolo Hipertrofia", governa: "Treino", onde: "12 semanas", fala: "O mapa de 12 semanas no app. Zero improviso.", imagem: "tela do Protocolo Hipertrofia", src: "/image3.webp" },
+      { nome: "Protocolo Dieta", governa: "Combustível", onde: "no app", fala: "Massa densa e seca. Sem passar fome, sem bulking sujo.", imagem: "tela do Protocolo Dieta", src: "/image4.webp" },
+      { nome: "Protocolo Sono", governa: "Recuperação", onde: "no app", fala: "Recupere entre um treino e outro. O músculo cresce no descanso.", imagem: "tela do Protocolo Sono", src: "/image5.webp" },
     ],
   },
   // So o fechamento: a headline da dobra e da intro segue "Natural / Cresce.".

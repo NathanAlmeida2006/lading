@@ -53,7 +53,15 @@
             scrollTo(0, 0);
           }
           var raiz = document.documentElement;
-          if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          // Quem volta da politica ou dos termos (a marca vem de src/documento.js, na mesma aba) ja viu a abertura: sem cortina
+          // e sem a entrada do heroi. Vale uma vez: a marca e consumida aqui, e a proxima carga abre normal.
+          var deDocumento = false;
+          try {
+            deDocumento = sessionStorage.getItem("fluor:de-documento") === "1";
+            sessionStorage.removeItem("fluor:de-documento");
+          } catch (e) {}
+          if (deDocumento) raiz.classList.add("sem-entrada");
+          else if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
             raiz.classList.add("intro-pendente");
             setTimeout(function () { raiz.classList.remove("intro-pendente"); }, 3200);
           }

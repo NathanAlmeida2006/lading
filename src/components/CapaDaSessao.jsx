@@ -1,4 +1,3 @@
-import { CampoDePontos } from "./CampoDePontos.jsx";
 import { Fio } from "./Fio.jsx";
 import { Modelo3D } from "./Modelo3D.jsx";
 import { Moldura } from "./Moldura.jsx";
@@ -19,7 +18,7 @@ function tamanhoDoTitulo(linhas) {
 
 /**
  * A capa de uma sessao do app Lithium (Sessao.jsx + PainelCartaz.jsx, em app-lithium), como ela abre na tela: cantos, grao, malha
- * de pontos, o kicker, os dois fios, o titulo em escala de cartaz (a primeira linha so em contorno, se ha mais de uma), o objeto 3D
+ * de pontos (o fundo e o do Video.jsx, compartilhado entre as capas), o kicker, os dois fios, o titulo em escala de cartaz (a primeira linha so em contorno, se ha mais de uma), o objeto 3D
  * flutuando atras do titulo e, nas sessoes (`acao`), o botao e os numeros crus. O mesmo painel abre as abas da EU (Semana,
  * Corpo, Social Vibe), sem botao nem numeros e sem os menus do app. O acento e o do protocolo (`acento`, o `--acento` desta capa).
  *
@@ -30,12 +29,11 @@ function tamanhoDoTitulo(linhas) {
 export function CapaDaSessao({ kicker, linhas, modelo, acento, cor, sobre, leituras, acao = true, origem }) {
   return (
     <section
-      className={`${grao} absolute inset-0 z-4 overflow-clip bg-void text-bone [--respiro:24px] md:[--respiro:48px]`}
+      className={`${grao} absolute inset-0 z-4 overflow-clip text-bone [--respiro:24px] md:[--respiro:48px]`}
       style={{ "--acento": acento }}
       aria-hidden="true"
     >
       <div className="absolute inset-0 flex flex-col pt-8 pb-6">
-      <CampoDePontos />
       <Moldura entrada="js" />
       <Modelo3D arquivo={`/3d-models/${modelo}-low-poly.glb`} cor={cor} origem={origem} className="absolute inset-0 z-1 pointer-events-none" />
 

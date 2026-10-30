@@ -34,8 +34,9 @@ async function somar(pasta, extensoes, comprimir) {
   return total;
 }
 
-const js = await somar(join(raiz, "dist"), [".js"], true);
-const css = await somar(join(raiz, "dist"), [".css"], true);
+// So dist/assets, o bundle da landing: as paginas legais tem JS proprio em dist/documentos (vite.documentos.config.js).
+const js = await somar(join(raiz, "dist", "assets"), [".js"], true);
+const css = await somar(join(raiz, "dist", "assets"), [".css"], true);
 const fontes = await somar(join(raiz, "public", "fonts"), [".woff2", ".otf"], false);
 
 const kb = (n) => `${(n / 1024).toFixed(1)} KB`;

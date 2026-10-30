@@ -9,5 +9,7 @@
 export const BATIDA = 504.2; // ms entre batidas (119 BPM)
 export const DROP = 3230; // ms depois do clique em que cai o drop
 export const batida = (n) => DROP + n * BATIDA;
+/** Quanto falta (ms) para `ms` depois de `inicioEm` (a hora em que o estagio devia entrar): os takes trocam de quadro por aqui, e nao `ms` depois de montarem, que atrasaria tudo o que o React demorou para montar. */
+export const atraso = (inicioEm, ms) => Math.max(0, (inicioEm ?? performance.now()) + ms - performance.now());
 export const MUSICA = "/apex-video.mp3";
 export const EFEITO_FINAL = "/rdr.mp3"; // o efeito sonoro que abre o ultimo take

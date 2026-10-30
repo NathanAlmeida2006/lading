@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { conteudo } from "../conteudo.js";
 import { CampoDePontos } from "../components/CampoDePontos.jsx";
 import { Botao } from "../components/Botao.jsx";
+import { ImagemReservada } from "../components/ImagemReservada.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { mascaraDeLinha, revelar, useMovimento } from "../motion/index.js";
 import { bloco, doisDigitos, envelope, mascara } from "../ui.js";
@@ -72,23 +73,24 @@ export function Espelho() {
         <ol className="flex flex-col gap-4 lg:gap-6" role="list" ref={lista}>
           {CARTAS.map((carta, indice) => (
             <li
-              className="carta sticky top-[calc(--spacing(6)+var(--ordem)*--spacing(12))] isolate flex flex-col gap-3 p-6 md:p-8 bg-surface-1 even:bg-void border border-line-strong motion-reduce:static [[data-solta]_&]:static"
+              className="carta sticky top-[calc(--spacing(6)+var(--ordem)*--spacing(12))] isolate flex flex-col gap-4 p-3 md:p-4 bg-surface-1 even:bg-void border border-line-strong motion-reduce:static [[data-solta]_&]:static"
               key={carta.titulo}
               style={{ "--ordem": indice }}
             >
-              <span className="text-silver font-terciaria text-mono-reg tabular-nums" aria-hidden="true">
-                {doisDigitos(indice + 1)}
-              </span>
-              <h3 className="text-bone font-secundaria text-h3 uppercase [font-size:24px] tracking-normal lg:text-h2 lg:[font-size:28.8px]">
-                {carta.titulo}
-              </h3>
-              <p className="max-w-prose text-bone font-terciaria text-body-lg">{carta.depois}</p>
-              <p className="text-silver font-terciaria text-body lg:text-body-lg">
-                <span className="mr-1 text-silver font-secundaria text-overline uppercase">{conteudo.espelho.rotuloSituacao}</span>{" "}
-                <s className="line-through decoration-2 decoration-line-strong">{carta.hoje}</s>
-              </p>
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mt-2 pt-4 border-t border-line">
-                <span className="text-silver font-terciaria text-mono-reg tabular-nums">[{carta.lastro}]</span>
+              <div className="relative">
+                <ImagemReservada legenda={carta.imagem} src={carta.src} className={`aspect-16/10${carta.src ? " brightness-60" : ""} ${carta.pos ?? ""}`} />
+                <span className="absolute left-3 top-3 px-3 py-1 bg-void border border-line-strong text-bone font-terciaria text-mono-reg tabular-nums" aria-hidden="true">
+                  {doisDigitos(indice + 1)}
+                </span>
+                <span className="absolute right-3 top-3 px-3 py-1 bg-acento text-bone font-secundaria text-overline uppercase">
+                  {carta.lastro}
+                </span>
+              </div>
+              <div className="flex flex-col gap-2 px-2 pb-2">
+                <h3 className="text-bone font-secundaria text-h3 uppercase [font-size:24px] tracking-normal lg:text-h2 lg:[font-size:28.8px]">
+                  {carta.titulo}
+                </h3>
+                <p className="max-w-prose text-silver font-terciaria text-body lg:text-body-lg">{carta.depois}</p>
               </div>
             </li>
           ))}

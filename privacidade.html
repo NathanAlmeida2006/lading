@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Política de privacidade · Lithium</title>
+    <meta name="description" content="Quais dados o Lithium trata na página, na compra e no app, para quê, com quem compartilha e como você controla." />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      @font-face { font-family: "Big Shoulders Display"; src: url("/fonts/big-shoulders-display-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+      @font-face { font-family: "IBM Plex Sans"; src: url("/fonts/ibm-plex-sans-latin.woff2") format("woff2"); font-weight: 100 700; font-display: swap; }
+      :root { color-scheme: dark; --void: #09090b; --surface: #121215; --line: #2c2c33; --silver: #8e8e9a; --bone: #ededf0; --rubro: #d2202c; --acento: var(--rubro); }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; scroll-padding-top: 1rem; background: var(--void); }
+      body { margin: 0; color: var(--bone); font: 400 0.956rem/1.65 "IBM Plex Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+      main { max-width: 44rem; margin: 0 auto; padding: 1.5rem max(1.25rem, env(safe-area-inset-right)) 5rem max(1.25rem, env(safe-area-inset-left)); overflow-wrap: anywhere; }
+      a { color: var(--bone); text-underline-offset: 0.2em; }
+      a:focus-visible { outline: 2px solid var(--bone); outline-offset: 3px; }
+      .voltar { display: inline-flex; align-items: center; min-height: 3rem; min-width: 3rem; }
+      main { container-type: inline-size; }
+      h1, h2 { white-space: nowrap; font-family: "Big Shoulders Display", Impact, sans-serif; text-transform: uppercase; letter-spacing: 0.01em; margin: 0; }
+      h1 { font-size: min(4.275rem, 10.5cqw); font-weight: 800; line-height: 0.95; padding-top: 1.5rem; border-top: 3px solid var(--rubro); margin-top: 0.5rem; }
+      h2 { font-size: min(1.6875rem, 6.5cqw); font-weight: 700; line-height: 1.05; margin-top: 3rem; }
+      h2 span { color: var(--silver); margin-right: 0.4em; }
+      h3 { font-size: 0.956rem; font-weight: 600; margin: 1.75rem 0 0.5rem; }
+      p, ul, ol, dl { margin: 0.75rem 0 0; }
+      h1 + p { margin-top: 1.25rem; }
+      ul, ol { padding-left: 1.25rem; }
+      li + li { margin-top: 0.4rem; }
+      .resumo { background: var(--surface); border: 1px solid var(--line); padding: 1.25rem 1.25rem 1.5rem; margin-top: 2rem; }
+      .resumo h2 { font-size: 1.2375rem; margin-top: 0; }
+      .indice { columns: 16rem; column-gap: 2rem; padding-left: 1.5rem; }
+      .indice a { display: inline-block; min-height: 2rem; }
+      dl.dado { border-left: 1px solid var(--line); padding-left: 1rem; margin-top: 0.75rem; }
+      dl.dado dt { color: var(--silver); font-size: 0.7875rem; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.75rem; }
+      dl.dado dt:first-child { margin-top: 0; }
+      dl.dado dd { margin: 0.1rem 0 0; }
+      dl.dado + dl.dado { margin-top: 1.25rem; }
+      .aviso { border-top: 1px solid var(--line); margin-top: 3rem; padding-top: 1.5rem; }
+      .aviso p { color: var(--silver); font-size: 0.844rem; }
+      footer { border-top: 1px solid var(--line); margin-top: 2rem; padding-top: 1rem; color: var(--silver); font-size: 0.844rem; }
+      /* O campo de pontos (motion/campo.js) fica fixo atrás do texto: só a tela é desenhada. */
+      .fundo { position: fixed; inset: 0; z-index: -1; overflow: clip; pointer-events: none; }
+      .campo { position: absolute; left: 0; width: 100%; pointer-events: none; }
+      main :is(p, li, dd) { text-align: justify; text-justify: inter-word; hyphens: auto; }
+      main .indice li { text-align: left; hyphens: manual; white-space: nowrap; }
+      .pausa { position: absolute; left: 1rem; top: 0.5rem; z-index: 10; min-height: 3rem; padding: 0 1rem; border: 0; background: var(--bone); color: var(--void); font: 600 0.844rem "Big Shoulders Display", Impact, sans-serif; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer; }
+      .pausa:not(:focus) { width: 1px; height: 1px; min-height: 0; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+      .pausa:focus-visible { outline: 2px solid var(--bone); outline-offset: 3px; }
+    </style>
+  </head>
+  <body>
+    <button type="button" class="pausa" aria-pressed="false" hidden>Pausar animações</button>
+    <div class="fundo" aria-hidden="true"><div class="campos"></div></div>
+    <main>
+      <a class="voltar" href="/">Voltar para a página</a>
+
+      <h1>Política de privacidade</h1>
+      <p>
+        Aqui você vê quais dados pessoais o Lithium trata quando você lê esta página, compra o acesso e usa o app, para que
+        servem, com quem são compartilhados e como você controla tudo isso. O texto segue a Lei Geral de Proteção de Dados
+        (LGPD, Lei nº 13.709/2018).
+      </p>
+
+      <section class="resumo" aria-labelledby="resumo">
+        <h2 id="resumo">Em resumo</h2>
+        <ul>
+          <li>Esta página não tem cadastro nem formulário. Dá para ler tudo sem informar dado nenhum.</li>
+          <li>A medição de anúncios só roda se você aceitar o aviso de cookies. Recusar não muda a leitura nem a compra.</li>
+          <li>O pagamento acontece na Hotmart. O Lithium não vê o número do seu cartão.</li>
+          <li>
+            No app, treinos, noites, refeições, pesos e medidas ficam no seu aparelho e, se você entrou pelo link de acesso,
+            numa cópia na sua conta. As fotos ficam só no aparelho.
+          </li>
+          <li>Não vendemos dados pessoais.</li>
+          <li>Para pedir acesso, correção ou exclusão, escreva para <a href="mailto:suportelithiumbr@gmail.com">suportelithiumbr@gmail.com</a>.</li>
+        </ul>
+      </section>
+
+      <nav aria-label="Nesta política">
+        <h2>Nesta política</h2>
+        <ol class="indice">
+          <li><a href="#quem">Quem trata seus dados</a></li>
+          <li><a href="#dados">Dados, finalidade e base legal</a></li>
+          <li><a href="#compartilhamento">Com quem compartilhamos</a></li>
+          <li><a href="#exterior">Transferência internacional</a></li>
+          <li><a href="#cookies">Cookies e armazenamento</a></li>
+          <li><a href="#prazos">Por quanto tempo guardamos</a></li>
+          <li><a href="#direitos">Seus direitos</a></li>
+          <li><a href="#seguranca">Segurança</a></li>
+          <li><a href="#menores">Menores de idade</a></li>
+          <li><a href="#mudancas">Mudanças nesta política</a></li>
+          <li><a href="#contato">Contato</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="quem"><span>1</span>Quem trata seus dados</h2>
+      <p>
+        O Lithium trata os dados descritos nesta política, na página e no app. Para qualquer pedido sobre eles, o canal é
+        <a href="mailto:suportelithiumbr@gmail.com">suportelithiumbr@gmail.com</a>.
+      </p>
+      <p>
+        Na compra, a Hotmart também trata seus dados de cadastro e de pagamento, com política própria, que aparece no
+        checkout.
+      </p>
+
+      <h2 id="dados"><span>2</span>Dados, finalidade e base legal</h2>
+      <p>
+        Cada bloco abaixo diz o dado, para que ele serve e a base legal que o permite (os artigos são da LGPD).
+      </p>
+
+      <h3>2.1 Quando você lê esta página</h3>
+      <dl class="dado">
+        <dt>Dado</dt>
+        <dd>Dados técnicos da conexão: endereço IP, navegador, aparelho, data e hora. Ficam com a hospedagem (Cloudflare).</dd>
+        <dt>Para quê</dt>
+        <dd>Entregar a página, protegê-la contra abuso e mantê-la no ar.</dd>
+        <dt>Base legal</dt>
+        <dd>Legítimo interesse (art. 7º, IX) e, quando a lei exigir a guarda de registros de acesso, obrigação legal (art. 7º, II).</dd>
+      </dl>
+      <dl class="dado">
+        <dt>Dado</dt>
+        <dd>
+          Parâmetros do endereço pelo qual você chegou: <code>utm_source</code>, <code>utm_medium</code>,
+          <code>utm_campaign</code>, <code>utm_content</code>, <code>utm_term</code>, <code>fbclid</code>, <code>src</code>
+          e <code>sck</code>. Ficam guardados na sessão do navegador, enquanto a aba estiver aberta, e são acrescentados ao
+          link de compra.
+        </dd>
+        <dt>Para quê</dt>
+        <dd>Saber de qual anúncio veio a visita e a compra.</dd>
+        <dt>Base legal</dt>
+        <dd>Legítimo interesse (art. 7º, IX). Você pode se opor pelo e-mail de contato.</dd>
+      </dl>
+      <dl class="dado">
+        <dt>Dado</dt>
+        <dd>Sua resposta ao aviso de cookies (aceitar ou recusar), guardada no navegador até você fechar a aba.</dd>
+        <dt>Para quê</dt>
+        <dd>Respeitar a sua escolha durante a visita.</dd>
+        <dt>Base legal</dt>
+        <dd>Consentimento (art. 7º, I).</dd>
+      </dl>
+
+      <h3>2.2 Se você aceitar o aviso de cookies</h3>
+      <dl class="dado">
+        <dt>Dado</dt>
+        <dd>
+          O Pixel da Meta é carregado e recebe eventos: visita à página, chegada a cada seção, chegada à oferta e clique no
+          botão de compra (neste, a posição do botão e o nome da campanha). A Meta também coleta pelo pixel dados como
+          endereço IP, navegador e identificadores em cookies dela.
+        </dd>
+        <dt>Para quê</dt>
+        <dd>
+          Medir de qual anúncio vem cada visita, saber se a página entrega o que o anúncio prometeu e melhorar a veiculação
+          dos anúncios.
+        </dd>
+        <dt>Base legal</dt>
+        <dd>Consentimento (art. 7º, I). Você pode revogar quando quiser.</dd>
+      </dl>
+      <p>
+        Se você recusar, o script da Meta não é carregado e nada é enviado a ela. O evento de compra, quando existe, é
+        enviado pela Hotmart, e não por esta página.
+      </p>
+
+      <h3>2.3 Quando você compra</h3>
+      <dl class="dado">
+        <dt>Dado</dt>
+        <dd>
+          Na Hotmart, você informa nome, e-mail, dados de pagamento e o mais que ela pedir. O pagamento é processado por
+          ela. O Lithium recebe o seu e-mail, o código do pedido e o estado do pedido (aprovado, reembolsado ou
+          contestado). Também vemos, no painel da Hotmart, os dados de comprador que ela mostra ao vendedor.
+        </dd>
+        <dt>Para quê</dt>
+        <dd>
+          Liberar e encerrar o acesso, enviar o link, dar suporte, processar reembolso, cumprir obrigações fiscais e legais e
+          nos defender em contestação de pagamento.
+        </dd>
+        <dt>Base legal</dt>
+        <dd>Execução de contrato (art. 7º, V), obrigação legal (art. 7º, II) e exercício regular de direitos (art. 7º, VI).</dd>
+      </dl>
+
+      <h3>2.4 Quando você usa o app</h3>
+      <dl class="dado">
+        <dt>Dado</dt>
+        <dd>
+          Seu e-mail e o estado do pedido, para criar a conta de acesso e enviar o link por e-mail. Um cookie de sessão
+          mantém você dentro do app e deixa de valer se o pedido for reembolsado.
+        </dd>
+        <dt>Base legal</dt>
+        <dd>Execução de contrato (art. 7º, V).</dd>
+      </dl>
+      <dl class="dado">
+        <dt>Dado</dt>
+        <dd>
+          O que você anota: treinos (exercícios, séries, cargas e repetições), noites de sono, refeições, peso e medidas
+          (cintura, quadril, peito, braço e coxa), anotações, metas e escolhas, como alarmes. Ficam no seu aparelho e, se você
+          entrou pelo link de acesso, numa cópia na sua conta, atualizada automaticamente.
+        </dd>
+        <dt>Para quê</dt>
+        <dd>Mostrar seu histórico, seu calendário e sua evolução, e manter tudo igual entre aparelhos.</dd>
+        <dt>Base legal</dt>
+        <dd>
+          Consentimento específico e destacado (art. 11, I), dado na cláusula
+          <a href="/termos.html#consentimento">Consentimento para dados de saúde</a> dos Termos de uso. São dados sobre
+          saúde, que a lei trata como sensíveis (art. 5º, II). Você escolhe o que anotar. Não anotar nada não tira o acesso
+          ao protocolo.
+        </dd>
+      </dl>
+      <dl class="dado">
+        <dt>Dado</dt>
+        <dd>
+          Fotos do corpo, se você quiser guardá-las. Ficam só no seu aparelho, num armazenamento separado. Nós não as
+          recebemos, e elas não entram na cópia na conta nem na cópia exportada. Limpar os dados do navegador apaga as fotos.
+        </dd>
+      </dl>
+      <dl class="dado">
+        <dt>Dado</dt>
+        <dd>
+          Erros do app (mensagem curta, trecho técnico, nome da tela, versão e se o app está instalado), medidas de
+          desempenho em 10% das visitas (carregamento, estabilidade visual e resposta ao toque) e relatos de bloqueio de
+          segurança do navegador. Esses registros não trazem o que você anotou nem o seu e-mail. O endereço IP é usado, em
+          forma de hash, para limitar tentativas abusivas.
+        </dd>
+        <dt>Para quê</dt>
+        <dd>Manter o app estável e seguro.</dd>
+        <dt>Base legal</dt>
+        <dd>Legítimo interesse (art. 7º, IX).</dd>
+      </dl>
+      <p>
+        O Social Vibe é um mural que vem do próprio app e não coleta dado. Ao tocar num link dele, você sai para o site de
+        terceiro, que tem a política dele.
+      </p>
+
+      <h2 id="compartilhamento"><span>3</span>Com quem compartilhamos</h2>
+      <ul>
+        <li><strong>Hotmart:</strong> pedido, pagamento e reembolso.</li>
+        <li><strong>Cloudflare:</strong> hospedagem da página e do app, rede de entrega e armazenamento da cópia na conta. Atua como operadora, em nosso nome.</li>
+        <li><strong>Serviço de envio de e-mail:</strong> recebe o seu e-mail para enviar o link de acesso. Atua como operador, em nosso nome.</li>
+        <li><strong>Meta:</strong> recebe os eventos do pixel, e só se você aceitar o aviso de cookies.</li>
+        <li><strong>Autoridades:</strong> quando uma lei ou uma ordem judicial exigir.</li>
+      </ul>
+      <p>Não vendemos nem alugamos dados pessoais.</p>
+
+      <h2 id="exterior"><span>4</span>Transferência internacional</h2>
+      <p>
+        A Meta, a Cloudflare e o serviço de e-mail podem tratar dados fora do Brasil. Quando isso acontece, a transferência
+        segue uma das hipóteses do art. 33 da LGPD.
+      </p>
+
+      <h2 id="cookies"><span>5</span>Cookies e armazenamento</h2>
+      <ul>
+        <li><strong>Resposta ao aviso de cookies</strong> (armazenamento da sessão): some quando você fecha a aba. Para mudar a resposta, feche a aba e abra a página de novo: o aviso volta.</li>
+        <li><strong>Parâmetros de campanha</strong> (armazenamento da sessão): somem quando você fecha a aba.</li>
+        <li><strong>Cookies da Meta</strong>, só se você aceitar: a duração é definida pela Meta.</li>
+        <li><strong>Cookie de sessão do app</strong>, necessário para entrar: renovado todo dia e inacessível a scripts da página.</li>
+        <li><strong>Armazenamento do app no aparelho:</strong> seus registros, suas fotos e uma cópia do app para abrir sem internet. Ficam até você apagar pelo app ou limpar os dados do navegador.</li>
+      </ul>
+      <p>
+        Recusar cookies de medição não impede a leitura da página nem a compra. Você também pode bloquear ou apagar cookies
+        nas configurações do navegador.
+      </p>
+
+      <h2 id="prazos"><span>6</span>Por quanto tempo guardamos</h2>
+      <ul>
+        <li><strong>Visita à página:</strong> a sessão termina quando você fecha a aba. Registros de acesso ficam com a hospedagem pelo prazo dela e da lei.</li>
+        <li>
+          <strong>Pedido e conta de acesso:</strong> guardamos o mínimo, o identificador do pedido e o estado dele, enquanto o
+          Lithium existir. É isso que impede que um link já usado ou um pedido reembolsado volte a valer. Dados fiscais e de
+          contestação de pagamento seguem o prazo da lei.
+        </li>
+        <li>
+          <strong>Registros do app:</strong> até você apagar. “Apagar registros” remove no aparelho e na conta. “Restaurar de
+          fábrica” remove só no aparelho, e a cópia na conta permanece.
+        </li>
+        <li>
+          <strong>Cópia na conta depois de um reembolso:</strong> o acesso acaba e a cópia deixa de ser sincronizada. Você
+          pode pedir a exclusão a qualquer momento.
+        </li>
+        <li><strong>Erros e medidas de desempenho:</strong> pelo prazo de retenção do provedor de registros, sem conteúdo seu.</li>
+      </ul>
+
+      <h2 id="direitos"><span>7</span>Seus direitos</h2>
+      <p>Pelo art. 18 da LGPD, você pode pedir:</p>
+      <ul>
+        <li>confirmação de que tratamos dados seus e acesso a eles;</li>
+        <li>correção de dado incompleto, inexato ou desatualizado;</li>
+        <li>anonimização, bloqueio ou eliminação de dado desnecessário, excessivo ou tratado fora da lei;</li>
+        <li>portabilidade (no app, “Exportar cópia local” baixa seus registros em arquivo);</li>
+        <li>eliminação dos dados tratados com o seu consentimento;</li>
+        <li>informação sobre com quem compartilhamos seus dados;</li>
+        <li>informação sobre a possibilidade de não consentir e sobre as consequências;</li>
+        <li>revogação do consentimento, a qualquer momento;</li>
+        <li>oposição ao tratamento feito por legítimo interesse.</li>
+      </ul>
+      <p>
+        Escreva para <a href="mailto:suportelithiumbr@gmail.com">suportelithiumbr@gmail.com</a>. Podemos pedir que você
+        confirme sua identidade, por exemplo respondendo do e-mail usado na compra. O pedido é gratuito, e a confirmação ou o
+        acesso saem em até 15 dias (art. 19, II). Se achar que não resolvemos, você pode reclamar à Autoridade Nacional de
+        Proteção de Dados (ANPD), em <a href="https://www.gov.br/anpd">gov.br/anpd</a>.
+      </p>
+
+      <h2 id="seguranca"><span>8</span>Segurança</h2>
+      <p>
+        O site e o app usam HTTPS. O cookie de sessão não é acessível a scripts da página. Os links de acesso têm validade e
+        uso controlado, e há limite de tentativas contra abuso. Nenhum sistema é totalmente seguro. Se houver incidente que
+        possa causar risco ou dano relevante a você, comunicamos você e a ANPD, como manda o art. 48 da LGPD.
+      </p>
+
+      <h2 id="menores"><span>9</span>Menores de idade</h2>
+      <p>
+        O Lithium é para maiores de 18 anos. Não tratamos dados de crianças ou adolescentes de propósito. Se você for
+        responsável por um menor que usou o app, ou se descobrirmos o uso, escreva para o e-mail de contato e excluímos os
+        dados.
+      </p>
+
+      <h2 id="mudancas"><span>10</span>Mudanças nesta política</h2>
+      <p>
+        Quando algo mudar, esta página é atualizada. Se a mudança alterar o uso dos seus dados, avisamos por e-mail ou aqui
+        na página, e, quando a lei pedir, pedimos um novo consentimento.
+      </p>
+
+      <h2 id="contato"><span>11</span>Contato</h2>
+      <p>
+        Dúvidas e pedidos sobre seus dados: <a href="mailto:suportelithiumbr@gmail.com">suportelithiumbr@gmail.com</a>.
+        As regras de compra, acesso e reembolso estão nos <a href="/termos.html">Termos de uso</a>.
+      </p>
+
+      <div class="aviso">
+        <p>
+          Este material é <strong>educativo</strong> e não substitui acompanhamento médico ou nutricional. Se você tem alguma
+          condição de saúde, procure um profissional antes de começar qualquer programa de treino ou mudança alimentar.
+        </p>
+      </div>
+      <footer>&copy; 2026 Lithium. Todos os direitos reservados.</footer>
+    </main>
+    <script type="module" src="/src/documento.js"></script>
+  </body>
+</html>

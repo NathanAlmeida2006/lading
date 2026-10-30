@@ -48,7 +48,7 @@ import { ligarCampo } from "../motion/campo.js";
  *      antes, byte a byte) estao em `motion/campo.js`; este componente so da a raiz onde os
  *      ladrilhos entram.
  */
-export function CampoDePontos({ variante = "malha" }) {
+export function CampoDePontos({ variante = "malha", cores }) {
   const raiz = useRef(null);
 
   useMovimento(() => {
@@ -63,11 +63,12 @@ export function CampoDePontos({ variante = "malha" }) {
           ponto: estilo.getPropertyValue("--bone").trim() || "#ededf0",
           fio: estilo.getPropertyValue("--line").trim() || "#2c2c33",
           acento: estilo.getPropertyValue("--acento").trim() || "#d2202c",
+          ...cores, // so os takes sobre fundo colorido trocam as cores (Takes.jsx)
         },
       },
       { aoMudarPausa, estaPausado },
     );
-  }, [variante]);
+  }, [variante, cores?.ponto]);
 
   // Os ladrilhos (`canvas.campo`) entram aqui por JavaScript: o HTML pre-renderizado so tem a raiz,
   // e o canvas nunca teve nada para mostrar antes de o pacote rodar.

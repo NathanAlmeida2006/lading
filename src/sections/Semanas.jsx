@@ -1,6 +1,7 @@
 import { CampoDePontos } from "../components/CampoDePontos.jsx";
 import { Fragment, useRef } from "react";
 import { Botao } from "../components/Botao.jsx";
+import { ImagemReservada } from "../components/ImagemReservada.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { conteudo } from "../conteudo.js";
 import { revelar, revelarEmCascata, subirLinhas, useMovimento } from "../motion/index.js";
@@ -126,23 +127,22 @@ export function Semanas() {
 
           {/* Capa, nome, legenda: a anatomia do card de showcase. A capa e um bloco de superficie
               com o numero em escala de cartaz, no lugar do preview de video. */}
-          <ol className="semanas__trilho flex flex-col gap-12 mt-16 lg:grid lg:grid-cols-[repeat(3,1fr)] lg:gap-x-8 lg:gap-y-16 lg:mt-24" role="list" ref={trilho}>
+          <ol className="semanas__trilho flex flex-col gap-12 mt-16 lg:grid lg:grid-cols-[repeat(3,1fr)] lg:items-start lg:gap-x-8 lg:gap-y-16 lg:mt-24" role="list" ref={trilho}>
             {ESTADOS.map((estado, indice) => (
-              <li className={`slide flex flex-col gap-3 ${DESCE[indice % 3]}`.trim()} key={estado.nome} data-semana={indice + 1} data-revelar>
-                <div className="relative flex items-center justify-center aspect-4/3 bg-surface-1 border border-line-strong overflow-clip">
-                  <span
-                    className="text-bone font-secundaria font-extrabold uppercase tracking-[0.01em] leading-[0.86] tabular-nums text-[length:clamp(64px,22vw,132px)] lg:text-[length:clamp(72px,7vw,120px)]"
-                    aria-hidden="true"
-                  >
-                    {estado.capa}
-                  </span>
-                  <span className="absolute left-4 bottom-4 text-silver font-secundaria text-overline uppercase" aria-hidden="true">
-                    {estado.faixa}
-                  </span>
-                  <span className="sr-only">{estado.leitura}</span>
+              <li
+                className={`slide relative isolate flex flex-col gap-3 p-4 border border-line-strong bg-surface-1 ${DESCE[indice % 3]}`.trim()}
+                key={estado.nome}
+                data-semana={indice + 1}
+                data-revelar
+              >
+                <div className="flex items-center justify-between text-overline font-secundaria uppercase" aria-hidden="true">
+                  <span className="text-silver">{estado.faixa}</span>
+                  <span className="text-acento tabular-nums">{estado.capa}</span>
                 </div>
+                <span className="sr-only">{estado.leitura}</span>
                 <h3 className="text-bone font-secundaria text-h3">{estado.nome}</h3>
                 <p className="max-w-prose text-silver font-terciaria text-body lg:text-body-lg">{estado.texto}</p>
+                <ImagemReservada legenda={estado.imagem} src={estado.src} className={`aspect-11/6 ${estado.pos ?? ""}`} />
               </li>
             ))}
           </ol>

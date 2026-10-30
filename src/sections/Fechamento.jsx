@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Fio } from "../components/Fio.jsx";
-import { FundoCapa } from "../components/FundoCapa.jsx";
+import { FundoFluido } from "../components/FundoFluido.jsx";
 import { Botao } from "../components/Botao.jsx";
 import { Moldura } from "../components/Moldura.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
@@ -8,7 +8,7 @@ import { conteudo } from "../conteudo.js";
 import { abrirPainel, useMovimento } from "../motion/index.js";
 import { config } from "../config.js";
 import { camada, crus, envelope, grao, linha, painel, vazado } from "../ui.js";
-import { textoReal as texto } from "../validacao.js";
+import { emailReal } from "../validacao.js";
 
 /**
  * Fechamento: a segunda capa.
@@ -23,10 +23,7 @@ import { textoReal as texto } from "../validacao.js";
  */
 export function Fechamento() {
   const raiz = useRef(null);
-  const { garantiaDias: dias, garantiaCanal: canal } = config.oferta;
-  const pendente = "a confirmar neste preview";
-  const prazoConfirmado = Number.isInteger(dias) && dias > 0;
-  const canalGarantia = texto(canal) ? ` · ${canal}` : prazoConfirmado ? ` · canal ${pendente}` : "";
+  const suporte = emailReal(config.legal.contato) ? config.legal.contato.trim() : null;
 
   useMovimento(() => {
     const no = raiz.current;
@@ -45,7 +42,7 @@ export function Fechamento() {
 
   return (
     <section id="fechamento" className={`${painel} ${grao} painel-capa`} ref={raiz}>
-      <FundoCapa />
+      <FundoFluido />
       <Moldura />
 
       <div className="w-full flex-1 flex flex-col justify-center gap-2 py-3 relative z-1">
@@ -75,7 +72,7 @@ export function Fechamento() {
           <div className={`${envelope} flex flex-col items-center text-center`}>
             <Botao posicao="fechamento" />
             <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
-              {prazoConfirmado ? `Garantia: ${dias} dias` : `Garantia: ${pendente}`}{canalGarantia} · condições acima
+              Pagamento único · acesso imediato e vitalício
             </p>
           </div>
         </div>
@@ -84,14 +81,20 @@ export function Fechamento() {
       <div className={`${envelope} painel__rodape pointer-events-none absolute inset-x-0 bottom-4 z-1 flex items-end justify-between gap-4 text-silver tela-rasa:hidden`} data-revelar>
         <ul className={crus} role="list">
           <li>
-            <b className="text-bone font-bold">Formato</b> {texto(config.entrega.formato) ? config.entrega.formato : pendente}
+            <b className="text-bone font-bold">App</b> direto no celular
           </li>
           <li>
-            <b className="text-bone font-bold">Canal</b> {texto(config.entrega.canal) ? config.entrega.canal : pendente}
+            <b className="text-bone font-bold">Acesso</b> imediato e vitalício
           </li>
           <li>
-            <b className="text-bone font-bold">Acesso</b> {texto(config.entrega.modoDeAcesso) ? config.entrega.modoDeAcesso : pendente}
+            <b className="text-bone font-bold">Pagamento</b> único
           </li>
+          {suporte && (
+            <li>
+              <b className="text-bone font-bold">Suporte</b>{" "}
+              <a className="pointer-events-auto underline underline-offset-4" href={`mailto:${suporte}`}>{suporte}</a>
+            </li>
+          )}
         </ul>
       </div>
     </section>

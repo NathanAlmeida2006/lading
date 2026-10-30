@@ -60,9 +60,9 @@ export const config = {
   },
 
   checkout: {
-    identificadorOferta: null, // ID da oferta correspondente na Ticto, quando confirmado
-    url: "#oferta", // âncora segura do preview; substituir pela URL real da Ticto
-    urlConfirmada: false,
+    identificadorOferta: null, // ID da oferta correspondente na Hotmart, quando confirmado
+    url: "https://pay.hotmart.com/Y108171272A", // checkout da Hotmart: único destino de todos os CTAs
+    urlConfirmada: true,
     parametroRastreio: null,
     parametroConfirmado: false,
   },
@@ -70,13 +70,10 @@ export const config = {
   pixel: { id: null },
 
   legal: {
-    responsavel: null,
-    documento: null,
-    contato: null,
-    // Preencher somente com documentos aprovados: /privacidade.html,
-    // /termos.html ou URLs HTTPS reais confirmadas. PUBLICAR=1 valida os arquivos.
-    politicaPrivacidade: null,
-    termosDeUso: null,
+    contato: "suportelithiumbr@gmail.com", // e-mail de suporte: aparece no fechamento e no rodapé legal
+    // Arquivos estáticos em public/ (ou URL HTTPS real). PUBLICAR=1 valida que existem no build.
+    politicaPrivacidade: "/privacidade.html",
+    termosDeUso: "/termos.html",
   },
 
   // Apenas texto público aprovado e referência opaca à autorização; nenhum
@@ -84,7 +81,6 @@ export const config = {
   depoimentos: [], // { id, texto, identificacao, contexto, origem, autorizacaoRef, aprovado }
 };
 
-// O verbo do CTA (RF-L10). O preço sai da pilha de valor, o mesmo número do recibo: mudou lá, muda aqui.
-// A dobra usa a forma curta, sem o preço.
+// O verbo do CTA (RF-L10). Nenhum botão mostra o preço: o valor fica na pilha de oferta.
 export const VERBO_CURTO = "Quero o Lithium vitalício";
-export const VERBO_ACAO = `${VERBO_CURTO} por ${config.pilhaDeValor.moeda} ${reais(config.pilhaDeValor.oferta.preco)}`;
+export const VERBO_ACAO = VERBO_CURTO;

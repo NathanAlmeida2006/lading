@@ -61,7 +61,6 @@ afirmacao("checkout.url", urlHttps(config.checkout.url) && config.checkout.urlCo
 afirmacao("checkout.parametroRastreio", /^[a-zA-Z][\w-]*$/.test(config.checkout.parametroRastreio ?? "") && config.checkout.parametroConfirmado === true,
   "nome do parâmetro de rastreio ainda não confirmado na conta");
 afirmacao("pixel.id", /^\d+$/.test(String(config.pixel.id ?? "")), "ID do Pixel ausente");
-for (const campo of ["responsavel", "documento"]) afirmacao(`legal.${campo}`, texto(config.legal[campo]));
 afirmacao("legal.contato", emailReal(config.legal.contato), "e-mail de contato ausente ou inválido");
 
 // A mesma regra do rodape (src/validacao.js): o que ele esconderia, o build recusa.

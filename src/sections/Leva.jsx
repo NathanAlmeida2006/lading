@@ -1,5 +1,6 @@
 import { Fragment, useRef } from "react";
 import { CampoDePontos } from "../components/CampoDePontos.jsx";
+import { ImagemReservada } from "../components/ImagemReservada.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { acenderEmSequencia, revelar, revelarEmCascata, useMovimento } from "../motion/index.js";
 import { conteudo } from "../conteudo.js";
@@ -109,6 +110,8 @@ export function Leva() {
                 key={voz.nome}
                 data-revelar
               >
+                <ImagemReservada legenda={voz.imagem} src={voz.src} className="absolute! inset-0 z-0! border-0" />
+                <span className="absolute! inset-0 z-0! bg-linear-to-t from-void/95 via-void/60 to-void/20" aria-hidden="true" />
                 <span
                   className="font-secundaria font-extrabold uppercase tracking-[0.02em] text-acento text-[48px] leading-[0.6]"
                   aria-hidden="true"
