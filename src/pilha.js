@@ -1,3 +1,5 @@
+import { config } from "./config.js";
+
 /**
  * Lógica pura da pilha de valor: confere o bloco de dados comerciais e devolve a forma
  * apresentável. Sem Date, window ou Intl: a saída é a mesma no servidor e no cliente.
@@ -45,3 +47,6 @@ export function pilhaApresentavel(bloco) {
     oferta: { rotulo: bloco.oferta.rotulo, preco: reais(bloco.oferta.preco), subtexto: bloco.oferta.subtexto },
   };
 }
+
+// Forma pronta da config comercial, conferida e formatada uma vez por carga.
+export const pilhaPronta = pilhaApresentavel(config.pilhaDeValor);

@@ -5,10 +5,13 @@ import { Botao } from "../components/Botao.jsx";
 import { ImagemReservada } from "../components/ImagemReservada.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { mascaraDeLinha, revelar, useMovimento } from "../motion/index.js";
-import { bloco, doisDigitos, envelope, mascara } from "../ui.js";
+import { usePilhaDeCartas } from "../motion/pilhaDeCartas.js";
+import { bloco, doisDigitos, envelope, grade12, mascara } from "../ui.js";
 
 // Situação e comportamento do protocolo; não são relatos nem antes/depois corporal.
 const CARTAS = conteudo.espelho.cartas;
+// Largura real da imagem: 7 das 12 colunas da grade no lg (1024: 584 do card menos 34 de borda e respiro; wide: 718), a coluna toda abaixo (cap de 720 do envelope).
+const SIZES = "(min-width: 1440px) 718px, (min-width: 1024px) 550px, (min-width: 720px) 662px, calc(100vw - 58px)";
 
 export function Espelho() {
   const raiz = useRef(null);
@@ -20,39 +23,13 @@ export function Espelho() {
     revelar(no.querySelector(".rotulo"));
     mascaraDeLinha(no.querySelector(".titulo"), { atraso: 60 });
     revelar(no.querySelector(".espelho__sub"), { atraso: 200 });
-
-    // A pilha so serve se cada card, grudado no seu degrau, cabe inteiro na janela: senao
-    // ela SOLTA (`data-solta`) e os cards seguem em fila. So se mede com o grude ligado: sob
-    // movimento reduzido o `top` e `auto`, a conta vira NaN e a pilha continua como esta.
-    const pilha = lista.current;
-    const cartas = [...no.querySelectorAll(".carta")];
-    const medir = () => {
-      pilha.removeAttribute("data-solta");
-      const cabe = cartas.every((carta, i) =>
-        i === cartas.length - 1 || !(parseFloat(getComputedStyle(carta).top) + carta.offsetHeight > window.innerHeight));
-      pilha.toggleAttribute("data-solta", !cabe);
-    };
-    // So a LARGURA reage: a barra do navegador no celular muda a altura a cada rolagem.
-    let largura = window.innerWidth;
-    const aoRedimensionar = () => {
-      if (window.innerWidth === largura) return;
-      largura = window.innerWidth;
-      medir();
-    };
-    let ativo = true;
-    medir();
-    document.fonts?.ready.then(() => { if (ativo) medir(); });
-    window.addEventListener("resize", aoRedimensionar);
-    return () => {
-      ativo = false;
-      window.removeEventListener("resize", aoRedimensionar);
-    };
   }, []);
+  usePilhaDeCartas(raiz, lista);
 
   return (
     <section id="espelho" className={`${bloco} isolate py-16 md:py-24`} ref={raiz}>
       <CampoDePontos variante="estelar" />
-      <div className={`${envelope} relative z-1 lg:grid lg:grid-cols-[repeat(12,1fr)] lg:gap-x-8 lg:items-start`}>
+      <div className={`${envelope} relative z-1 ${grade12} lg:items-start`}>
         <header className="mb-8 lg:mb-0 lg:col-[1/span_5] lg:sticky lg:top-12">
           <Rotulo>hipertrofia · natural</Rotulo>
           <h2
@@ -78,7 +55,7 @@ export function Espelho() {
               style={{ "--ordem": indice }}
             >
               <div className="relative">
-                <ImagemReservada legenda={carta.imagem} src={carta.src} className={`aspect-16/10${carta.src ? " brightness-60" : ""} ${carta.pos ?? ""}`} />
+                <ImagemReservada src={carta.src} sizes={SIZES} fixarProporcao className={`aspect-16/10${carta.src ? " brightness-60" : ""} ${carta.pos ?? ""}`} />
                 <span className="absolute left-3 top-3 px-3 py-1 bg-void border border-line-strong text-bone font-terciaria text-mono-reg tabular-nums" aria-hidden="true">
                   {doisDigitos(indice + 1)}
                 </span>
@@ -87,7 +64,7 @@ export function Espelho() {
                 </span>
               </div>
               <div className="flex flex-col gap-2 px-2 pb-2">
-                <h3 className="text-bone font-secundaria text-h3 uppercase [font-size:24px] tracking-normal lg:text-h2 lg:[font-size:28.8px]">
+                <h3 className="text-bone font-secundaria text-h3-grande uppercase tracking-normal lg:text-h2-grande">
                   {carta.titulo}
                 </h3>
                 <p className="max-w-prose text-silver font-terciaria text-body lg:text-body-lg">{carta.depois}</p>

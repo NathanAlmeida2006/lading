@@ -2,7 +2,7 @@
  * Entrada das páginas legais (privacidade.html e termos.html): o mesmo scroll (Lenis) e o mesmo campo de
  * pontos `estelar` da landing, sem React. Build próprio: vite.documentos.config.js.
  */
-import { ligarCampo } from "./motion/campo.js";
+import { coresDoCampo, ligarCampo } from "./motion/campo.js";
 import { aoMudarPausa, definirPausa, estaPausado } from "./motion/pausa.js";
 import { ligarLenis } from "./motion/rolagem.js";
 import { semMovimento } from "./motion/tokens.js";
@@ -16,21 +16,15 @@ try {
   /* armazenamento bloqueado: a landing abre com a introducao, como sempre */
 }
 
-const estilo = getComputedStyle(document.documentElement);
-const cor = (nome, padrao) => estilo.getPropertyValue(nome).trim() || padrao;
 const reduzido = semMovimento();
 
 const raiz = document.querySelector(".campos");
 if (raiz) {
-  ligarCampo(
-    raiz,
-    {
-      variante: "estelar",
-      reduzido,
-      cores: { ponto: cor("--bone", "#ededf0"), fio: cor("--line", "#2c2c33"), acento: cor("--acento", "#d2202c") },
-    },
-    { aoMudarPausa, estaPausado },
-  );
+  ligarCampo(raiz, {
+    variante: "estelar",
+    reduzido,
+    cores: coresDoCampo(),
+  });
 }
 
 // WCAG 2.2.2: o campo anda sozinho por mais de 5 s. Fora da tela até receber foco; sob movimento reduzido

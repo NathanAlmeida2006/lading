@@ -5,36 +5,20 @@ import { Menu } from "../components/Menu.jsx";
 import { Moldura } from "../components/Moldura.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { Wordmark } from "../components/Wordmark.jsx";
-import { VERBO_CURTO } from "../config.js";
 import { conteudo } from "../conteudo.js";
-import { camada, crus, envelope, grao, linha, painel, vazado } from "../ui.js";
+import { camada, crus, destaque, envelope, grao, linha, painel, vazado } from "../ui.js";
 
-/**
- * A dobra, em painel de tela cheia.
- *
- * A headline e TIPOGRAFIA COMO ARQUITETURA, que e a licao do Rep Republic: duas
- * linhas compostas a mao, encostando nas bordas do container, a segunda so em
- * contorno de fio. Nao e tamanho de texto, e cartaz - e por isso a escala
- * `display-xxl` existe so aqui e no fechamento.
- *
- * O que compoe o resto e so o que ja e do sistema: kit de molduras e cantos,
- * fios de 1px como grade, grao, e numeros crus como ornamento honesto. Nenhum
- * sigilo, porque os tres do RF-G03 ainda nao existem na base.
- *
- * `min-h-svh` e nao `vh`: no celular a barra do navegador entra e sai, e `vh`
- * mede a viewport grande - o botao cairia para fora da tela justamente em quem
- * chega pelo anuncio (RF-L09).
- */
-/**
- * A entrada e toda CSS (styles/residual.css, secao 7): kicker, corpo, acao e rodape
- * entram em `steps(2)`, as linhas da headline sobem em expo-out, os fios e os cantos se
- * desenham, e a seta pulsa. O heroi compoe DEBAIXO da cortina e ja esta parado quando ela
- * levanta, como no site de origem; `pendente:[--base:300ms]` empurra tudo 300 ms enquanto
- * a cortina cobre a tela. Nada aqui espera o pacote de JavaScript, e e por isso que o LCP
- * (RNF-L01) nao depende da hidratacao.
- */
 const ENTRA = "animate-revelar motion-reduce:animate-none";
 
+/**
+ * A dobra, em painel de tela cheia.A headline e tipografia como arquitetura: duas linhas
+ * compostas a mao, encostando nas bordas do container, a segunda so em contorno de fio.
+ *
+ * `min-h-svh` e nao `vh`: no celular a barra do navegador entra e sai, e `vh` mede a
+ * viewport grande - o botao cairia para fora da tela justamente em quem chega pelo anuncio
+ * (RF-L09). A entrada e toda CSS (styles/residual.css, secao 7), sem esperar o pacote de
+ * JavaScript, para o LCP (RNF-L01) nao depender da hidratacao.
+ */
 export function Dobra() {
   return (
     <section className={`${painel} ${grao} painel-capa pendente:[--base:300ms]`} id="inicio">
@@ -68,7 +52,7 @@ export function Dobra() {
         </p>
 
         <div className={`painel__acao w-full shrink-0 mt-4 tela-rasa:mt-2 ${ENTRA} [--atraso:80ms]`}>
-          <Botao posicao="dobra" rotulo={VERBO_CURTO} />
+          <Botao posicao="dobra" />
           <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
             {conteudo.mecanismo.semanas} semanas · condições na oferta abaixo
           </p>
@@ -83,13 +67,13 @@ export function Dobra() {
         </span>
         <ul className={crus} role="list">
           <li>
-            <b className="text-bone font-bold">{conteudo.mecanismo.semanas}</b> semanas
+            <b className={destaque}>{conteudo.mecanismo.semanas}</b> semanas
           </li>
           <li>
-            <b className="text-bone font-bold">{conteudo.mecanismo.sessoesObrigatorias}</b> sessões por semana
+            <b className={destaque}>{conteudo.mecanismo.sessoesObrigatorias}</b> sessões por semana
           </li>
           <li>
-            <b className="text-bone font-bold">{conteudo.mecanismo.sessoesOpcionais}</b> opcional
+            <b className={destaque}>{conteudo.mecanismo.sessoesOpcionais}</b> opcional
           </li>
         </ul>
       </div>

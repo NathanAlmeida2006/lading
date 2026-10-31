@@ -18,7 +18,6 @@
   --color-*: initial;
   --color-void: var(--void);
   --color-surface-1: var(--surface-1);
-  --color-surface-2: var(--surface-2);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-silver: var(--silver);
@@ -70,10 +69,6 @@
   --text-h3--line-height: 1.25;
   --text-h3--font-weight: 600;
 
-  --text-stat: clamp(40px, 5vw, 72px);
-  --text-stat--line-height: 1;
-  --text-stat--font-weight: 800;
-
   --text-body: 16px;
   --text-body--line-height: 1.55;
   --text-body--font-weight: 400;
@@ -99,6 +94,30 @@
   --text-mono-reg: 11px;
   --text-mono-reg--line-height: 1.2;
   --text-mono-reg--font-weight: 500;
+
+  /* Escala x1,2 (Leva, Espelho): cada token herda line-height, tracking e peso do de origem. */
+  --text-h3-grande: 24px;
+  --text-h3-grande--line-height: 1.25;
+  --text-h3-grande--font-weight: 600;
+  --text-h2-grande: 28.8px;
+  --text-h2-grande--line-height: 1.15;
+  --text-h2-grande--letter-spacing: 0.03em;
+  --text-h2-grande--font-weight: 700;
+  --text-h3-voz: 23.76px;
+  --text-h3-voz--line-height: 1.25;
+  --text-h3-voz--font-weight: 600;
+  --text-h3-voz-lg: 28.51px;
+  --text-h3-voz-lg--line-height: 1.15;
+  --text-label-grande: 18px;
+  --text-label-grande--line-height: 1;
+  --text-label-grande--letter-spacing: 0.04em;
+  --text-label-grande--font-weight: 600;
+  --text-caption-grande: 15.6px;
+  --text-caption-grande--line-height: 1.4;
+  --text-caption-grande--font-weight: 400;
+  --text-mono-grande: 13.2px;
+  --text-mono-grande--line-height: 1.2;
+  --text-mono-grande--font-weight: 500;
 }
 
 /* O `:hover` do Tailwind v4 so vale em `@media (hover: hover)`. O original
@@ -118,8 +137,5 @@
 /* Enquanto a cortina de introducao esta pendente (classe escrita no <html> pelo
    script inline do index.html, antes da primeira pintura). */
 @custom-variant pendente (:where(.intro-pendente) &);
-
-/* Dentro de um bloco Cartaz (o botao troca de tinta; RNF-L36). */
-@custom-variant cartaz (&:where([data-theme="cartaz"], [data-theme="cartaz"] *));
 
 @import "./residual.css";

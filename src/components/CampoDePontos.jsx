@@ -1,8 +1,7 @@
 import { useRef } from "react";
 import { useMovimento } from "../motion/index.js";
-import { semMovimento } from "../motion/tokens.js";
-import { aoMudarPausa, estaPausado } from "../motion/pausa.js";
-import { ligarCampo } from "../motion/campo.js";
+import { semMovimento, toque } from "../motion/tokens.js";
+import { coresDoCampo, ligarCampo } from "../motion/campo.js";
 
 /**
  * O campo de pontos ao fundo das secoes.
@@ -27,8 +26,8 @@ import { ligarCampo } from "../motion/campo.js";
  *
  *   - ponto de 1 bit em `--bone`, sem brilho, sem halo, sem gradiente;
  *   - fio de grade em `--line`, que e o mesmo fio de 1px de toda a pagina;
- *   - nenhuma cor propria: o acento nao entra aqui, porque ele ja aparece uma
- *     vez por tela em outro lugar da secao.
+ *   - nenhuma cor propria na malha; a variante estelar usa o acento em 6% dos
+ *     pontos.
  *
  * Reprovado o `TR-03`, o conserto e este componente devolver `null`: o
  * layout inteiro continua de pe, so o fundo fica liso.
@@ -53,21 +52,13 @@ export function CampoDePontos({ variante = "malha", cores }) {
 
   useMovimento(() => {
     if (!raiz.current) return;
-    const estilo = getComputedStyle(document.documentElement);
-    return ligarCampo(
-      raiz.current,
-      {
-        variante,
-        reduzido: semMovimento(),
-        cores: {
-          ponto: estilo.getPropertyValue("--bone").trim() || "#ededf0",
-          fio: estilo.getPropertyValue("--line").trim() || "#2c2c33",
-          acento: estilo.getPropertyValue("--acento").trim() || "#d2202c",
-          ...cores, // so os takes sobre fundo colorido trocam as cores (Takes.jsx)
-        },
-      },
-      { aoMudarPausa, estaPausado },
-    );
+    return ligarCampo(raiz.current, {
+      variante,
+      reduzido: semMovimento(),
+      toque: toque(),
+      // so os takes sobre fundo colorido trocam as cores (Takes.jsx)
+      cores: { ...coresDoCampo(), ...cores },
+    });
   }, [variante, cores?.ponto]);
 
   // Os ladrilhos (`canvas.campo`) entram aqui por JavaScript: o HTML pre-renderizado so tem a raiz,

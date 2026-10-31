@@ -7,38 +7,16 @@ import { conteudo } from "../conteudo.js";
 import { bloco, doisDigitos, envelope, grao, palavra as PALAVRA } from "../ui.js";
 
 /**
- * O que voce leva, na forma da secao "Members' Words" do Rep Republic.
+ * O que voce leva. A cabeca fica centrada e grudada no meio da tela, e os cards
+ * passam por cima dela ao rolar, em ziguezague de tres posicoes no monitor e
+ * empilhados no celular.
  *
- * Lida ao vivo em 06/09/2026: a cabeca fica CENTRADA e GRUDADA no meio da
- * tela (rotulo, titulo grande, subtitulo) e os cards passam por cima dela ao
- * rolar - em ziguezague de tres colunas no monitor (esquerda, direita,
- * centro) e empilhados no celular - alternando card escuro com textura e card
- * claro. Anatomia do card: glifo de aspas no acento, a frase grande, nome,
- * cidade, fio e etiqueta no pe.
- *
- * Aqui nao ha depoimento, e nenhum e inventado: a "fala" de cada card e o
- * beneficio, na voz do parceiro de treino; o "nome" e o termo-marca do
- * glossario (§5 do manual-de-voz), escrito sempre da mesma forma; a "cidade"
- * e o que aquele termo governa; e a etiqueta diz onde ele vive dentro do
- * protocolo, sem numero de capitulo, que a landing nao tem autoridade para
- * fixar (RF-L11a). O nome do sistema de retomada continua fora da capa, pela
- * trava do glossario.
- *
- * Os cards alternam tema pelo proprio atributo: a secao e Sigilo, e os pares
- * levam `data-theme="cartaz"`. E o unico lugar da pagina em que os dois temas
- * convivem na mesma tela, e e o que reproduz a alternancia do site de origem
- * sem fotografia.
- *
- * O campo de pontos ao fundo e o mesmo da prova (07/09/2026), e vale a mesma
- * ressalva: ele esbarra no `TR-03` e a decisao esta na §6 do contrato. Os
- * cards tem superficie opaca propria, entao nenhum texto corrido cai sobre a
- * malha - o que sobra por cima dela e a cabeca, em escala de titulo, e a
- * propria malha e tratamento de 1 bit, que e o que o `TR-07` pede por baixo
- * de texto.
- *
- * O `transform` de centralizacao fica na PROPRIA cabeca, que nao e ancestral
- * de nada grudado: a trava e sobre ancestrais.
+ * A fala de cada card e o beneficio, na voz do parceiro de treino. Nao ha
+ * depoimento, e nenhum e inventado.
  */
+
+// A imagem (quadrada, object-cover) preenche o card inteiro, e o card e mais alto que largo no celular e no lg (min-h-95 / lg:min-h-115): a largura desenhada e a ALTURA (460 no lg, com folga). No celular o `sizes` fica de proposito um pouco abaixo dela (356 contra 378 a 390 px): com DPR 3 isso escolhe a variante de 1080 em vez do original de 1440, a 2,86x em vez de 3x.
+const SIZES = "(min-width: 1024px) 480px, (min-width: 720px) 686px, calc(100vw - 34px)";
 
 /**
  * O ziguezague do monitor: um PAR (esquerda, e a direita nascendo 15vh mais
@@ -49,11 +27,10 @@ import { bloco, doisDigitos, envelope, grao, palavra as PALAVRA } from "../ui.js
  * garantida.
  */
 const ZIGUEZAGUE = [
-  "lg:self-start lg:mt-32",
+  "lg:self-start lg:mt-0",
   "lg:self-end lg:mt-[calc(15vh_-_--spacing(115))]",
   "lg:self-center lg:mt-32",
 ];
-
 
 export function Leva() {
   const raiz = useRef(null);
@@ -64,13 +41,12 @@ export function Leva() {
     if (!no) return;
     revelar(no.querySelector(".rotulo"));
     revelarEmCascata(no.querySelectorAll(".voz"), { intervalo: 80 });
-    // O trilho `fixo` e o palco da prova: 190svh, 90svh de titulo pinado. Ele nasce acima do
+    // O trilho `fixo` e o palco: 190svh, 90svh de titulo pinado. Ele nasce acima do
     // titulo (o titulo pina no meio da tela) para a conta comecar quando o titulo pina.
-    const anim = acenderEmSequencia(no.querySelectorAll(".titulo .palavra"), palco.current, {
+    acenderEmSequencia(no.querySelectorAll(".titulo .palavra"), palco.current, {
       fixo: true,
       atributoAtual: "data-atual",
     });
-    return () => anim?.revert?.();
   }, []);
 
   return (
@@ -83,9 +59,9 @@ export function Leva() {
           ref={palco}
           aria-hidden="true"
         />
-        {/* O titulo fica pinado ate os cards chegarem pelo mesmo tempo da prova: o palco dela tem
-            190svh com 100svh pinado, 90svh de espera. Aqui a margem da lista (140svh - 140px) soma,
-            com o titulo centrado e ~280px de altura, esses mesmos 90svh. */}
+        {/* O titulo fica pinado ate os cards chegarem: o palco tem 190svh com 100svh pinado,
+            90svh de espera. Aqui a margem da lista (140svh - 140px) soma, com o titulo centrado
+            e ~280px de altura, esses mesmos 90svh. */}
         <header className="sticky top-[max(--spacing(12),calc(50svh-140px))] z-0 flex flex-col items-center py-8 text-center motion-reduce:static">
           <Rotulo>Veja tudo que você terá direito</Rotulo>
           <h2
@@ -103,14 +79,14 @@ export function Leva() {
 
         <ol className="relative z-1 flex flex-col gap-10 mt-[calc(140svh-140px)] motion-reduce:mt-16 lg:gap-0" role="list">
           {conteudo.leva.vozes.map((voz, indice) => {
-            const posicao = indice === 0 ? "lg:self-start lg:mt-0" : ZIGUEZAGUE[indice % 3];
+            const posicao = ZIGUEZAGUE[indice % 3];
             return (
               <li
                 className={`voz relative flex flex-col gap-3 min-h-95 p-6 bg-surface-1 text-bone border border-line-strong *:relative *:z-1 lg:w-[calc((100%-2*--spacing(8))/3)] lg:min-h-115 lg:p-8 ${posicao} ${grao} before:z-0`}
                 key={voz.nome}
                 data-revelar
               >
-                <ImagemReservada legenda={voz.imagem} src={voz.src} className="absolute! inset-0 z-0! border-0" />
+                <ImagemReservada src={voz.src} sizes={SIZES} className="absolute! inset-0 z-0! border-0" />
                 <span className="absolute! inset-0 z-0! bg-linear-to-t from-void/95 via-void/60 to-void/20" aria-hidden="true" />
                 <span
                   className="font-secundaria font-extrabold uppercase tracking-[0.02em] text-acento text-[48px] leading-[0.6]"
@@ -118,14 +94,14 @@ export function Leva() {
                 >
                   &ldquo;
                 </span>
-                <p className="flex-auto text-left text-bone font-secundaria text-h3 [font-size:23.76px] lg:text-[28.51px] lg:leading-[1.15]">
+                <p className="flex-auto text-left text-bone font-secundaria text-h3-voz lg:text-h3-voz-lg">
                   {voz.fala}
                 </p>
                 <div className="flex flex-col gap-1">
-                  <h3 className="text-bone font-secundaria text-label [font-size:18px] uppercase">{voz.nome}</h3>
-                  <p className="text-silver font-terciaria text-caption [font-size:15.6px]">{voz.governa}</p>
+                  <h3 className="text-bone font-secundaria text-label-grande uppercase">{voz.nome}</h3>
+                  <p className="text-silver font-terciaria text-caption-grande">{voz.governa}</p>
                 </div>
-                <span className="block pt-4 border-t border-line text-silver font-terciaria text-mono-reg [font-size:13.2px] tabular-nums">
+                <span className="block pt-4 border-t border-line text-silver font-terciaria text-mono-grande tabular-nums">
                   [{doisDigitos(indice + 1)} · {voz.onde}]
                 </span>
               </li>

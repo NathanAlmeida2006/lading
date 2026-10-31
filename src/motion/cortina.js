@@ -19,29 +19,33 @@ const FADE = 140;
 export function useCortina(ref) {
   useEffect(() => {
     const el = ref.current;
-    const cobre = el?.parentElement?.children[[...el.parentElement.children].indexOf(el) + 1];
+    const cobre = el?.nextElementSibling;
     if (!el || !cobre || semMovimento()) return;
     let quadro = 0;
     let topo = 0;
+    let altura = 0;
     // O ultimo valor escrito de cada estilo: a rolagem reescrevia os quatro a cada quadro, mesmo iguais.
     let posicao;
     let topoCss;
     let mascara;
     const medir = () => {
-      topo = Math.min(0, window.innerHeight - el.offsetHeight);
+      altura = el.offsetHeight;
+      topo = Math.min(0, window.innerHeight - altura);
     };
     const mascarar = () => {
       quadro = 0;
+      const topoCobre = cobre.getBoundingClientRect().top;
       // Toda coberta: o pino sai (o layout nao muda, o `sticky` so desloca o desenho) e a secao
       // deixa de contar como "na tela" para os observadores (a doca, o alcance).
-      const coberta = cobre.getBoundingClientRect().top <= 0;
+      // `< 1`, nao `<= 0`: o topo real pode ficar em fracao de pixel (0,234 medido) e a secao ficaria presa atras, desenhando sem ninguem ver.
+      const coberta = topoCobre < 1;
       const novaPosicao = coberta ? "relative" : "sticky";
       const novoTopo = coberta ? "" : `${topo}px`;
       if (novaPosicao !== posicao) el.style.position = posicao = novaPosicao;
       if (novoTopo !== topoCss) el.style.top = topoCss = novoTopo;
       // Posicao da borda de cima da que cobre, medida a partir do topo da pinada.
-      const y = cobre.getBoundingClientRect().top - el.getBoundingClientRect().top;
-      const m = y >= el.offsetHeight ? "" : `linear-gradient(to bottom, #000 ${Math.max(0, y - FADE)}px, transparent ${Math.max(0, y)}px)`;
+      const y = topoCobre - el.getBoundingClientRect().top;
+      const m = y >= altura ? "" : `linear-gradient(to bottom, #000 ${Math.max(0, y - FADE)}px, transparent ${Math.max(0, y)}px)`;
       if (m !== mascara) {
         mascara = m;
         el.style.maskImage = m;
@@ -56,13 +60,13 @@ export function useCortina(ref) {
       pedir();
     };
     aoMudar();
-    const obs = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(aoMudar);
-    obs?.observe(el);
+    const obs = new ResizeObserver(aoMudar);
+    obs.observe(el);
     window.addEventListener("resize", aoMudar);
     window.addEventListener("scroll", pedir, { passive: true });
     return () => {
       cancelAnimationFrame(quadro);
-      obs?.disconnect();
+      obs.disconnect();
       window.removeEventListener("resize", aoMudar);
       window.removeEventListener("scroll", pedir);
       el.style.position = "";

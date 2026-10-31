@@ -1,3 +1,5 @@
+import { aoMudarPausa, estaPausado } from "./pausa.js";
+
 /**
  * O campo de pontos de UMA secao, desenhado em LADRILHOS.
  *
@@ -28,6 +30,13 @@ const MAX_PONTOS = 2600; // teto de pontos por quadro
 const GRADE = 160; // distancia entre os fios da grade
 // O ponto da malha sobe ou desce ate 18 px (`onda * 9`, com |onda| <= 2) e tem 1,5 px de lado.
 const FOLGA = 24;
+// Toque (`opcoes.toque`): o desenho do campo e o que mais pesa no celular, entao ele anda a no maximo 30
+// quadros por segundo e congela enquanto o dedo rola. ponytail: teto fixo de 30 fps; calibrar so aqui (o FundoFluido usa a mesma).
+export const PASSO_TOQUE = 1000 / 30 - 4; // ms; a folga mantem um a cada dois quadros a 60 Hz
+const PARADA_TOQUE = 150; // ms sem `scroll` para o campo voltar a andar
+// Um ouvinte so para todos os campos (ha um por secao): o instante do ultimo `scroll`, no relogio do rAF.
+let ultimaRolagem = -Infinity;
+let ouvindoRolagem = false;
 
 /**
  * A `estelar` (vem do Social Vibe do app): campo estelar, pontos com
@@ -45,13 +54,22 @@ function semearEstrelas(n) {
 class Campo {
   /**
    * @param {HTMLElement} raiz onde os ladrilhos entram (sem caixa; os ladrilhos sao `absolute` e se posicionam pela secao)
-   * @param {{ variante: string, cores: { ponto: string, fio: string, acento: string }, reduzido: boolean }} opcoes
+   * @param {{ variante: string, cores: { ponto: string, fio: string, acento: string }, reduzido: boolean, toque: boolean }} opcoes
    */
-  constructor(raiz, { variante, cores, reduzido }) {
+  constructor(raiz, { variante, cores, reduzido, toque }) {
     this.raiz = raiz;
     this.estelar = variante === "estelar";
     this.cores = cores;
     this.reduzido = reduzido;
+    this.toque = toque;
+    if (toque && !ouvindoRolagem) {
+      ouvindoRolagem = true;
+      window.addEventListener("scroll", () => (ultimaRolagem = performance.now()), { passive: true });
+    }
+    // Toque: o tempo do quadro que o campo nao desenhou (congelado), descontado para a onda retomar sem salto de fase.
+    this.desconto = 0;
+    this.tAnterior = NaN; // o ultimo quadro do rAF visto pelo laco (pintado ou nao)
+    this.tPintado = -Infinity; // o ultimo quadro de fato pintado, para o teto de 30 fps
 
     this.largura = 0;
     this.altura = 0;
@@ -72,6 +90,29 @@ class Campo {
     // Pontos projetados do quadro (estelar), calculados UMA vez por quadro e nao por ladrilho.
     this.prep = null;
     this.tPrep = NaN;
+    // Cada ladrilho observado e recalculado pelo navegador a CADA quadro (52 canvases x 2 observadores,
+    // medido: 908 ms de 8.405 ms da thread principal ao rolar), mesmo o de uma secao a milhares de px da
+    // tela. Entao os ladrilhos so sao observados enquanto a secao esta perto (`secaoPerto`, ligado em ligarCampo).
+    this.porCanvas = new Map();
+    this.secaoPerto = false;
+    this.observaPerto = new IntersectionObserver(
+      (entradas) => {
+        for (const e of entradas) {
+          const lad = this.porCanvas.get(e.target);
+          if (lad) this.perto(lad, e.isIntersecting);
+        }
+      },
+      { rootMargin: "100% 0px" },
+    );
+    this.observaVisivel = reduzido ? null : new IntersectionObserver(
+      (entradas) => {
+        for (const e of entradas) {
+          const lad = this.porCanvas.get(e.target);
+          if (lad) this.visivel(lad, e.isIntersecting);
+        }
+      },
+      { rootMargin: toque ? "0px" : "120px 0px" },
+    );
   }
 
   /** O que depende da area da secao: densidade dos pontos e estrelas. */
@@ -101,24 +142,37 @@ class Campo {
       // Sem buffer ate ficar perto da tela (o padrao de um canvas e 300 x 150): 0 e o "sem buffer" de `perto(lad, false)`.
       canvas.width = 0;
       canvas.height = 0;
-      const lad = { canvas, ctx: null, y0: 0, h: 0, ativo: false, naTela: false, novo: true };
+      const lad = { canvas, ctx: null, y0: 0, ativo: false, naTela: false, novo: true };
       this.lad.push(lad);
       this.raiz.append(canvas);
-      this.aoCriar?.(lad);
+      this.porCanvas.set(canvas, lad);
+      if (this.secaoPerto) this.observar(lad);
     }
     while (this.lad.length > n) {
       const lad = this.lad.pop();
-      this.aoRemover?.(lad);
+      this.desobservar(lad);
+      this.porCanvas.delete(lad.canvas);
       lad.canvas.remove();
     }
     for (const [i, lad] of this.lad.entries()) {
       lad.y0 = i * LADRILHO;
       // Todo ladrilho tem a altura cheia, o ultimo tambem: a secao recorta (`overflow-clip`). Assim
       // uma secao que cresce ou encolhe (o acordeao da FAQ) nao realoca o buffer do ultimo a cada quadro.
-      lad.h = LADRILHO;
       lad.canvas.style.top = `${lad.y0}px`;
       lad.canvas.style.height = `${LADRILHO}px`;
     }
+  }
+
+  /** Observa o ladrilho nos dois observadores (so com a secao perto). */
+  observar(lad) {
+    this.observaPerto.observe(lad.canvas);
+    this.observaVisivel?.observe(lad.canvas);
+  }
+
+  /** Larga o ladrilho nos dois observadores. */
+  desobservar(lad) {
+    this.observaPerto.unobserve(lad.canvas);
+    this.observaVisivel?.unobserve(lad.canvas);
   }
 
   /** Aloca o buffer do ladrilho e poe a escala e o deslocamento (o desenho usa coordenadas da secao). */
@@ -127,7 +181,7 @@ class Campo {
     lad.ctx ??= lad.canvas.getContext("2d", { alpha: true });
     // Atribuir width/height LIMPA o canvas, mesmo com o valor igual: so mexe se o tamanho mudou.
     const largura = Math.round(this.largura * dpr);
-    const altura = Math.round(lad.h * dpr);
+    const altura = Math.round(LADRILHO * dpr);
     if (lad.canvas.width !== largura) lad.canvas.width = largura;
     if (lad.canvas.height !== altura) lad.canvas.height = altura;
     lad.ctx.setTransform(dpr, 0, 0, dpr, 0, -lad.y0 * dpr);
@@ -136,14 +190,14 @@ class Campo {
   /** Quadro de um ladrilho. A conta e a de sempre, so no que cai dentro dele. */
   pintarLadrilho(lad, t) {
     const { ctx, y0 } = lad;
-    const y1 = y0 + lad.h;
+    const y1 = y0 + LADRILHO;
     // Com DPR fracionario o buffer do ULTIMO ladrilho passa da secao em ate um pixel do dispositivo
     // (319 x 1,25 = 398,75, buffer de 399): o canvas inteiro de antes desenhava, e o ponto que cai nessa
     // ultima linha parcial aparecia. A poda dos pontos olha um pixel de css alem.
     const yMax = y1 + 1;
     const { largura, altura, espaco, colunas, linhas } = this;
     const { ponto: corPonto, fio: corFio, acento: corAcento } = this.cores;
-    ctx.clearRect(0, y0, largura, lad.h);
+    ctx.clearRect(0, y0, largura, LADRILHO);
 
     if (this.estelar) {
       this.preparar(t);
@@ -242,7 +296,16 @@ class Campo {
 
   laco = (t) => {
     if (!this.vivo) return;
-    this.pintar(t);
+    if (!this.toque) this.pintar(t);
+    else {
+      const dt = t - (this.tAnterior || t);
+      this.tAnterior = t;
+      if (t - ultimaRolagem < PARADA_TOQUE) this.desconto += dt;
+      else if (t - this.tPintado >= PASSO_TOQUE) {
+        this.tPintado = t;
+        this.pintar(t - this.desconto);
+      }
+    }
     this.quadro = requestAnimationFrame(this.laco);
   };
 
@@ -255,6 +318,7 @@ class Campo {
     const deve = !this.reduzido && !this.pausado && this.lad.some((lad) => lad.ativo && lad.naTela);
     if (deve && !this.vivo) {
       this.vivo = true;
+      this.tAnterior = NaN;
       this.quadro = requestAnimationFrame(this.laco);
     } else if (!deve && this.vivo) {
       this.vivo = false;
@@ -279,6 +343,9 @@ class Campo {
   }
 
   visivel(lad, sim) {
+    // Toque: o laco nao pinta durante a rolagem, e o ladrilho que entra foi pintado quando acordou, talvez segundos atras. Sem isto ele
+    // apareceria numa fase da onda diferente da dos vizinhos, com a emenda visivel.
+    if (this.toque && sim && !lad.naTela && lad.ativo) this.pintarLadrilho(lad, this.ultimoT);
     lad.naTela = sim;
     this.sincronizar();
   }
@@ -330,13 +397,11 @@ class Campo {
     }
   }
 
-  parar() {
+  soltar() {
     this.vivo = false;
     cancelAnimationFrame(this.quadro);
-  }
-
-  soltar() {
-    this.parar();
+    this.observaPerto.disconnect();
+    this.observaVisivel?.disconnect();
     for (const lad of this.lad) lad.canvas.remove();
     this.lad = [];
   }
@@ -346,66 +411,51 @@ class Campo {
  * Liga um campo a uma raiz: observa o tamanho, a proximidade e a pausa, e devolve a funcao que desfaz.
  * Cada ladrilho tem o proprio par de observadores (perto e na tela); a pagina so os usa.
  */
-export function ligarCampo(raiz, opcoes, { aoMudarPausa, estaPausado }) {
+export function ligarCampo(raiz, opcoes) {
   const campo = new Campo(raiz, opcoes);
-  const porCanvas = new Map();
-  let perto = null;
-  let visivel = null;
-
-  campo.aoCriar = (lad) => {
-    porCanvas.set(lad.canvas, lad);
-    perto?.observe(lad.canvas);
-    visivel?.observe(lad.canvas);
-  };
-  campo.aoRemover = (lad) => {
-    perto?.unobserve(lad.canvas);
-    visivel?.unobserve(lad.canvas);
-    porCanvas.delete(lad.canvas);
-  };
-
-  const comIO = typeof IntersectionObserver !== "undefined";
-  if (comIO) {
-    perto = new IntersectionObserver(
-      (entradas) => {
-        for (const e of entradas) {
-          const lad = porCanvas.get(e.target);
-          if (lad) campo.perto(lad, e.isIntersecting);
-        }
-      },
-      { rootMargin: "100% 0px" },
-    );
-    if (!opcoes.reduzido) {
-      visivel = new IntersectionObserver(
-        (entradas) => {
-          for (const e of entradas) {
-            const lad = porCanvas.get(e.target);
-            if (lad) campo.visivel(lad, e.isIntersecting);
-          }
-        },
-        { rootMargin: "120px 0px" },
-      );
-    }
-  }
 
   // O tamanho e o da SECAO (a raiz nao tem caixa: ver `CampoDePontos.jsx`), a caixa de padding, que e o
   // que o canvas `inset-0` de antes cobria. O `ResizeObserver` avisa na hora de observar e a cada mudanca
   // da borda (so o padding mudar tambem conta), e dentro dele o layout esta limpo.
   const pai = raiz.parentElement;
+  // A margem (150%) e MAIOR que a do `perto` (100%): quando a secao sai dela, o buffer de cada ladrilho
+  // ja foi liberado. `unobserve` nao avisa `false`, entao ele e dito aqui mesmo (sem efeito se ja foi).
+  const secao = new IntersectionObserver(
+    (entradas) => {
+      const sim = entradas[entradas.length - 1].isIntersecting;
+      if (sim === campo.secaoPerto) return;
+      campo.secaoPerto = sim;
+      for (const lad of campo.lad) {
+        if (sim) campo.observar(lad);
+        else {
+          campo.desobservar(lad);
+          campo.perto(lad, false);
+          campo.visivel(lad, false);
+        }
+      }
+    },
+    { rootMargin: "150% 0px" },
+  );
+  secao.observe(pai);
   const tamanho = new ResizeObserver(() => {
     campo.tamanho(pai.clientWidth, pai.clientHeight, Math.min(window.devicePixelRatio || 1, 2));
-    // Sem IntersectionObserver todo ladrilho vale (o comportamento de antes).
-    if (!comIO) for (const lad of campo.lad) campo.perto(lad, true);
   });
   tamanho.observe(pai, { box: "border-box" });
 
   campo.pausa(estaPausado());
-  const soltarPausa = comIO && !opcoes.reduzido ? aoMudarPausa((valor) => campo.pausa(valor)) : () => {};
+  const soltarPausa = !opcoes.reduzido ? aoMudarPausa((valor) => campo.pausa(valor)) : () => {};
 
   return () => {
-    perto?.disconnect();
-    visivel?.disconnect();
+    secao.disconnect();
     soltarPausa();
     tamanho.disconnect();
     campo.soltar();
   };
+}
+
+/** As cores do campo, lidas dos tokens do CSS. */
+export function coresDoCampo() {
+  const estilo = getComputedStyle(document.documentElement);
+  const cor = (nome, padrao) => estilo.getPropertyValue(nome).trim() || padrao;
+  return { ponto: cor("--bone", "#ededf0"), fio: cor("--line", "#2c2c33"), acento: cor("--acento", "#d2202c") };
 }

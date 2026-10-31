@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { aoMudarPausa, definirPausa, estaPausado } from "../motion/pausa.js";
+import { alvoDeTeclado } from "../ui.js";
 
 const semPausaNoServidor = () => false;
 
@@ -19,7 +20,7 @@ export function PausaMovimento() {
   return (
     <button
       type="button"
-      className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-10 focus:inline-flex focus:items-center focus:min-h-12 focus:px-4 focus:py-3 focus:bg-bone focus:text-void font-secundaria text-label uppercase cursor-pointer"
+      className={`${alvoDeTeclado} cursor-pointer`}
       aria-pressed={pausado}
       onClick={() => definirPausa(!pausado)}
     >

@@ -7,34 +7,23 @@ import { aoMudarPreferencia, curva, semMovimento } from "./tokens.js";
  * A secao so fornece o DOM, o numero de passos e a frase.
  */
 
-function topoEmFluxo(elemento) {
+/** Onde um elemento comeca no conteudo `ate` (offsetTop acumulado: nao muda com o `transform` do reveal). Sem `ate`, sobe ate o topo. */
+export const topoEm = (el, ate) => {
   let topo = 0;
-  for (let no = elemento; no; no = no.offsetParent) topo += no.offsetTop;
+  for (let no = el; no && no !== ate; no = no.offsetParent) topo += no.offsetTop;
   return topo;
-}
+};
 
 /**
  * Os marcos de leitura de cada card, relativos ao trilho. So mudam quando o layout do trilho muda,
  * entao saem do quadro de rolagem: sao medidos uma vez e refeitos a cada mudanca de tamanho.
  */
 function medirMarcos(trilho) {
-  const origem = topoEmFluxo(trilho);
+  const origem = topoEm(trilho);
   const marcos = Array.from(trilho.children, (card) => ({
-    topo: topoEmFluxo(card) - origem,
-    semana: Number(card.dataset.semana),
+    topo: topoEm(card) - origem,
+    passo: Number(card.dataset.passo),
   }));
-  // Se a grade alinhar cards, o grupo ocupa o seu trecho natural de leitura.
-  // A ordem editorial permanece explícita, sem transformar colunas em novas etapas.
-  for (let inicio = 0; inicio < marcos.length;) {
-    let fim = inicio + 1;
-    while (fim < marcos.length && marcos[fim].topo === marcos[inicio].topo) fim += 1;
-    const topo = marcos[inicio].topo;
-    const limite = marcos[fim]?.topo ?? trilho.offsetHeight;
-    for (let indice = inicio + 1; indice < fim; indice += 1) {
-      marcos[indice].topo = topo + (limite - topo) * (indice - inicio) / (fim - inicio);
-    }
-    inicio = fim;
-  }
   return { marcos, alto: trilho.offsetHeight };
 }
 
@@ -45,7 +34,7 @@ function passoNoTrilho(posicao, marcos, passos) {
     const fim = marcos[indice + 1];
     if (posicao >= fim.topo) continue;
     const proporcao = (posicao - inicio.topo) / (fim.topo - inicio.topo);
-    return Math.floor(inicio.semana + proporcao * (fim.semana - inicio.semana));
+    return Math.floor(inicio.passo + proporcao * (fim.passo - inicio.passo));
   }
   return passos;
 }
@@ -58,10 +47,10 @@ function passoNoTrilho(posicao, marcos, passos) {
  */
 const EXPO_IN_OUT = "cubic-bezier(0.76, 0, 0.24, 1)";
 
-function engolirRegua(semana, frase) {
-  const regua = semana.parentElement;
+function engolirRegua(passo, frase) {
+  const regua = passo.parentElement;
   const o = regua.getBoundingClientRect();
-  const r = semana.getBoundingClientRect();
+  const r = passo.getBoundingClientRect();
   // A origem e a marca de 6px do ultimo passo, em coordenadas da propria regua.
   const esq = r.left - o.left;
   const dir = o.right - r.right;
@@ -119,7 +108,7 @@ export function useReguaDoTrilho(raiz, trilho, passos, frase) {
   useEffect(() => {
     const no = trilho.current;
     if (!no) return;
-    const semanas = Array.from(raiz.current?.querySelectorAll(".regua12__semana") ?? []);
+    const itens = Array.from(raiz.current?.querySelectorAll(".regua__passo") ?? []);
     const documento = document.documentElement;
     const viewport = window.visualViewport;
     let ativo = true;
@@ -135,9 +124,9 @@ export function useReguaDoTrilho(raiz, trilho, passos, frase) {
       const estado = `${acesas}:${atual}`;
       if (estado === ultimo) return;
       ultimo = estado;
-      for (const [indice, semana] of semanas.entries()) {
-        semana.toggleAttribute("data-acesa", indice < acesas);
-        semana.toggleAttribute("data-atual", indice === atual);
+      for (const [indice, passo] of itens.entries()) {
+        passo.toggleAttribute("data-acesa", indice < acesas);
+        passo.toggleAttribute("data-atual", indice === atual);
       }
     };
     const atualizar = () => {
@@ -148,21 +137,21 @@ export function useReguaDoTrilho(raiz, trilho, passos, frase) {
         documento.classList.contains("movimento-falhou");
       const caixa = no.getBoundingClientRect();
       if (leituraCompleta || caixa.height <= 0) {
-        escrever(semanas.length, -1);
+        escrever(itens.length, -1);
         anterior = passos;
         return;
       }
-      const altura = Math.min(window.innerHeight, viewport?.height ?? window.innerHeight);
-      const linhaDeLeitura = (viewport?.offsetTop ?? 0) + altura / 2;
+      const altura = Math.min(window.innerHeight, viewport.height);
+      const linhaDeLeitura = viewport.offsetTop + altura / 2;
       medidos ??= medirMarcos(no);
       const { marcos, alto } = medidos;
       // O caminho está lido quando o fim do último card entra na tela, antes do CTA.
-      const final = { topo: Math.max(marcos.at(-1).topo, alto - altura / 2), semana: passos };
+      const final = { topo: Math.max(marcos.at(-1).topo, alto - altura / 2), passo: passos };
       // A posição acompanha a leitura dos cards, um passo por card.
       const acesas = passoNoTrilho(linhaDeLeitura - caixa.top, [...marcos, final], passos);
       escrever(acesas, acesas - 1);
       if (anterior !== null && anterior < passos && acesas >= passos && !limparEngolir) {
-        limparEngolir = engolirRegua(semanas.at(-1), frase);
+        limparEngolir = engolirRegua(itens.at(-1), frase);
       }
       anterior = acesas;
     };
@@ -173,34 +162,32 @@ export function useReguaDoTrilho(raiz, trilho, passos, frase) {
       medidos = null;
       agendar();
     };
-    const tamanho = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(remedir);
-    tamanho?.observe(no);
-    for (const card of no.children) tamanho?.observe(card);
-    const movimento = typeof MutationObserver === "undefined" ? null : new MutationObserver(remedir);
-    movimento?.observe(documento, { attributes: true, attributeFilter: ["class", "data-pausado"] });
+    const tamanho = new ResizeObserver(remedir);
+    tamanho.observe(no);
+    for (const card of no.children) tamanho.observe(card);
+    const movimento = new MutationObserver(remedir);
+    movimento.observe(documento, { attributes: true, attributeFilter: ["class", "data-pausado"] });
     window.addEventListener("scroll", agendar, { passive: true });
     window.addEventListener("resize", remedir);
-    window.addEventListener("orientationchange", remedir);
     window.addEventListener("pageshow", remedir);
-    viewport?.addEventListener("resize", remedir);
-    viewport?.addEventListener("scroll", agendar, { passive: true });
+    viewport.addEventListener("resize", remedir);
+    viewport.addEventListener("scroll", agendar, { passive: true });
     const soltarPreferencia = aoMudarPreferencia(remedir);
-    document.fonts?.ready.then(remedir);
+    document.fonts.ready.then(remedir);
     atualizar();
     return () => {
       ativo = false;
       cancelAnimationFrame(quadro);
-      tamanho?.disconnect();
-      movimento?.disconnect();
+      tamanho.disconnect();
+      movimento.disconnect();
       window.removeEventListener("scroll", agendar);
       window.removeEventListener("resize", remedir);
-      window.removeEventListener("orientationchange", remedir);
       window.removeEventListener("pageshow", remedir);
-      viewport?.removeEventListener("resize", remedir);
-      viewport?.removeEventListener("scroll", agendar);
+      viewport.removeEventListener("resize", remedir);
+      viewport.removeEventListener("scroll", agendar);
       soltarPreferencia();
       limparEngolir?.();
-      escrever(semanas.length, -1);
+      escrever(itens.length, -1);
     };
   }, [raiz, trilho, passos, frase]);
 }

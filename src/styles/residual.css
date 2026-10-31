@@ -5,8 +5,7 @@
    coisa, que o Tailwind nao expressa em classe:
 
      1. Custom properties com um SVG ou uma curva dentro (serrilha, grao, expo).
-     2. Regras globais de base: a correcao do acento no Cartaz, o foco, a selecao, o
-        estado de JavaScript (`[data-revelar]`) e a pausa.
+     2. Regras globais de base: o foco, a selecao e a pausa.
      3. Keyframes: as pontas soltas, a cortina de introducao e a entrada do heroi.
    ========================================================================== */
 
@@ -50,16 +49,6 @@ html:has(body.com-doca) {
 }
 
 @layer base {
-  /* ---- 2. Correcao de token (RNF-L36) -------------------------------------
-     `tokens/cor.css` declara `--acento: var(--rubro)` em `:root` e o bloco
-     Cartaz redefine `--rubro` sem re-aliasar `--acento`. Substituicao de
-     custom property resolve onde foi declarada, entao o acento descia preso no
-     Rubro do Sigilo. A correcao de verdade e na fundacao; a regra sai quando
-     ela chegar. */
-  [data-theme="cartaz"] {
-    --acento: var(--rubro);
-  }
-
   /* ---- 3. Foco visivel em 100% dos interativos (RNF-L11 / RNF-G04) ------- */
   :focus-visible {
     outline: 2px solid var(--bone);
@@ -91,13 +80,16 @@ html:has(body.com-doca) {
 }
 
 /* ---- 4c. Fora da tela, as animacoes infinitas param ----------------------------
-   `components/FundoCapa.jsx` poe `data-fora` na capa (dobra ou fechamento) quando ela sai da tela, e
-   as pontas soltas e a seta da dobra congelam onde estao: o Chrome reavalia o estilo de cada animacao
+   `components/FundoCapa.jsx` poe `data-fora` na secao (dobra, pilhas de valor, video) quando ela sai da tela, e
+   as pontas soltas, a seta, o brilho do titulo, do conector e do preco e o anel do play congelam onde estao: o Chrome reavalia o estilo de cada animacao
    de CSS a cada quadro em que a thread principal desenha qualquer coisa, e quem ninguem ve nao precisa
    disso. `!important` pelo mesmo motivo da pausa acima: `animation` e atalho, e `animate-*` mora numa
    camada mais forte que a de base. */
 @layer base {
-  [data-fora] :is(.ponta, .animate-seta) {
+  [data-fora] :is(.ponta, .animate-seta, .cor-viva [data-line], .brilho-varrido, .aberracao) {
+    animation-play-state: paused !important;
+  }
+  [data-fora] button::before {
     animation-play-state: paused !important;
   }
 }
@@ -135,8 +127,7 @@ html:has(body.com-doca) {
 @theme {
   --animate-anel: anel 2.8s ease-out infinite;
   /* O corte do video: um circulo que nasce no centro e cobre a secao (75% = a meia diagonal, com folga). */
-  --animate-empurra: empurra 1600ms linear both; /* a camera empurra devagar numa capa */
-  /* Os takes finais do video (sections/Takes.jsx). */
+  /* Os takes finais do video (sections/video/Takes.jsx). */
   --animate-placa: placa 320ms var(--ease-expo) both; /* uma anilha cai na barra */
   --animate-bate: bate 280ms var(--ease-expo) both;
   --animate-cresce: cresce 1000ms var(--ease-expo) both;
@@ -148,12 +139,8 @@ html:has(body.com-doca) {
   --animate-glitch-b: glitch-b 130ms steps(4) both;
   --animate-batida: batida 260ms var(--ease-expo) both; /* a logo a cada quadro */
   --animate-corte: corte 450ms var(--ease-expo) both;
-  /* A letra da capa digitada: some ate o atraso (inline) e aparece de uma vez. */
-  --animate-digitar: digitar 1ms steps(1) both;
   /* O triangulo do play vira um L enorme (Big Shoulders): 6 pontos nos dois, e o clip-path interpola ponto a ponto. */
   --animate-letra: letra 800ms var(--ease-expo) 1500ms both;
-  /* O "ithium" vertical aparece sobre a perna do L, subindo (a palavra le de baixo para cima). */
-  --animate-ithium: ithium 600ms var(--ease-expo) 750ms both;
   --animate-ithium-letra: ithium 380ms var(--ease-expo) both; /* uma letra do "ithium"; o atraso de cada uma vai inline */
   /* A onda que sai do play ao clique. */
   --animate-onda: onda 750ms var(--ease-expo) both;
@@ -168,8 +155,6 @@ html:has(body.com-doca) {
     from { opacity: 0; clip-path: inset(0 0 100% 0); }
     to { opacity: 1; clip-path: inset(0); }
   }
-  @keyframes digitar { from { opacity: 0; } }
-  @keyframes empurra { to { transform: scale(1.045); } }
   @keyframes placa { from { opacity: 0; transform: translateY(-45%) scale(1.25); } }
   @keyframes bate { from { opacity: 0; transform: scale(1.45); } }
   @keyframes cresce { from { transform: scale(0.12); } }
@@ -292,9 +277,8 @@ html.sem-entrada :is(.animate-revelar, .animate-subir, .animate-tracar, .animate
   .brilho-varrido { animation: none; background: none; color: var(--acento); }
 }
 
-/* A cor de realce do brilho varrido: branco puro no escuro, o osso do tema no cartaz. */
+/* A cor de realce do brilho varrido: branco puro. */
 .brilho-varrido { --cor-realce: var(--bone-pure); }
-[data-theme="cartaz"] .brilho-varrido { --cor-realce: var(--bone); }
 
 /* ---- 10. A aberracao do preco -------------------------------------------------
    Duas copias em acento se abrem para os lados do numero e voltam, em curva suave,
@@ -304,7 +288,6 @@ html.sem-entrada :is(.animate-revelar, .animate-subir, .animate-tracar, .animate
   50% { text-shadow: -.04em 0 0 var(--acento), .04em 0 0 color-mix(in srgb, var(--acento) 45%, transparent); }
 }
 .aberracao { color: var(--bone-pure); animation: aberracao 4.5s ease-in-out infinite; }
-[data-theme="cartaz"] .aberracao { color: var(--bone); }
 @media (prefers-reduced-motion: reduce) {
   .aberracao { animation: none; }
 }

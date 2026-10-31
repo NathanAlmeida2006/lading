@@ -2,7 +2,7 @@
  * Instrumentacao: parametros, consentimento, pixel e alcance das secoes.
  *
  * Regra que organiza o arquivo inteiro (RF-L29): a landing reporta INTENCAO,
- * a Ticto reporta o FATO. `Purchase` nao nasce aqui. Pixel que dispara compra
+ * a Hotmart reporta o FATO. `Purchase` nao nasce aqui. Pixel que dispara compra
  * no clique conta venda que pode nao ter acontecido, e o ledger passa a
  * registrar receita que o extrato desmente.
  *
@@ -32,7 +32,6 @@ const VALOR_PERMITIDO = /^[\w.~:+%-]{1,100}$/;
  * de terceiro pode levar a query junto.
  */
 export function capturarParametros() {
-  if (typeof window === "undefined") return {};
   const daUrl = {};
   const busca = new URLSearchParams(window.location.search);
   for (const chave of RASTREIO) {
@@ -92,21 +91,15 @@ export function urlCheckout(params = {}) {
     const valor = params?.[chave];
     if (typeof valor === "string" && VALOR_PERMITIDO.test(valor)) permitidos[chave] = valor;
   }
-  const extras = new URLSearchParams();
   const acrescentar = (chave, valor) => {
-    if (!base.searchParams.has(chave) && !extras.has(chave)) extras.set(chave, valor);
+    if (!base.searchParams.has(chave)) base.searchParams.append(chave, valor);
   };
   for (const [chave, valor] of Object.entries(permitidos)) acrescentar(chave, valor);
   const origem = permitidos.utm_content ?? permitidos.utm_campaign ?? permitidos.src;
   if (origem && parametroConfirmado === true && typeof parametroRastreio === "string" && parametroRastreio.trim()) {
     acrescentar(parametroRastreio.trim(), origem);
   }
-  const sufixo = extras.toString();
-  if (!sufixo) return url;
-  const corte = url.indexOf("#");
-  const semHash = corte < 0 ? url : url.slice(0, corte);
-  const juncao = !semHash.includes("?") ? "?" : /[?&]$/.test(semHash) ? "" : "&";
-  return semHash + juncao + sufixo + (corte < 0 ? "" : url.slice(corte));
+  return base.href;
 }
 
 /* -------------------------------------------------------------------------
@@ -118,7 +111,7 @@ const assinantes = new Set();
 
 /** true | false | null. Valor estavel entre chamadas: serve de snapshot a `useSyncExternalStore`. */
 export function lerConsentimento() {
-  if (consentimento === undefined && typeof window !== "undefined") {
+  if (consentimento === undefined) {
     const guardado = ler(CHAVE_CONSENTIMENTO);
     consentimento = typeof guardado === "boolean" ? guardado : null;
   }
@@ -164,7 +157,7 @@ const idDoPixel = () => String(config.pixel.id ?? "").trim();
  * script injetado por este modulo. Nada de terceiro acontece fora dela.
  */
 function elegivel(paraEnvio = true) {
-  if (typeof window === "undefined" || lerConsentimento() !== true || !idDoPixel()) return false;
+  if (lerConsentimento() !== true || !idDoPixel()) return false;
   return !paraEnvio || (pixelInjetado && !pixelFalhou && typeof window.fbq === "function");
 }
 
@@ -239,14 +232,13 @@ export function registrarInicioCheckout(posicaoCTA) {
  * A impressao so entra em `enviadas` depois de o evento ter saido de fato.
  */
 export function iniciarMensuracao(alcance = {}) {
-  if (typeof window === "undefined") return () => {};
   let observador;
 
   function sincronizar() {
     observador?.disconnect();
     observador = undefined;
     carregarPixel();
-    if (!elegivel() || !("IntersectionObserver" in window)) return;
+    if (!elegivel()) return;
     observador = new IntersectionObserver(
       (entradas) => {
         for (const { isIntersecting, target } of entradas) {

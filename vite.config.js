@@ -12,9 +12,9 @@ export default defineConfig({
   // pre-renderizado na virada do ano e quebraria a hidratacao.
   define: { __ANO__: JSON.stringify(new Date().getFullYear()) },
   build: {
-    // O piso real ja e o do Tailwind v4 (Safari 16.4, Chrome 111, Firefox 128): abaixo dele o esbuild
-    // so transpilava a toa. O CSS segue minificado como antes (`cssTarget`), byte a byte.
-    target: ["chrome111", "edge111", "firefox128", "safari16.4"],
+    // O piso e o que o `@scope` das telas do video exige (Chrome 118, Safari 17.4, Firefox 146), e abaixo
+    // dele o esbuild so transpilaria a toa. O CSS segue minificado como antes (`cssTarget`), byte a byte.
+    target: ["chrome118", "edge118", "firefox146", "safari17.4"],
     cssTarget: "es2020",
     assetsInlineLimit: 2048,
     // `scripts/check-size.mjs` ja mede o gzip contra o teto do RNF-L04, e a

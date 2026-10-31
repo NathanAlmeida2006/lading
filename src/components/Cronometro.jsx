@@ -86,32 +86,28 @@ function vigiar(elemento) {
     perto += agora ? 1 : -1;
     reagendar();
   };
-  // Sem IntersectionObserver, os milesimos correm sempre (o comportamento de antes).
-  const observador = "IntersectionObserver" in window
-    ? new IntersectionObserver(([e]) => mudar(e.isIntersecting), { rootMargin: "100% 0px" })
-    : null;
-  if (observador) observador.observe(elemento);
-  else mudar(true);
+  const observador = new IntersectionObserver(([e]) => mudar(e.isIntersecting), { rootMargin: "100% 0px" });
+  observador.observe(elemento);
   return () => {
-    observador?.disconnect();
+    observador.disconnect();
     mudar(false);
   };
 }
 
 /** Restante em ms; `DURACAO` no servidor e na hidratacao, o valor real logo depois. */
-function useRestante(arredondar) {
+function useRestante() {
   const [restante, definirRestante] = useState(DURACAO);
   useEffect(
-    // Arredonda para cima ao segundo: o estado so muda a cada segundo, no mesmo instante da `OfertaLimitada`.
-    () => assinar((ms) => definirRestante(arredondar ? Math.ceil(ms / 1000) * 1000 : ms)),
-    [arredondar],
+    // Arredonda para cima ao segundo: o estado so muda a cada segundo.
+    () => assinar((ms) => definirRestante(Math.ceil(ms / 1000) * 1000)),
+    [],
   );
   return restante;
 }
 
 /** Contagem regressiva de 24 h; zerada, mostra o aviso de expiracao. Renderiza "24:00:00" no servidor. */
 export function Cronometro({ classe = "text-body text-center" }) {
-  const restante = useRestante(true);
+  const restante = useRestante();
 
   if (restante <= 0) {
     return <p className="font-secundaria text-body uppercase text-center text-acento" role="status">PROMOÇÃO IRÁ EXPIRAR LOGO</p>;
@@ -125,27 +121,28 @@ export function Cronometro({ classe = "text-body text-center" }) {
   );
 }
 
+const milesimos = (restante) => {
+  const t = Math.ceil(restante / 1000);
+  return `${Math.floor(t / 86400)}d ${Math.floor(t / 3600) % 24}h ${Math.floor(t / 60) % 60}min ${doisDigitos(t % 60)}s ${String(restante % 1000).padStart(3, "0")}ms`;
+};
 /** Oferta limitada: mesmo fim do `Cronometro`, em "0d 23h 59min 59s 999ms" com os milesimos correndo. */
 export function OfertaLimitada() {
-  const restante = useRestante(false);
   const raiz = useRef(null);
-  const ativa = restante > 0;
+  const texto = useRef(null);
+  const [ativa, definirAtiva] = useState(true);
+  useEffect(() => assinar((ms) => {
+    if (ms <= 0) definirAtiva(false);
+    else if (texto.current) texto.current.firstChild.nodeValue = milesimos(ms);
+  }), []);
   useEffect(() => (ativa ? vigiar(raiz.current) : undefined), [ativa]);
-
-  if (!ativa) return null; // o `Cronometro` do recibo ja avisa a expiracao
-  const t = Math.ceil(restante / 1000); // mesmos segundos do `Cronometro` (arredonda para cima)
-  const d = Math.floor(t / 86400);
-  const h = Math.floor(t / 3600) % 24;
-  const min = Math.floor(t / 60) % 60;
-  const s = t % 60;
-  const ms = String(restante % 1000).padStart(3, "0");
+  if (!ativa) return null;
   return (
     <div className="mt-10 text-center" ref={raiz}>
       <p className="font-secundaria font-extrabold uppercase leading-none whitespace-nowrap text-acento text-[length:clamp(28px,9vw,56px)]">
         Oferta limitada
       </p>
-      <p className="mt-3 font-terciaria font-bold text-bone-pure tabular-nums text-[length:clamp(18px,5.5vw,30px)]" aria-hidden="true">
-        {d}d {h}h {min}min {doisDigitos(s)}s {ms}ms
+      <p ref={texto} className="mt-3 font-terciaria font-bold text-bone-pure tabular-nums text-[length:clamp(18px,5.5vw,30px)]" aria-hidden="true">
+        {milesimos(DURACAO)}
       </p>
     </div>
   );

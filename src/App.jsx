@@ -17,15 +17,15 @@ import { PilhaDeValor } from "./sections/PilhaDeValor.jsx";
 import { Espelho } from "./sections/Espelho.jsx";
 import { Leva } from "./sections/Leva.jsx";
 import { Semanas } from "./sections/Semanas.jsx";
-import { Video } from "./sections/Video.jsx";
-import { Amostra } from "./sections/Amostra.jsx";
+import { Video } from "./sections/video/Video.jsx";
 import { Objecoes } from "./sections/Objecoes.jsx";
 import { Fechamento } from "./sections/Fechamento.jsx";
 import { RodapeLegal } from "./sections/RodapeLegal.jsx";
 
 import { iniciarMensuracao } from "./instrumentacao.js";
 import { garantirVisibilidade, ligarLenis, useMovimento } from "./motion/index.js";
-import { alcancePorId, idsDoIndice, secoesPorId } from "./secoes.js";
+import { alcancePorId, secoesPorId } from "./secoes.js";
+import { alvoDeTeclado } from "./ui.js";
 
 /** O registro em secoes.js fixa ids, etapas e presença; a árvore preserva RF-L08. */
 export function App() {
@@ -48,7 +48,7 @@ export function App() {
 
       {/* Primeiro alvo do teclado: fora da tela ate receber foco. */}
       <a
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-10 focus:inline-flex focus:items-center focus:min-h-12 focus:px-4 focus:py-3 focus:bg-bone focus:text-void underline font-secundaria text-label uppercase"
+        className={`${alvoDeTeclado} underline`}
         href="#conteudo"
       >
         Pular para o conteúdo
@@ -62,8 +62,8 @@ export function App() {
 
       <main id="conteudo">
         <Dobra />
-        {/* Cortinas (`useCortina`): a secao de cima fica pinada e a de baixo sobe por cima. Cada par
-            vive num conteiner proprio, onde o pino termina com a de cima toda coberta. */}
+        {/* A cortina pina o Manifesto, e este conteiner define ate onde o pino vale: a secao de
+            baixo sobe por cima, e o pino termina com a de cima toda coberta. */}
         <div>
           <Manifesto />
           <Video />
@@ -72,17 +72,14 @@ export function App() {
         </div>
         <Leva />
         {secoesPorId.mapa.presente && <Semanas />}
-        <div>
-          {secoesPorId.amostra.presente && <Amostra />}
-          {/* A oferta e a mesma pilha de valor, com a ancora `#oferta` e a posicao `oferta` do CTA. */}
-          <PilhaDeValor id="oferta" posicao="oferta" />
-        </div>
+        {/* A oferta e a mesma pilha de valor, com a ancora `#oferta` e a posicao `oferta` do CTA. */}
+        <PilhaDeValor id="oferta" posicao="oferta" />
         <Objecoes />
         <Fechamento />
       </main>
 
       <RodapeLegal />
-      <IndiceFixo ids={idsDoIndice} />
+      <IndiceFixo />
       <Doca />
     </>
   );

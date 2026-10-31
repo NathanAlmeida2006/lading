@@ -9,7 +9,6 @@
 import { readFile, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { validarCondicaoOferta } from "../src/oferta.js";
 import { emailReal, textoReal as texto, urlDocumento } from "../src/validacao.js";
 
 const raiz = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -95,15 +94,7 @@ for (const [indice, depoimento] of config.depoimentos.entries()) {
     afirmacao(`depoimentos[${indice}].${campo}`, texto(depoimento[campo]));
   afirmacao(`depoimentos[${indice}].aprovado`, depoimento.aprovado === true, "relato ou identificação sem aprovação");
 }
-const condicao = config.oferta.condicaoOferta;
 afirmacao("oferta.disponivel", typeof config.oferta.disponivel === "boolean", "disponibilidade explícita da oferta-base obrigatória");
-const validacaoCondicao = validarCondicaoOferta(condicao, {
-  checkout: config.checkout,
-  referenciaComercial: config.oferta.referenciaComercial,
-  agora: Date.now(),
-  publicacao: true,
-});
-for (const erro of validacaoCondicao.erros) falta("oferta.condicaoOferta", erro);
 
 if (faltam.length) {
   const aviso = `prerender  ${faltam.length} pendência(s) de publicação:\n  - ${faltam.join("\n  - ")}`;

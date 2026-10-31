@@ -56,3 +56,45 @@ export const palavra =
  * com `[data-line]` e o recorte (`overflow: clip`) comeria o `g` e a cedilha sem esta folga.
  */
 export const mascara = "[&_[data-line]]:pb-[0.08em]";
+
+/** Doze colunas iguais a partir de 1024px, com o vao horizontal da escala lg. */
+export const grade12 = "lg:grid lg:grid-cols-[repeat(12,1fr)] lg:gap-x-8";
+
+/** Trecho em destaque dentro de um texto corrido. */
+export const destaque = "text-bone font-bold";
+
+/** Parte comum do link de pular e do botao de pausa: fora da tela ate receber foco. */
+export const alvoDeTeclado =
+  "sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-10 focus:inline-flex focus:items-center " +
+  "focus:min-h-12 focus:px-4 focus:py-3 focus:bg-bone focus:text-void font-secundaria text-label uppercase";
+
+/** Link de cada secao na lista do menu em tela cheia (Menu.jsx). */
+export const linkDoMenu =
+  "flex items-baseline gap-4 py-[clamp(6px,1.5svh,18px)] text-void font-secundaria " +
+  "text-[length:clamp(2.5rem,4.5vw,3.5rem)] leading-none tracking-[0.02em] font-extrabold uppercase " +
+  "transition-transform duration-300 ease-(--ease-expo) hover:translate-x-4 focus-visible:translate-x-4 " +
+  "[&:hover_.menu-nome]:text-transparent [&:hover_.menu-nome]:[-webkit-text-stroke:1.5px_var(--void)] " +
+  "[&:focus-visible_.menu-nome]:text-transparent [&:focus-visible_.menu-nome]:[-webkit-text-stroke:1.5px_var(--void)]";
+
+/** A barra fixa de venda na base da pagina (Doca.jsx). */
+export const barraDaDoca =
+  "doca hidden js:flex fixed inset-x-0 bottom-0 z-15 flex-wrap items-center justify-between gap-3 " +
+  "pl-[max(--spacing(4),env(safe-area-inset-left))] pr-[max(--spacing(4),env(safe-area-inset-right))] " +
+  "pt-3 pb-[max(--spacing(3),env(safe-area-inset-bottom))] bg-surface-1 text-bone border-t border-line-strong " +
+  "translate-y-full opacity-0 transition-[translate,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] " +
+  "[.com-consentimento_&]:hidden data-ativa:translate-y-0 data-ativa:opacity-100";
+
+/** O botao de play da secao de video (Video.jsx). */
+export const botaoDoPlay =
+  "group relative [--u:min(1svh,1.7vw)] grid place-items-center size-40 lg:size-64 rounded-full bg-acento " +
+  "before:content-[''] before:absolute before:inset-0 before:rounded-full before:border-2 before:border-acento " +
+  "motion-safe:before:animate-anel text-void transition-transform duration-(--motion-fast) hover:scale-105 " +
+  "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bone " +
+  "data-tocando:before:hidden data-tocando:pointer-events-none z-3";
+
+/** Cada pergunta da lista de duvidas, em forma de acordeao (PerguntasFrequentes.jsx). */
+export const itemDaFaq =
+  "group/pergunta relative isolate min-w-0 border-b border-line-strong first:border-t data-aberto:text-void " +
+  "transition-colors duration-700 ease-(--ease-expo) before:content-[''] before:absolute before:inset-y-0 " +
+  "before:-inset-x-4 before:-z-10 before:bg-acento before:opacity-0 data-aberto:before:opacity-100 " +
+  "before:transition-opacity before:duration-700 before:ease-(--ease-expo)";

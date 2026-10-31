@@ -7,7 +7,7 @@
  * sao texto, entao o leitor de tela os le como pausa, que e o que sao.
  *
  * `como` troca a tag sem trocar o desenho: o rotulo e o unico titulo de uma secao
- * (manifesto, prova) ou de um bloco (depois do Pix), e titulo precisa ser titulo.
+ * (o manifesto), e titulo precisa ser titulo.
  *
  * `margem` existe porque duas utilitarias de margem na mesma classe nao tem
  * ordem garantida: quem precisa de outra margem a passa aqui, em vez de somar.

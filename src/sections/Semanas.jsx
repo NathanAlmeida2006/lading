@@ -6,7 +6,7 @@ import { Rotulo } from "../components/Rotulo.jsx";
 import { conteudo } from "../conteudo.js";
 import { revelar, revelarEmCascata, subirLinhas, useMovimento } from "../motion/index.js";
 import { useReguaDoTrilho } from "../motion/regua.js";
-import { bloco, camada, envelope, linha } from "../ui.js";
+import { bloco, camada, envelope, grade12, linha } from "../ui.js";
 
 /**
  * O mapa do caminho, na forma da secao "Lenis runs the web" do lenis.dev.
@@ -17,25 +17,24 @@ import { bloco, camada, envelope, linha } from "../ui.js";
  * ziguezague vertical: nenhum card alinha com o vizinho. Fecha com a grade de
  * numeros e o CTA.
  *
- * A capa de cada card e um numero grande, o analogo do preview de video do
- * showcase: um numero por card, um card por item de `conteudo.mapa.estados`.
+ * Um card por item de `conteudo.mapa.estados`: etiqueta, nome, texto e imagem.
  *
- * A regua acende e apaga com a posicao da pagina (RF-L11b): um passo por card,
- * e nao as doze semanas do protocolo. O trilho em fluxo mede os cards; a regua
- * sticky apenas exibe. Sob movimento reduzido ela nasce inteira acesa, porque
- * informa o caminho e informacao nao depende de animacao.
+ * A regua acende e apaga com a posicao da pagina (RF-L11b): um passo por card.
+ * O trilho em fluxo mede os cards; a regua fixa apenas exibe. Sob movimento
+ * reduzido ela nasce inteira acesa, porque informa o caminho e informacao nao
+ * depende de animacao.
  */
 const ESTADOS = conteudo.mapa.estados;
-// Passos da regua (um por card). O nome e o das classes `regua12__semana`, de quando eram doze semanas.
-const SEMANAS = ESTADOS.length;
+// Um passo da regua por card.
+const PASSOS = ESTADOS.length;
 const LINHAS = conteudo.mapa.linhas;
 
 /**
- * Uma semana da regua: o ponto (::before) e o numero (::after, de um contador CSS).
- * Cor nunca sozinha (RNF-L14): acesa, a semana muda de PREENCHIMENTO e o numero de peso.
+ * Um passo da regua: o ponto (::before) e o numero (::after, de um contador CSS).
+ * Cor nunca sozinha (RNF-L14): aceso, o passo muda de PREENCHIMENTO e o numero de peso.
  */
-const SEMANA =
-  "regua12__semana [counter-increment:semana] flex flex-col gap-2 " +
+const PASSO =
+  "regua__passo [counter-increment:semana] flex flex-col gap-2 " +
   "before:block before:h-1.5 before:bg-transparent before:border before:border-line-strong " +
   "before:transition-[background,border-color] before:duration-(--motion-fast) before:ease-(--ease-corte-2) " +
   "data-acesa:before:bg-acento data-acesa:before:border-acento motion-reduce:before:bg-acento motion-reduce:before:border-acento " +
@@ -50,11 +49,13 @@ const SEMANA =
  * composicao. A posicao sai do indice, e nao de `nth-child`.
  */
 const DESCE = ["", "lg:mt-24", "lg:mt-48"];
+// Largura real da imagem: o card (p-4, borda de 1px) menos 34; no lg e 1/3 da coluna (gap de 32), abaixo dele a coluna toda do envelope (cap de 720).
+const SIZES = "(min-width: 1440px) 382px, (min-width: 1024px) 286px, (min-width: 720px) 654px, calc(100vw - 66px)";
 
 export function Semanas() {
   const raiz = useRef(null);
   const trilho = useRef(null);
-  useReguaDoTrilho(raiz, trilho, SEMANAS, conteudo.mapa.frase);
+  useReguaDoTrilho(raiz, trilho, PASSOS, conteudo.mapa.frase);
 
   useMovimento(() => {
     const no = raiz.current;
@@ -71,7 +72,6 @@ export function Semanas() {
     // reversas fixam para movimento em interacao direta. 520 mais 60 poe o
     // fim em 640 ms.
     subirLinhas(no.querySelectorAll(".semanas__titulo .linha__texto"), {
-      pai: no.querySelector(".semanas__titulo"),
       tempo: 520,
       intervalo: 60,
     });
@@ -87,7 +87,7 @@ export function Semanas() {
         <Rotulo>as próximas doze semanas</Rotulo>
 
         {/* O fio a esquerda do titulo: 2px em acento, da altura do bloco de linhas. */}
-        <div className="relative mt-6 pl-6 lg:pl-8 lg:grid lg:grid-cols-[repeat(12,1fr)] lg:gap-x-8 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-acento">
+        <div className={`relative mt-6 pl-6 lg:pl-8 ${grade12} before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-acento`}>
           {/* Escala PROPRIA, menor que a dos paineis: o teto e o que faz a linha mais longa caber
               na coluna, medido. O recorte de `.linha` e so vertical, entao uma palavra mais larga
               que a coluna transborda em vez de sair cortada. */}
@@ -113,36 +113,34 @@ export function Semanas() {
         </div>
 
         <div className="semanas__caminho">
-          {/* A regua (1 a 3, um passo por card): acende e apaga com a rolagem (RF-L11b). Cor nunca sozinha (RNF-L14): a
-              semana acesa muda de PREENCHIMENTO, de vazado para cheio, e o numero muda de peso. */}
+          {/* A regua (1 a 3, um passo por card): acende e apaga com a rolagem (RF-L11b). Cor nunca sozinha (RNF-L14): o passo
+              aceso muda de PREENCHIMENTO, de vazado para cheio, e o numero muda de peso. */}
           <ol
-            className="regua12 sticky top-0 z-2 bg-void pb-4 motion-reduce:static [counter-reset:semana] grid grid-cols-[repeat(3,1fr)] gap-x-2 gap-y-3 mt-12 pt-4 border-t border-line"
+            className="regua sticky top-0 z-2 bg-void pb-4 motion-reduce:static [counter-reset:semana] grid grid-cols-[repeat(3,1fr)] gap-x-2 gap-y-3 mt-12 pt-4 border-t border-line"
             role="list"
             aria-hidden="true"
           >
-            {Array.from({ length: SEMANAS }, (_, i) => (
-              <li className={SEMANA} key={i} data-acesa />
+            {Array.from({ length: PASSOS }, (_, i) => (
+              <li className={PASSO} key={i} data-acesa />
             ))}
           </ol>
 
-          {/* Capa, nome, legenda: a anatomia do card de showcase. A capa e um bloco de superficie
-              com o numero em escala de cartaz, no lugar do preview de video. */}
+          {/* Cada card: etiqueta (faixa e valor), nome, texto e imagem. */}
           <ol className="semanas__trilho flex flex-col gap-12 mt-16 lg:grid lg:grid-cols-[repeat(3,1fr)] lg:items-start lg:gap-x-8 lg:gap-y-16 lg:mt-24" role="list" ref={trilho}>
             {ESTADOS.map((estado, indice) => (
               <li
                 className={`slide relative isolate flex flex-col gap-3 p-4 border border-line-strong bg-surface-1 ${DESCE[indice % 3]}`.trim()}
                 key={estado.nome}
-                data-semana={indice + 1}
+                data-passo={indice + 1}
                 data-revelar
               >
                 <div className="flex items-center justify-between text-overline font-secundaria uppercase" aria-hidden="true">
                   <span className="text-silver">{estado.faixa}</span>
                   <span className="text-acento tabular-nums">{estado.capa}</span>
                 </div>
-                <span className="sr-only">{estado.leitura}</span>
                 <h3 className="text-bone font-secundaria text-h3">{estado.nome}</h3>
                 <p className="max-w-prose text-silver font-terciaria text-body lg:text-body-lg">{estado.texto}</p>
-                <ImagemReservada legenda={estado.imagem} src={estado.src} className={`aspect-11/6 ${estado.pos ?? ""}`} />
+                <ImagemReservada src={estado.src} sizes={SIZES} className={`aspect-11/6 ${estado.pos ?? ""}`} />
               </li>
             ))}
           </ol>

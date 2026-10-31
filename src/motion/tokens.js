@@ -14,7 +14,6 @@ const PADROES = {
 let cache = null;
 
 export function duracao(nome) {
-  if (typeof window === "undefined") return PADROES[nome];
   if (!cache) {
     cache = {};
     const estilo = getComputedStyle(document.documentElement);
@@ -35,7 +34,6 @@ export function duracao(nome) {
 const CURVAS = { "--ease-expo": "cubic-bezier(0.16, 1, 0.3, 1)" };
 
 export function curva(nome) {
-  if (typeof window === "undefined") return CURVAS[nome];
   return getComputedStyle(document.documentElement).getPropertyValue(nome).trim() || CURVAS[nome];
 }
 
@@ -48,14 +46,20 @@ const preferencia = () => (consulta ??= window.matchMedia("(prefers-reduced-moti
  * tudo vira opacidade: sem deslocamento, sem corte, sem desenho.
  */
 export function semMovimento() {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
   return preferencia().matches;
+}
+
+// Idem para o toque: o dedo rola e a CPU do celular e curta, entao o fundo anima mais devagar.
+let consultaToque = null;
+
+/** Ponteiro grosso (dedo): os fundos animados desenham menos e congelam enquanto a pagina rola. */
+export function toque() {
+  return (consultaToque ??= window.matchMedia("(pointer: coarse)")).matches;
 }
 
 /** Reexecuta efeitos quando a preferência muda sem deixar um listener órfão. */
 export function aoMudarPreferencia(ouvinte) {
-  if (typeof window === "undefined" || !window.matchMedia) return () => {};
   const media = preferencia();
-  media.addEventListener?.("change", ouvinte);
-  return () => media.removeEventListener?.("change", ouvinte);
+  media.addEventListener("change", ouvinte);
+  return () => media.removeEventListener("change", ouvinte);
 }

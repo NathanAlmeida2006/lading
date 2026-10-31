@@ -20,8 +20,7 @@ export function Consentimento() {
   const resposta = useConsentimento();
   const decidido = resposta !== null;
 
-  // O banner e fixed: sem esta folga ele cobre o micro-registro do botao,
-  // que e onde estao preco e garantia.
+  // A folga evita que o aviso, preso na base da tela, cubra o fim da pagina.
   useEffect(() => {
     document.body.classList.toggle("com-consentimento", !decidido);
     return () => document.body.classList.remove("com-consentimento");

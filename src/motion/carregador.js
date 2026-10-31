@@ -15,7 +15,6 @@ export function carregarCoreografias() {
 }
 
 export function abrirLeitura() {
-  if (typeof document === "undefined") return;
   const raiz = document.documentElement;
   raiz.classList.remove("movimento-pronto");
   raiz.classList.add("movimento-falhou");
@@ -25,7 +24,7 @@ export function abrirLeitura() {
     el.style.translate = "none";
     el.style.scale = "none";
   }
-  for (const el of document.querySelectorAll(".palavra, .regua12__semana")) {
+  for (const el of document.querySelectorAll(".palavra, .regua__passo")) {
     el.setAttribute("data-acesa", "");
   }
 }

@@ -6,9 +6,8 @@ import { Moldura } from "../components/Moldura.jsx";
 import { Rotulo } from "../components/Rotulo.jsx";
 import { conteudo } from "../conteudo.js";
 import { abrirPainel, useMovimento } from "../motion/index.js";
-import { config } from "../config.js";
-import { camada, crus, envelope, grao, linha, painel, vazado } from "../ui.js";
-import { emailReal } from "../validacao.js";
+import { contatoPublico } from "../config.js";
+import { camada, crus, destaque, envelope, grao, linha, painel, vazado } from "../ui.js";
 
 /**
  * Fechamento: a segunda capa.
@@ -23,7 +22,6 @@ import { emailReal } from "../validacao.js";
  */
 export function Fechamento() {
   const raiz = useRef(null);
-  const suporte = emailReal(config.legal.contato) ? config.legal.contato.trim() : null;
 
   useMovimento(() => {
     const no = raiz.current;
@@ -32,7 +30,6 @@ export function Fechamento() {
       moldura: no.querySelectorAll(".moldura path"),
       fios: no.querySelectorAll(".painel__fio line"),
       kicker: no.querySelector(".painel__kicker"),
-      titulo: no.querySelector(".painel__titulo"),
       linhas: no.querySelectorAll(".linha__texto"),
       corpo: no.querySelector(".painel__corpo"),
       acao: no.querySelector(".painel__acao"),
@@ -81,18 +78,18 @@ export function Fechamento() {
       <div className={`${envelope} painel__rodape pointer-events-none absolute inset-x-0 bottom-4 z-1 flex items-end justify-between gap-4 text-silver tela-rasa:hidden`} data-revelar>
         <ul className={crus} role="list">
           <li>
-            <b className="text-bone font-bold">App</b> direto no celular
+            <b className={destaque}>App</b> direto no celular
           </li>
           <li>
-            <b className="text-bone font-bold">Acesso</b> imediato e vitalício
+            <b className={destaque}>Acesso</b> imediato e vitalício
           </li>
           <li>
-            <b className="text-bone font-bold">Pagamento</b> único
+            <b className={destaque}>Pagamento</b> único
           </li>
-          {suporte && (
+          {contatoPublico && (
             <li>
-              <b className="text-bone font-bold">Suporte</b>{" "}
-              <a className="pointer-events-auto underline underline-offset-4" href={`mailto:${suporte}`}>{suporte}</a>
+              <b className={destaque}>Suporte</b>{" "}
+              <a className="pointer-events-auto underline underline-offset-4" href={`mailto:${contatoPublico}`}>{contatoPublico}</a>
             </li>
           )}
         </ul>

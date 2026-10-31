@@ -8,7 +8,8 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: false,
     copyPublicDir: false, // public/ ja foi copiado pelo build da landing; aqui so resolve /fonts/*
-    target: ["chrome111", "edge111", "firefox128", "safari16.4"],
+    target: ["chrome118", "edge118", "firefox146", "safari17.4"],
+    cssTarget: "es2020",
     reportCompressedSize: false,
     rollupOptions: {
       input: { privacidade: "privacidade.html", termos: "termos.html" },

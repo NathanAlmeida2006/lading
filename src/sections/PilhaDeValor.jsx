@@ -2,12 +2,9 @@ import { useRef } from "react";
 import { Botao } from "../components/Botao.jsx";
 import { Cronometro, OfertaLimitada } from "../components/Cronometro.jsx";
 import { FundoCapa } from "../components/FundoCapa.jsx";
-import { CondicaoOferta } from "../components/CondicaoOferta.jsx";
 import { mascaraDeLinha, revelar, revelarEmCascata, useMovimento } from "../motion/index.js";
 import { semMovimento } from "../motion/tokens.js";
-import { config } from "../config.js";
-import { useCondicaoOferta } from "../oferta.js";
-import { pilhaApresentavel } from "../pilha.js";
+import { pilhaPronta as DADOS } from "../pilha.js";
 import { bloco, envelope, mascara } from "../ui.js";
 
 const SERRILHA =
@@ -24,12 +21,9 @@ const ICONES = {
   app: ["M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z", "M12 18h.01"],
 };
 
-// A config e estatica: o bloco e conferido e formatado uma vez, e nao a cada render.
-const DADOS = pilhaApresentavel(config.pilhaDeValor);
-
 /**
  * Pilha de valor: o que o protocolo entrega, somado, contra o preco de oferta.
- * Recibo em tema escuro (sem `data-theme="cartaz"`).
+ * Recibo em tema escuro.
  *
  * Os dados vem de `config.pilhaDeValor` ja conferidos por `pilhaApresentavel`. Sem bloco
  * valido, a secao nao existe na pagina (devolve `null`).
@@ -40,7 +34,6 @@ const DADOS = pilhaApresentavel(config.pilhaDeValor);
  */
 export function PilhaDeValor({ id = "pilha-de-valor", posicao = "pilha" }) {
   const raiz = useRef(null);
-  const { condicao, estado, disponivel } = useCondicaoOferta(config.oferta, config.checkout);
 
   useMovimento(() => {
     if (semMovimento()) return;
@@ -73,15 +66,11 @@ export function PilhaDeValor({ id = "pilha-de-valor", posicao = "pilha" }) {
 
           <PilhaCartao dados={DADOS} />
 
-          <CondicaoOferta condicao={condicao} estado={estado} />
+          <OfertaLimitada />
 
-          {disponivel ? <OfertaLimitada /> : null}
-
-          {disponivel ? (
-            <div className="chamada flex flex-col items-start lg:items-center mt-12" data-revelar>
-              <Botao posicao={posicao} />
-            </div>
-          ) : null}
+          <div className="chamada flex flex-col items-start lg:items-center mt-12" data-revelar>
+            <Botao posicao={posicao} />
+          </div>
         </div>
       </div>
     </section>
@@ -117,7 +106,7 @@ function PilhaCartao({ dados }) {
       <p className="mt-4 pt-4 border-t border-dashed border-line-strong flex items-center justify-center gap-2 font-terciaria text-[12.8px] text-silver">
         {totalRotulo}{" "}
         <span className="sr-only">valor de referência </span>
-        <s className="font-secundaria text-[28.8px] text-acento tabular-nums line-through decoration-1">{moeda} {total}</s>
+        <s className="font-secundaria text-[28.8px] text-acento tabular-nums decoration-1">{moeda} {total}</s>
       </p>
 
       <p

@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Botao } from "./Botao.jsx";
 import { Cronometro } from "./Cronometro.jsx";
-import { config } from "../config.js";
 import { useConsentimento } from "../instrumentacao.js";
-import { useCondicaoOferta } from "../oferta.js";
-import { pilhaApresentavel } from "../pilha.js";
+import { pilhaPronta as OFERTA } from "../pilha.js";
+import { barraDaDoca } from "../ui.js";
 
 /**
  * A doca de venda: barra fixa na base, com preco, Pix e o botao.
@@ -27,22 +26,17 @@ import { pilhaApresentavel } from "../pilha.js";
  * empurra o conteudo, e o botao dela fica fora dos alvos. Um botao que sobe por tras da doca ja
  * conta como "a vista" e a recolhe; nao ha como a entrada dela realimentar o observador.
  *
- * Falha fechada: sem IntersectionObserver, sem os alvos, ou antes da primeira leitura, fica oculta.
+ * Falha fechada: sem os alvos, ou antes da primeira leitura, fica oculta.
  *
  * Inativa, ela e `inert`: so sai da tela por `translate`, e sem isso o Tab cairia
  * num botao que ninguem ve.
  */
-// O preco vem da pilha de valor (config estatica: conferida uma vez); `config.oferta.preco` segue nulo.
-const OFERTA = pilhaApresentavel(config.pilhaDeValor);
-
 export function Doca() {
   const doca = useRef(null);
   const [livre, definirLivre] = useState(false); // nenhum alvo ocupa a tela
-  // Os botoes de venda nascem e somem juntos, com a disponibilidade da oferta: e ela que
-  // manda refazer a lista de alvos. Sem botao proprio, a doca tambem nao tem o que oferecer.
-  const { disponivel } = useCondicaoOferta(config.oferta, config.checkout);
+  // Os botoes de venda ficam sempre na pagina, entao a lista de alvos e fixa.
   const avisoAberto = useConsentimento() === null;
-  const ativa = livre && disponivel && !avisoAberto;
+  const ativa = livre && !avisoAberto;
 
   useEffect(() => {
     const inicio = document.getElementById("inicio");
@@ -51,7 +45,7 @@ export function Doca() {
     // O rodape tem o proprio botao e a faixa de acento: a doca por cima dele
     // seria o segundo acento na mesma tela.
     const rodape = document.getElementById("rodape-legal");
-    if (!inicio || !regua || !rodape || !("IntersectionObserver" in window)) return;
+    if (!inicio || !regua || !rodape) return;
     const naTela = new Set();
     const obs = new IntersectionObserver(
       (entradas) => {
@@ -72,38 +66,21 @@ export function Doca() {
       obs.disconnect();
       definirLivre(false);
     };
-  }, [disponivel]);
+  }, []);
 
-  // O indice e o espaco de rolagem acompanham a altura real da barra, inclusive
-  // quando o texto quebra com zoom ou a safe-area aumenta seu tamanho.
+  // O indice e o espaco de rolagem acompanham a altura real da barra, inclusive com zoom ou safe-area.
   useEffect(() => {
     const barra = doca.current;
-    if (!barra) return;
     const estilo = document.documentElement.style;
-    const alturaAnterior = estilo.getPropertyValue("--doca-altura");
-    const prioridadeAnterior = estilo.getPropertyPriority("--doca-altura");
-    let encerrado = false;
-
-    const medirAltura = () => {
-      if (encerrado) return;
+    // Oculta pelo consentimento, a barra mede 0: vale a ultima medida.
+    const observador = new ResizeObserver(() => {
       const altura = barra.getBoundingClientRect().height;
-      // O consentimento pode ocultar a barra com display:none. Nesse intervalo,
-      // preservar a ultima medida valida ou o fallback definido nos estilos.
       if (altura > 0) estilo.setProperty("--doca-altura", `${Math.ceil(altura)}px`);
-    };
-
-    const observador = "ResizeObserver" in window ? new ResizeObserver(medirAltura) : null;
-    observador?.observe(barra);
-    window.addEventListener("resize", medirAltura);
-    document.fonts?.ready.then(medirAltura);
-    medirAltura();
-
+    });
+    observador.observe(barra);
     return () => {
-      encerrado = true;
-      observador?.disconnect();
-      window.removeEventListener("resize", medirAltura);
-      if (alturaAnterior) estilo.setProperty("--doca-altura", alturaAnterior, prioridadeAnterior);
-      else estilo.removeProperty("--doca-altura");
+      observador.disconnect();
+      estilo.removeProperty("--doca-altura");
     };
   }, []);
 
@@ -116,7 +93,7 @@ export function Doca() {
   return (
     <aside
       ref={doca}
-      className="doca hidden js:flex fixed inset-x-0 bottom-0 z-15 flex-wrap items-center justify-between gap-3 pl-[max(--spacing(4),env(safe-area-inset-left))] pr-[max(--spacing(4),env(safe-area-inset-right))] pt-3 pb-[max(--spacing(3),env(safe-area-inset-bottom))] bg-surface-1 text-bone border-t border-line-strong translate-y-full opacity-0 transition-[translate,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none [.com-consentimento_&]:hidden data-ativa:translate-y-0 data-ativa:opacity-100"
+      className={barraDaDoca}
       data-ativa={ativa ? "" : undefined}
       aria-label="Oferta"
       aria-hidden={!ativa}

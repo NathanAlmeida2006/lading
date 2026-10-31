@@ -1,4 +1,4 @@
-import { reais } from "./pilha.js";
+import { emailReal } from "./validacao.js";
 
 /** Dados comerciais da instância. null indica informação ainda não confirmada. */
 export const config = {
@@ -39,7 +39,6 @@ export const config = {
 
   oferta: {
     disponivel: true, // oferta-base; false retira os CTAs fora de uma condição vigente
-    referenciaComercial: null, // referência opaca da configuração comercial aprovada
     preco: null, // valor à vista em reais; RF-L23
     moeda: "R$",
     pix: { ativo: true, valor: null },
@@ -49,7 +48,6 @@ export const config = {
     garantiaCanal: null,
     bonus: [], // { id, nome, descricao, origem, confirmado }
     ancoragem: null, // { precoComparativo, fundamento, fonte, confirmado }
-    condicaoOferta: null, // { texto, fonte, inicio, fim, fuso, referenciaComercial, confirmado, dataConfirmacao, identificadorCheckout }
   },
 
   entrega: {
@@ -60,7 +58,6 @@ export const config = {
   },
 
   checkout: {
-    identificadorOferta: null, // ID da oferta correspondente na Hotmart, quando confirmado
     url: "https://pay.hotmart.com/Y108171272A", // checkout da Hotmart: único destino de todos os CTAs
     urlConfirmada: true,
     parametroRastreio: null,
@@ -81,6 +78,8 @@ export const config = {
   depoimentos: [], // { id, texto, identificacao, contexto, origem, autorizacaoRef, aprovado }
 };
 
+// E-mail público único: o fechamento e o rodapé leem daqui. Nulo quando o e-mail não é válido.
+export const contatoPublico = emailReal(config.legal.contato) ? config.legal.contato.trim() : null;
+
 // O verbo do CTA (RF-L10). Nenhum botão mostra o preço: o valor fica na pilha de oferta.
 export const VERBO_CURTO = "Quero o Lithium vitalício";
-export const VERBO_ACAO = VERBO_CURTO;

@@ -34,7 +34,7 @@ export function Pontas({ camada = "z-3" }) {
 
   useMovimento(() => {
     const secao = primeira.current?.parentElement;
-    if (!secao || !("IntersectionObserver" in window)) return;
+    if (!secao) return;
     const obs = new IntersectionObserver(([e]) => secao.toggleAttribute("data-fora", !e.isIntersecting), {
       rootMargin: "200px 0px",
     });

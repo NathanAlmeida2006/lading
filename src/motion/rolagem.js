@@ -1,11 +1,6 @@
 import Lenis from "lenis";
 
-// StrictMode pode iniciar o proximo efeito antes de a limpeza anterior,
-// registrada pelo useMovimento em microtask, chegar. So o dono atual restaura.
-let donoDaAncora = null;
-
 export function ligarLenis() {
-  if (typeof window === "undefined") return () => {};
   const lenis = new Lenis({ autoRaf: false, anchors: true, lerp: 0.1, syncTouch: false, respectReducedMotion: true });
 
   // O intervalo entre quadros desta tela (6,9 ms a 144 Hz, 16,7 ms a 60 Hz), medido; usado so
@@ -23,9 +18,6 @@ export function ligarLenis() {
   const documento = document.documentElement;
   const navegacao = performance.getEntriesByType("navigation")[0]?.type;
   let ancoraPendente = navegacao === "reload" || navegacao === "back_forward";
-  const ancoraAnterior = donoDaAncora?.valor ?? documento.style.getPropertyValue("overflow-anchor");
-  const prioridadeAncora = donoDaAncora?.prioridade ?? documento.style.getPropertyPriority("overflow-anchor");
-  const dono = ancoraPendente ? { valor: ancoraAnterior, prioridade: prioridadeAncora } : null;
   let observadorAncora;
   let quadroAncoraA = 0;
   let quadroAncoraB = 0;
@@ -35,13 +27,9 @@ export function ligarLenis() {
     observadorAncora?.disconnect();
     cancelAnimationFrame(quadroAncoraA);
     cancelAnimationFrame(quadroAncoraB);
-    if (donoDaAncora !== dono) return;
-    donoDaAncora = null;
-    if (ancoraAnterior) documento.style.setProperty("overflow-anchor", ancoraAnterior, prioridadeAncora);
-    else documento.style.removeProperty("overflow-anchor");
+    documento.style.removeProperty("overflow-anchor");
   };
   if (ancoraPendente) {
-    donoDaAncora = dono;
     documento.style.setProperty("overflow-anchor", "none");
     let fontesProntas = false;
     const conferirAncora = () => {
@@ -61,7 +49,7 @@ export function ligarLenis() {
     };
     observadorAncora = new MutationObserver(conferirAncora);
     observadorAncora.observe(documento, { attributes: true, attributeFilter: ["class"] });
-    Promise.resolve(document.fonts?.ready).then(() => {
+    document.fonts.ready.then(() => {
       fontesProntas = true;
       conferirAncora();
     });

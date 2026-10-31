@@ -39,10 +39,6 @@ function disparar(alvo) {
 
 function aoEntrar(gatilho, executar) {
   if (!gatilho) return;
-  if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
-    const animacao = executar();
-    return () => animacao?.revert?.();
-  }
   if (!observador) {
     observador = new IntersectionObserver(
       (entradas) => {
@@ -129,7 +125,7 @@ export function revelarEmCascata(alvos, { intervalo = 70 } = {}) {
 /** Espera as fontes antes de dividir; uma desmontagem ou falha impede escrita tardia no DOM. */
 export async function mascaraDeLinha(alvo, { atraso = 0 } = {}, sinal) {
   if (!alvo) return;
-  if (!semMovimento() && document.fonts?.ready) await document.fonts.ready;
+  if (!semMovimento()) await document.fonts.ready;
   if (sinal?.aborted || !alvo.isConnected || document.documentElement.classList.contains("movimento-falhou")) return;
   let fatias;
   let limpar;
@@ -161,16 +157,11 @@ export async function mascaraDeLinha(alvo, { atraso = 0 } = {}, sinal) {
  * quebra foi o designer, nao o navegador, e e isso que a engenharia reversa
  * manda fazer nos titulos.
  *
- * `pai` e o elemento com `data-revelar`, se houver: ver a nota dentro.
  */
-export function subirLinhas(linhas, { atraso = 0, intervalo = 110, pai = null, tempo = 820 } = {}) {
+export function subirLinhas(linhas, { atraso = 0, intervalo = 110, tempo = 820 } = {}) {
   const lista = Array.from(linhas ?? []);
   if (!lista.length) return;
   const reduzido = semMovimento();
-  // Quem anima sao as LINHAS; um pai com `data-revelar` fica em `opacity: 0`
-  // pelo CSS e leva o titulo inteiro junto. Sair dele na mao e a mesma
-  // correcao que `abrirPainel` faz, e ela ja custou um defeito medido.
-  if (pai) utils.set(pai, { opacity: 1 });
   // O gatilho e o recorte (`.linha`), nao a linha: ela nasce transladada para fora do recorte, e o
   // IntersectionObserver nao enxerga um alvo recortado (nunca disparava; so a rede de seguranca
   // do RNF-L35 destravava, zerando a linha antes de a secao chegar).
@@ -195,8 +186,8 @@ export function subirLinhas(linhas, { atraso = 0, intervalo = 110, pai = null, t
 }
 
 /**
- * Desenha um traco de SVG quando ele chega a tela. Serve a moldura do fechamento, a regua e os
- * riscos do espelho. Sob movimento reduzido o traco ja nasce inteiro e so aparece.
+ * Desenha um traco de SVG quando ele chega a tela. Serve a moldura e os
+ * fios do fechamento. Sob movimento reduzido o traco ja nasce inteiro e so aparece.
  */
 export function desenhar(alvos, { atraso = 0, tempo } = {}) {
   const lista = Array.from(alvos ?? []).filter(Boolean);
@@ -270,7 +261,7 @@ export function acenderEmSequencia(alvos, contexto, { atributo = "data-acesa", a
 
 /** Resposta ao toque no botao. Um degrau: e confirmacao, nao animacao. */
 export function pulsar(alvo) {
-  if (!alvo || semMovimento()) return;
+  if (!alvo) return;
   return animate(alvo, { scale: [1, 0.97, 1], duration: duracao("--motion-fast"), ease: steps(2) });
 }
 
@@ -285,12 +276,8 @@ export function pulsar(alvo) {
  * Barato primeiro, caro depois: `revelar` so marca o elemento; `desenhar` mede
  * cada traco e `subirLinhas` escreve transform.
  */
-export function abrirPainel({ moldura, fios, kicker, titulo, linhas, corpo, acao, rodape }) {
+export function abrirPainel({ moldura, fios, kicker, linhas, corpo, acao, rodape }) {
   const passo = semMovimento() ? 0 : 1;
-
-  // Quem anima sao as linhas; o pai precisa sair do opacity 0 do
-  // [data-revelar] na mao, senao o titulo nunca aparece.
-  if (titulo) utils.set(titulo, { opacity: 1 });
 
   const limpezas = [
     revelar(kicker, { atraso: 120 * passo }),

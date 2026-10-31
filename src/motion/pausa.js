@@ -15,7 +15,7 @@ export function definirPausa(valor) {
   const proximo = Boolean(valor);
   if (pausado === proximo) return;
   pausado = proximo;
-  if (typeof document !== "undefined") document.documentElement.toggleAttribute("data-pausado", proximo);
+  document.documentElement.toggleAttribute("data-pausado", proximo);
   for (const f of ouvintes) f(proximo);
 }
 

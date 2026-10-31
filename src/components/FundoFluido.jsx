@@ -1,7 +1,8 @@
 import { useRef } from "react";
 import { useMovimento } from "../motion/index.js";
-import { semMovimento } from "../motion/tokens.js";
+import { semMovimento, toque } from "../motion/tokens.js";
 import { aoMudarPausa, estaPausado } from "../motion/pausa.js";
+import { PASSO_TOQUE } from "../motion/campo.js";
 
 const VERTICE = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
 
@@ -29,79 +30,74 @@ void main(){
   gl_FragColor=vec4(c3*on,on); // premultiplicado: fora das cristas o canvas e transparente
 }`;
 
-/**
- * `cor` (rgb 0-1) tinge as cristas; `className` fixa a opacidade. Fundo animado em WebGL cru (sem dependencia). Anda so na tela e fora de pausa; com movimento
- * reduzido desenha um quadro e para. Sem WebGL, o canvas fica sem desenho e a secao segue lisa.
- */
-export function FundoFluido({ cor = [0.42, 0.42, 0.42], className = "opacity-30" }) {
-  const tela = useRef(null);
+// Pool de no maximo um contexto pronto: criar custa ~200 ms de thread, entao o aquecimento o cria antes
+// do corte e quem desmonta devolve. Manifesto e Faca nunca estao na tela juntos, por isso um basta.
+const piscina = [];
+function criar() {
+  const cv = document.createElement("canvas");
+  const gl = cv.getContext("webgl", { antialias: false, alpha: true });
+  if (!gl) return null;
+  const compila = (tipo, fonte) => { const s = gl.createShader(tipo); gl.shaderSource(s, fonte); gl.compileShader(s); return s; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compila(gl.VERTEX_SHADER, VERTICE));
+  gl.attachShader(prog, compila(gl.FRAGMENT_SHADER, FRAGMENTO));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+  gl.useProgram(prog);
+  gl.uniform3f(gl.getUniformLocation(prog, "c3"), 0.42, 0.42, 0.42);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, "p");
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  return { cv, gl, uR: gl.getUniformLocation(prog, "r"), uT: gl.getUniformLocation(prog, "t") };
+}
+export function aquecerFluido() {
+  if (!piscina.length) { const f = criar(); if (f) piscina.push(f); }
+}
+
+// A pega do contexto so acontece quando a secao pai chega perto da tela, para a compilacao nao cair na montagem.
+export function FundoFluido() {
+  const host = useRef(null);
 
   useMovimento(() => {
-    const cv = tela.current;
-    const gl = cv?.getContext("webgl", { antialias: false, alpha: true });
-    if (!gl) return;
-    const compila = (tipo, fonte) => {
-      const s = gl.createShader(tipo);
-      gl.shaderSource(s, fonte);
-      gl.compileShader(s);
-      return s;
-    };
-    const prog = gl.createProgram();
-    gl.attachShader(prog, compila(gl.VERTEX_SHADER, VERTICE));
-    gl.attachShader(prog, compila(gl.FRAGMENT_SHADER, FRAGMENTO));
-    gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
-    gl.useProgram(prog);
-    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-    const loc = gl.getAttribLocation(prog, "p");
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    const uR = gl.getUniformLocation(prog, "r");
-    const uT = gl.getUniformLocation(prog, "t");
-    gl.uniform3f(gl.getUniformLocation(prog, "c3"), ...cor);
+    const pai = host.current?.parentElement;
+    if (!pai) return;
+    let limpar;
+    const adiar = new IntersectionObserver(([e0]) => {
+      if (!e0.isIntersecting) return;
+      adiar.disconnect();
+      limpar = ligar();
+    }, { rootMargin: "100% 0px" });
+    adiar.observe(pai);
+    function ligar() {
+      const f = piscina.pop() ?? criar();
+      if (!f) return;
+      const { cv, gl, uR, uT } = f;
+      cv.className = "absolute inset-0 size-full pointer-events-none opacity-30 [image-rendering:pixelated]";
+      cv.setAttribute("aria-hidden", "true");
+      host.current.append(cv);
+      const ajusta = () => { cv.width = Math.max(1, cv.clientWidth); cv.height = Math.max(1, cv.clientHeight); gl.viewport(0, 0, cv.width, cv.height); };
+      const desenha = (ms) => { gl.uniform2f(uR, cv.width, cv.height); gl.uniform1f(uT, (ms / 12000) * Math.PI * 2); gl.drawArrays(gl.TRIANGLES, 0, 3); };
+      let visivel = false, raf = 0, ultimo = -Infinity;
+      const passo = toque() ? PASSO_TOQUE : 0;
+      const laco = (ms) => { if (ms - ultimo >= passo) { ultimo = ms; desenha(ms); } raf = visivel && !estaPausado() ? requestAnimationFrame(laco) : 0; };
+      const liga = () => { if (!raf && visivel && !semMovimento() && !estaPausado()) raf = requestAnimationFrame(laco); };
+      ajusta(); desenha(0);
+      const obs = new IntersectionObserver(([e]) => { visivel = e.isIntersecting; liga(); });
+      obs.observe(cv);
+      const ro = new ResizeObserver(() => { ajusta(); desenha(performance.now()); });
+      ro.observe(cv);
+      const desliga = aoMudarPausa(liga);
+      return () => { cancelAnimationFrame(raf); obs.disconnect(); ro.disconnect(); desliga(); cv.remove(); piscina.push(f); };
+    }
+    return () => { adiar.disconnect(); limpar?.(); };
+  }, []);
 
-    // Resolucao cheia: a celula do dither e 3 px de tela. ponteiro: custo 4x o da meia resolucao; voltar a /2 se pesar.
-    const ajusta = () => {
-      cv.width = Math.max(1, cv.clientWidth);
-      cv.height = Math.max(1, cv.clientHeight);
-      gl.viewport(0, 0, cv.width, cv.height);
-    };
-    const desenha = (ms) => {
-      gl.uniform2f(uR, cv.width, cv.height);
-      gl.uniform1f(uT, (ms / 12000) * Math.PI * 2);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-    };
-
-    let visivel = false;
-    let raf = 0;
-    const laco = (ms) => {
-      desenha(ms);
-      raf = visivel && !estaPausado() ? requestAnimationFrame(laco) : 0;
-    };
-    const liga = () => {
-      if (!raf && visivel && !semMovimento() && !estaPausado()) raf = requestAnimationFrame(laco);
-    };
-    ajusta();
-    desenha(0);
-    const obs = new IntersectionObserver(([e]) => {
-      visivel = e.isIntersecting;
-      liga();
-    });
-    obs.observe(cv);
-    const ro = new ResizeObserver(() => {
-      ajusta();
-      desenha(performance.now());
-    });
-    ro.observe(cv);
-    const desliga = aoMudarPausa(liga);
-    return () => {
-      cancelAnimationFrame(raf);
-      obs.disconnect();
-      ro.disconnect();
-      desliga();
-    };
-  }, [cor.join()]);
-
-  return <canvas ref={tela} className={`absolute inset-0 size-full pointer-events-none ${className} [image-rendering:pixelated]`} aria-hidden="true" />;
+  // Sem JavaScript, a camada do canvas vazio mantem o antialiasing do texto vizinho como sempre foi.
+  return (
+    <div className="contents" ref={host} aria-hidden="true">
+      <noscript><canvas className="absolute inset-0 size-full pointer-events-none opacity-30 [image-rendering:pixelated]" /></noscript>
+    </div>
+  );
 }

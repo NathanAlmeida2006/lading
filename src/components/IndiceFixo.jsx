@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { idsDoIndice } from "../secoes.js";
 import { doisDigitos } from "../ui.js";
 
 /**
@@ -25,11 +26,11 @@ import { doisDigitos } from "../ui.js";
  * a ultima secao acima do meio da tela e justamente a que se esta lendo, entao
  * nao ha dois caminhos para manter.
  */
-export function IndiceFixo({ ids }) {
+export function IndiceFixo() {
   const [atual, definirAtual] = useState(1);
 
   useEffect(() => {
-    const secoes = ids.map((id) => document.getElementById(id)).filter(Boolean);
+    const secoes = idsDoIndice.map((id) => document.getElementById(id)).filter(Boolean);
     if (!secoes.length) return;
 
     // Nenhuma leitura de layout no caminho da rolagem. A posicao de cada secao NO DOCUMENTO so muda
@@ -40,7 +41,6 @@ export function IndiceFixo({ ids }) {
     // `scrollY` se le dentro do evento de rolagem, que roda antes de qualquer escrita do quadro.
     let topos = [];
     let meio = 0;
-    let atual = -1;
 
     const escolher = () => {
       const y = window.scrollY;
@@ -48,8 +48,6 @@ export function IndiceFixo({ ids }) {
       for (const [indice, posicao] of topos.entries()) {
         if (posicao - y <= meio) topo = indice;
       }
-      if (topo === atual) return;
-      atual = topo;
       definirAtual(topo + 1);
     };
 
@@ -74,16 +72,16 @@ export function IndiceFixo({ ids }) {
       window.removeEventListener("scroll", escolher);
       window.removeEventListener("resize", aoRedimensionar);
     };
-  }, [ids]);
+  }, []);
 
   // Some com o aviso de cookies e em tela de 380px ou menos. A altura medida da
   // doca inclui quebra de linha e safe-area; o indice conserva um respiro acima dela.
   return (
     <div
-      className="fixed bottom-4 left-4 z-5 font-terciaria text-mono-reg tabular-nums tracking-[0.08em] text-bone-pure mix-blend-difference pointer-events-none transition-[bottom] duration-(--motion-base) ease-(--ease-corte-2) motion-reduce:transition-none [.com-doca_&]:bottom-[calc(var(--doca-altura,--spacing(24))+--spacing(3))] [.com-consentimento_&]:hidden tela-estreita:hidden"
+      className="fixed bottom-4 left-4 z-5 font-terciaria text-mono-reg tabular-nums tracking-[0.08em] text-bone-pure mix-blend-difference pointer-events-none transition-[bottom] duration-(--motion-base) ease-(--ease-corte-2) [.com-doca_&]:bottom-[calc(var(--doca-altura,--spacing(24))+--spacing(3))] [.com-consentimento_&]:hidden tela-estreita:hidden"
       aria-hidden="true"
     >
-      {doisDigitos(atual)} / {doisDigitos(ids.length)}
+      {doisDigitos(atual)} / {doisDigitos(idsDoIndice.length)}
     </div>
   );
 }
