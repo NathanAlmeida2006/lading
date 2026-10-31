@@ -35,7 +35,7 @@ const EASE_ENTRADA = "cubic-bezier(0.16, 1, 0.3, 1)"; // expo-out: a tela assent
  * escura e a forma sumiria no fundo preto: junto com a mascara, as cores se invertem (`invert` + `hue-rotate`, que mantem os
  * matizes), e a forma fica clara, com o app em tinta dentro, e se encaixa na logo branca do quadro seguinte.
  */
-export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidade = VELOCIDADE, aoMedir, zoomSaida, zoomEntrada, mascarar, inicioEm }) {
+export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidade = VELOCIDADE, aoMedir, zoomSaida, zoomEntrada, mascarar, ligada = true, inicioEm }) {
   const raiz = useRef(null);
   const moldura = useRef(null);
   const rolo = useRef(null);
@@ -95,10 +95,12 @@ export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidad
     return () => { vivo = false; cancelAnimationFrame(quadro); obs.disconnect(); };
   }, []);
 
+  // A mascara e o filtro nascem pausados no quadro 0 (a forma cobre a tela e a inversao e nula: nada muda na imagem) e so
+  // `ligada` os faz andar. Criar a camada mascarada so na batida do corte dava um quadro preto, mais longo no celular.
+  const mascaras = useRef([]);
   useLayoutEffect(() => {
     if (!mascarar) return;
     const el = raiz.current;
-    const mold = moldura.current;
     const { url, proporcao, foco, raio, largura, ms } = mascarar;
     const { width: W, height: H } = el.getBoundingClientRect();
     const final = largura(W), finalH = final * proporcao;
@@ -110,25 +112,34 @@ export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidad
       { w: final, h: finalH, x: (W - final) / 2, y: (H - finalH) / 2 },
     ].map(({ w, h, x, y }) => ({ WebkitMaskSize: `${w}px ${h}px`, maskSize: `${w}px ${h}px`, WebkitMaskPosition: `${x}px ${y}px`, maskPosition: `${x}px ${y}px` }));
     const estilo = { WebkitMaskImage: `url(${url})`, maskImage: `url(${url})`, WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat" };
-    Object.assign(el.style, estilo, quadros[1]);
+    Object.assign(el.style, estilo, quadros[ligada ? 1 : 0]);
     if (semMovimento()) return;
     const opcoes = { duration: ms, easing: "cubic-bezier(0.7, 0, 0.15, 1)", fill: "both" };
-    el.animate(quadros, opcoes);
+    const forma = el.animate(quadros, opcoes);
     // A inversao so na segunda metade: com a mascara ainda enorme a tela escura enche a forma, e no meio do caminho a
     // inversao parcial daria um cinza turvo; assim ela vira rapido, quando as letras ja aparecem.
-    el.animate([{ filter: "invert(0) hue-rotate(0deg)" }, { filter: "invert(0) hue-rotate(0deg)", offset: 0.45 }, { filter: "invert(1) hue-rotate(180deg)", offset: 0.7 }, { filter: "invert(1) hue-rotate(180deg)" }], { duration: ms, easing: "linear", fill: "both" });
-    // A tela dentro da forma ocupa a largura da forma (no desktop a moldura tem 430 px e a logo, 1100).
-    mold.style.transformOrigin = "50% 50%";
-    mold.animate([{ transform: "scale(1)" }, { transform: `scale(${Math.max(1, final / mold.clientWidth)})` }], opcoes);
+    const cor = el.animate([{ filter: "invert(0) hue-rotate(0deg)" }, { filter: "invert(0) hue-rotate(0deg)", offset: 0.45 }, { filter: "invert(1) hue-rotate(180deg)", offset: 0.7 }, { filter: "invert(1) hue-rotate(180deg)" }], { duration: ms, easing: "linear", fill: "both" });
+    mascaras.current = [forma, cor];
+    if (!ligada) mascaras.current.forEach((a) => a.pause());
     return () => { el.getAnimations().forEach((a) => a.cancel()); };
   }, [Boolean(mascarar)]);
+
+  useLayoutEffect(() => {
+    if (!mascarar || !ligada || semMovimento()) return;
+    const mold = moldura.current;
+    mascaras.current.forEach((a) => a.play());
+    // A tela dentro da forma ocupa a largura da forma (no desktop a moldura tem 430 px e a logo, 1100).
+    mold.style.transformOrigin = "50% 50%";
+    const { largura, ms } = mascarar;
+    mold.animate([{ transform: "scale(1)" }, { transform: `scale(${Math.max(1, largura(raiz.current.getBoundingClientRect().width) / mold.clientWidth)})` }], { duration: ms, easing: "cubic-bezier(0.7, 0, 0.15, 1)", fill: "both" });
+  }, [ligada]);
 
   return (
     <div className={`${escopo} absolute inset-0 z-4 flex justify-center bg-void`} ref={raiz} aria-hidden="true" inert>
       <div className="app-moldura relative h-full w-full max-w-107.5 overflow-hidden border-x border-line [contain:paint]" ref={moldura}>
         <div className="app-rolo relative h-full overflow-y-auto" ref={rolo}>{children}</div>
         {/* O dedo: um toque que arrasta para cima, de novo e de novo, como quem rola (so com movimento; some na mascara). */}
-        {!mascarar && <span className="hidden motion-safe:block absolute z-10 left-[68%] bottom-[16%] size-14 rounded-full bg-white/20 ring-2 ring-white/50 pointer-events-none opacity-0 animate-dedo" aria-hidden="true" />}
+        {!(mascarar && ligada) && <span className="hidden motion-safe:block absolute z-10 left-[68%] bottom-[16%] size-14 rounded-full bg-white/20 ring-2 ring-white/50 pointer-events-none opacity-0 animate-dedo" aria-hidden="true" />}
       </div>
     </div>
   );
