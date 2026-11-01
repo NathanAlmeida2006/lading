@@ -2,13 +2,19 @@ import { CampoDePontos } from "../../components/CampoDePontos.jsx";
 import { AppRegistro } from "./AppRegistro.jsx";
 import { AppTrilha } from "./AppTrilha.jsx";
 import { CapaDaSessao } from "./CapaDaSessao.jsx";
-import { LogoLithium } from "./LogoLithium.jsx";
+import { LogoLithium, MASCARA_DA_LOGO } from "./LogoLithium.jsx";
 import { preparar } from "./Modelo3D.jsx";
 import { TakeArsenal, TakeCalendario, TakeCarga, TakeFaca, TakeL3D, TakeManifesto, TakeNumeros } from "./Takes.jsx";
 import { BATIDA, CAPAS, ESTAGIOS, FIM_DA_MUSICA, OBJETOS_3D, REPLAY_APOS } from "./tempo.js";
 
+const logo = new Image();
+
 /** Baixa e le os modelos antes do primeiro corte que os usa. */
 export function prepararModelos() {
+  // A logo e a mascara da tela do Registro (TelaDoApp): se ela nao estiver decodificada no primeiro quadro, a tela fica
+  // transparente e o play (vermelho, atras de tudo) aparece por um quadro no corte. `logo` a segura na memoria.
+  logo.src = MASCARA_DA_LOGO.url;
+  logo.decode().catch(() => {});
   [...CAPAS.map(({ modelo }) => modelo), ...OBJETOS_3D].forEach((modelo) => preparar(modelo).catch(() => {}));
 }
 

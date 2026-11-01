@@ -110,10 +110,15 @@ export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidad
     const quadros = [
       { w: final * s, h: finalH * s, x: W / 2 - foco.x * final * s, y: H / 2 - foco.y * finalH * s },
       { w: final, h: finalH, x: (W - final) / 2, y: (H - finalH) / 2 },
-    ].map(({ w, h, x, y }) => ({ WebkitMaskSize: `${w}px ${h}px`, maskSize: `${w}px ${h}px`, WebkitMaskPosition: `${x}px ${y}px`, maskPosition: `${x}px ${y}px` }));
-    const estilo = { WebkitMaskImage: `url(${url})`, maskImage: `url(${url})`, WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat" };
+    ].map(({ w, h, x, y }) => ({ WebkitMaskSize: `${w}px ${h}px, 100% 100%`, maskSize: `${w}px ${h}px, 100% 100%`, WebkitMaskPosition: `${x}px ${y}px, 0 0`, maskPosition: `${x}px ${y}px, 0 0` }));
+    // Nos primeiros quadros a imagem da mascara ainda nao esta desenhada, e a tela mascarada some (aparecia o preto, ou o play
+    // vermelho que fica atras). Uma camada opaca por baixo mantem a tela inteira ate la; depois sai, e so a logo mascara.
+    const so = `url(${url})`, com = `${so}, linear-gradient(#000, #000)`;
+    const estilo = { WebkitMaskImage: com, maskImage: com, WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat" };
     Object.assign(el.style, estilo, quadros[ligada ? 1 : 0]);
-    if (semMovimento()) return;
+    mascaras.current = [];
+    if (semMovimento()) { mascaras.current = quadros; return; }
+    let quadro = requestAnimationFrame(() => { quadro = requestAnimationFrame(() => { quadro = requestAnimationFrame(() => { el.style.maskImage = el.style.webkitMaskImage = so; }); }); });
     const opcoes = { duration: ms, easing: "cubic-bezier(0.7, 0, 0.15, 1)", fill: "both" };
     const forma = el.animate(quadros, opcoes);
     // A inversao so na segunda metade: com a mascara ainda enorme a tela escura enche a forma, e no meio do caminho a
@@ -121,12 +126,14 @@ export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidad
     const cor = el.animate([{ filter: "invert(0) hue-rotate(0deg)" }, { filter: "invert(0) hue-rotate(0deg)", offset: 0.45 }, { filter: "invert(1) hue-rotate(180deg)", offset: 0.7 }, { filter: "invert(1) hue-rotate(180deg)" }], { duration: ms, easing: "linear", fill: "both" });
     mascaras.current = [forma, cor];
     if (!ligada) mascaras.current.forEach((a) => a.pause());
-    return () => { el.getAnimations().forEach((a) => a.cancel()); };
+    return () => { cancelAnimationFrame(quadro); el.getAnimations().forEach((a) => a.cancel()); };
   }, [Boolean(mascarar)]);
 
   useLayoutEffect(() => {
-    if (!mascarar || !ligada || semMovimento()) return;
+    if (!mascarar || !ligada) return;
     const mold = moldura.current;
+    // Sem movimento nao ha animacao: a forma ja nasce no tamanho final.
+    if (semMovimento()) return void Object.assign(raiz.current.style, mascaras.current[1]);
     mascaras.current.forEach((a) => a.play());
     // A tela dentro da forma ocupa a largura da forma (no desktop a moldura tem 430 px e a logo, 1100).
     mold.style.transformOrigin = "50% 50%";
