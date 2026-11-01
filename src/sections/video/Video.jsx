@@ -3,7 +3,7 @@ import { CampoDePontos } from "../../components/CampoDePontos.jsx";
 import { aquecerFluido } from "../../components/FundoFluido.jsx";
 import { Pontas } from "../../components/FundoCapa.jsx";
 import { criarSom, prepararSom } from "./som.js";
-import { BATIDA_FACA, DROP, FIM_DA_MUSICA, LINHA, batida } from "./tempo.js";
+import { BATIDA_FACA, DROP, ESTAGIOS, FIM_DA_MUSICA, LINHA, batida } from "./tempo.js";
 import { bloco, botaoDoPlay, envelope } from "../../ui.js";
 
 /**
@@ -54,6 +54,9 @@ export function Video() {
     relogios.current.push(setTimeout(aquecerFluido, 800));
   };
 
+  // Da carga em diante tudo o que entra cobre a secao: o play (o L e o "ithium") e o vermelho que ficam atras nao tem mais o que
+  // mostrar, e qualquer quadro em que uma tela ainda nao pintou (celular lento) deixava a logo aparecer. Escondidos, so sobra o escuro.
+  const encoberto = estagio >= ESTAGIOS.carga;
   return (
     <section id="video" ref={secao} className={`${bloco} flex flex-col justify-center min-h-svh py-16 md:py-24`}>
       {/* A malha de pontos do player, atras de tudo; as pontas e o circulo do clique ficam por cima dela. */}
@@ -65,7 +68,7 @@ export function Video() {
           <button
             type="button"
             key={rodada}
-            className={botaoDoPlay}
+            className={`${botaoDoPlay}${encoberto ? " invisible" : ""}`}
             aria-label="Reproduzir vídeo"
             data-tocando={tocando ? "" : undefined}
             onClick={() => tocar()}
@@ -89,7 +92,7 @@ export function Video() {
         </div>
       </div>
 
-      {tocando && <div className="absolute inset-0 z-2 pointer-events-none bg-acento motion-safe:animate-corte" aria-hidden="true" onAnimationEnd={() => setCoberto(true)} key={rodada} />}
+      {tocando && <div className={`absolute inset-0 z-2 pointer-events-none ${encoberto ? "bg-void" : "bg-acento"} motion-safe:animate-corte`} aria-hidden="true" onAnimationEnd={() => setCoberto(true)} key={rodada} />}
 
       {tocando && modulo && <modulo.default estagio={estagio} agenda={agenda} origem={origem} velocidade={velocidade} aoRepetir={() => tocar(true)} />}
     </section>
