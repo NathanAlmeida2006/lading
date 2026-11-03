@@ -2,7 +2,7 @@ import { Fio } from "../../componentes/ui/Fio.jsx";
 import { Modelo3D } from "./Modelo3D.jsx";
 import { Moldura } from "../../componentes/ui/Moldura.jsx";
 import { Rotulo } from "../../componentes/ui/Rotulo.jsx";
-import { destaque, grao, vazado } from "../../app/ui.js";
+import { destaque, vazado } from "../../app/ui.js";
 
 /**
  * O tamanho do titulo, como o `.sessao-capa .hoje-display` do app: o da Home (27vw, ate 240 px), encolhido o bastante para a palavra
@@ -18,7 +18,7 @@ function tamanhoDoTitulo(linhas) {
 
 /**
  * A capa de uma sessao do app Lithium (Sessao.jsx + PainelCartaz.jsx, em app-lithium), como ela abre na tela: cantos, grao, malha
- * de pontos (o fundo e o do Video.jsx, compartilhado entre as capas), o kicker, os dois fios, o titulo em escala de cartaz (a primeira linha so em contorno, se ha mais de uma), o objeto 3D
+ * de pontos (o grao e o fundo sao os do Palco.jsx, compartilhados entre as capas), o kicker, os dois fios, o titulo em escala de cartaz (a primeira linha so em contorno, se ha mais de uma), o objeto 3D
  * flutuando atras do titulo e, nas sessoes (`acao`), o botao e os numeros crus. O mesmo painel abre as abas da EU (Semana,
  * Corpo, Social Vibe), sem botao nem numeros e sem os menus do app. O acento e o do protocolo (`acento`, o `--acento` desta capa).
  *
@@ -29,7 +29,7 @@ function tamanhoDoTitulo(linhas) {
 export function CapaDaSessao({ kicker, linhas, modelo, acento, cor, sobre, leituras, acao = true, origem }) {
   return (
     <section
-      className={`${grao} absolute inset-0 z-4 overflow-clip text-bone [--respiro:24px] md:[--respiro:48px]`}
+      className="absolute inset-0 z-4 overflow-clip text-bone [--respiro:24px] md:[--respiro:48px]"
       style={{ "--acento": acento }}
       aria-hidden="true"
     >

@@ -1,3 +1,4 @@
+import { grao } from "../../app/ui.js";
 import { CampoDePontos } from "../../componentes/visuais/CampoDePontos.jsx";
 import { AppRegistro } from "./AppRegistro.jsx";
 import { AppTrilha } from "./AppTrilha.jsx";
@@ -23,10 +24,10 @@ export default function Palco({ estagio, agenda, origem, velocidade, aoRepetir }
   return (
     <>
       {estagio === ESTAGIOS.l3d && <TakeL3D inicioEm={agenda.current[ESTAGIOS.l3d]} />}
-      {/* Um unico fundo (preto + malha de pontos) para a carga e as seis capas: ele nao remonta nos cortes, so a frente troca.
+      {/* Um unico fundo (preto + malha de pontos) para a carga e as seis capas: ele nao remonta nos cortes, so a frente troca. O grao fica aqui, sobre o bg-void, para misturar com ele (overlay) como nas outras secoes; na capa, sem fundo proprio, ele clareava o preto.
           Remontar o canvas a cada corte dava um piscar de um quadro e reiniciava a onda. As frentes abaixo sao transparentes. */}
       {estagio >= ESTAGIOS.carga && estagio < ESTAGIOS.trilha && (
-        <div className="absolute inset-0 z-4 bg-void" aria-hidden="true">
+        <div className={`${grao} absolute inset-0 z-4 bg-void`} aria-hidden="true">
           <CampoDePontos />
         </div>
       )}
