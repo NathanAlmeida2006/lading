@@ -17,8 +17,8 @@
     />
     <meta name="theme-color" content="#09090b" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="preload" href="/fonts/big-shoulders-display-latin.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high" />
-    <link rel="preload" href="/fonts/ibm-plex-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fontes/big-shoulders-display-latin.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high" />
+    <link rel="preload" href="/fontes/ibm-plex-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
 
 
     <script>
@@ -26,13 +26,13 @@
       // A cortina de introducao e decidida AQUI, antes da primeira pintura,
       // para nao piscar por cima do heroi ja pre-renderizado. Em TODA carga,
       // inclusive recarga no meio da pagina (decisao do gerente do projeto,
-      // 06/09/2026); nunca sob movimento reduzido. Ver components/Intro.jsx.
+      // 06/09/2026); nunca sob movimento reduzido. Ver componentes/visuais/Intro.jsx.
       //
       // Os dois relogios abaixo NAO dependem do pacote de JavaScript, e e esse o
       // ponto: a cortina e CSS e este script a recolhe (display e trava de
       // rolagem) aos 3,2 s; e se o pacote nao acordar em 8 s, a classe `js`
       // sai e todo [data-revelar] e toda palavra apagada voltam a aparecer
-      // (RNF-L35). App.jsx escreve `pronto` depois de hidratar. Se o pacote chegar
+      // (RNF-L35). Aplicativo.jsx escreve `pronto` depois de hidratar. Se o pacote chegar
       // depois da hora, a classe NAO volta: a pagina fica aberta, sem movimento.
       (function () {
         try {
@@ -47,7 +47,7 @@
             scrollTo(0, 0);
           }
           var raiz = document.documentElement;
-          // Quem volta da politica ou dos termos (a marca vem de src/documento.js, na mesma aba) ja viu a abertura: sem cortina
+          // Quem volta da politica ou dos termos (a marca vem de src/entradas/documentos.js, na mesma aba) ja viu a abertura: sem cortina
           // e sem a entrada do heroi. Vale uma vez: a marca e consumida aqui, e a proxima carga abre normal.
           var deDocumento = false;
           try {
@@ -68,6 +68,6 @@
   </head>
   <body class="overflow-x-hidden pendente:overflow-hidden bg-void text-bone font-terciaria text-body [-webkit-font-smoothing:antialiased] [&.com-consentimento]:pb-42 sm:[&.com-consentimento]:pb-24">
     <div id="raiz"><!--app-html--></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/entradas/cliente.jsx"></script>
   </body>
 </html>

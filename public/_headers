@@ -1,7 +1,7 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-/fonts/*
+/fontes/*
   Cache-Control: public, max-age=604800
 
 /*.webp
@@ -10,5 +10,5 @@
 /*.mp3
   Cache-Control: public, max-age=86400
 
-/3d-models/*
+/modelos-3d/*
   Cache-Control: public, max-age=86400
