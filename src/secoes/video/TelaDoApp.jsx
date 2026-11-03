@@ -4,28 +4,19 @@ import { topoEm } from "../../sensorial/regua.js";
 
 const VELOCIDADE = 1100; // px por segundo, constante (se a tela nao pedir outra)
 
-/** O zoom do match cut entre duas telas: a primeira entra nele (`saida`, ms) e a seguinte sai dele (`entrada`, ms). */
-export const ZOOM = { escala: 2.4, saida: 220, entrada: 320 };
-const EASE_SAIDA = "cubic-bezier(0.55, 0, 1, 0.45)"; // acelera: o zoom "puxa" a tela
-const EASE_ENTRADA = "cubic-bezier(0.16, 1, 0.3, 1)"; // expo-out: a tela assenta
-
 /**
  * Uma tela do app Lithium, rolada por um usuario: a moldura de celular (430 px no desktop, a tela toda no celular)
  * e a rolagem rapida e de velocidade constante, que ja comeca andando (sem espera). `escopo` e a classe a que o CSS
  * da tela esta restrito (estilos/app-telas.css, @scope). Os `data-revelar` entram pela rolagem, como no app.
  *
- * Pensada para match cut entre duas telas: cada uma rola so um trecho, e o trecho e definido pelo que aparece na tela.
+ * Cada tela rola so um trecho, definido pelo que aparece na tela:
  *   `de`  { alvo, y }: comeca rolada ate o elemento `alvo` (seletor) ficar com o topo a `y` px do topo da tela;
  *   `ate` { alvo, y }: rola do topo ate o `alvo` chegar a `y`, em exatamente `duracao` ms (a velocidade sai da distancia, e vai
- *   para `aoMedir`, em px/s); sem `ate`, anda por `duracao` ms a `velocidade` px/s (a medida pela tela anterior, para o
- *   movimento casar) e para. Quem tira a tela de cena e o video (Video.jsx), na hora da batida. Sob movimento reduzido
- *   nao rola: fica em `de`.
- * Uma tela com `ate` e outra com `de`, no mesmo `alvo` e `y`, casam: o corte troca o conteudo e a forma fica no lugar.
- * Para o corte ser um zoom (punch-in / punch-out) sobre esse cartao, a primeira leva `zoomSaida` e a segunda `zoomEntrada`
- * ({ escala, ms }, ZOOM): a primeira se aproxima do cartao nos ultimos ms da rolagem, a segunda nasce aproximada e se afasta.
+ *   para `aoMedir`, em px/s); sem `ate`, anda por `duracao` ms a `velocidade` px/s e para. Quem tira a tela de cena e o video
+ *   (Video.jsx), na hora da batida. Sob movimento reduzido nao rola: fica em `de`.
  *
  * `inicioEm` (ms, no relogio de `performance.now()`): a hora em que o estagio devia entrar. A rolagem com `ate` conta dele, e nao do primeiro
- * quadro depois de montar: se o React monta tarde (celular, CPU carregada), a tela chega ao cartao-alvo e ao zoom na hora do corte seguinte, e
+ * quadro depois de montar: se o React monta tarde (celular, CPU carregada), a tela chega ao alvo na hora do corte seguinte, e
  * nao depois dele. Sem `inicioEm`, conta do primeiro quadro.
  *
  * Um dedo (toque translucido) arrasta para cima sobre a tela, em loop, enquanto ela rola.
@@ -35,26 +26,18 @@ const EASE_ENTRADA = "cubic-bezier(0.16, 1, 0.3, 1)"; // expo-out: a tela assent
  * escura e a forma sumiria no fundo preto: junto com a mascara, as cores se invertem (`invert` + `hue-rotate`, que mantem os
  * matizes), e a forma fica clara, com o app em tinta dentro, e se encaixa na logo branca do quadro seguinte.
  */
-export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidade = VELOCIDADE, aoMedir, zoomSaida, zoomEntrada, mascarar, ligada = true, inicioEm }) {
+export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidade = VELOCIDADE, aoMedir, mascarar, ligada = true, inicioEm }) {
   const raiz = useRef(null);
   const moldura = useRef(null);
   const rolo = useRef(null);
 
   useLayoutEffect(() => {
     const no = rolo.current;
-    const mold = moldura.current;
     const reduzido = semMovimento();
     const itens = no.querySelectorAll("[data-revelar]");
     const posicao = ({ alvo, y }) => topoEm(no.querySelector(alvo), no) - y;
     const inicio = de ? posicao(de) : 0;
     no.scrollTop = inicio;
-    // O zoom gira em torno do centro do cartao-alvo.
-    const ref = ate || de;
-    const alvo = ref && no.querySelector(ref.alvo);
-    mold.style.transformOrigin = `50% ${alvo ? ref.y + alvo.offsetHeight / 2 : no.clientHeight / 2}px`;
-    if (zoomEntrada && !reduzido) {
-      mold.animate([{ transform: `scale(${zoomEntrada.escala})` }, { transform: "scale(1)" }], { duration: zoomEntrada.ms, easing: EASE_ENTRADA });
-    }
     const obs = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && e.target.setAttribute("data-visto", "")), { root: no, rootMargin: "0px 0px -8% 0px" });
     itens.forEach((i) => obs.observe(i));
     if (reduzido) {
@@ -66,15 +49,10 @@ export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidad
     const fim = Math.min(maximo, ate ? posicao(ate) : inicio + (velocidade * duracao) / 1000);
     const v = ate ? Math.max(0, fim - inicio) / (duracao / 1000) : velocidade;
     aoMedir?.(v);
-    let quadro = 0, vivo = true, t0 = inicioEm ?? null, zoomou = false, y = inicio;
+    let quadro = 0, vivo = true, t0 = inicioEm ?? null, y = inicio;
     const andar = (agora) => {
       y = Math.min(fim, inicio + (Math.max(0, agora - t0) / 1000) * v);
       no.scrollTop = y;
-      if (zoomSaida && !zoomou && fim - y <= (v * zoomSaida.ms) / 1000) {
-        zoomou = true;
-        const zoom = mold.animate([{ transform: "scale(1)" }, { transform: `scale(${zoomSaida.escala})` }], { duration: zoomSaida.ms, easing: EASE_SAIDA, fill: "forwards" });
-        zoom.currentTime = Math.min(zoomSaida.ms, Math.max(0, zoomSaida.ms - ((fim - y) / v) * 1000)); // montou tarde: o zoom entra ja no ponto certo
-      }
     };
     // Com `inicioEm`, o primeiro quadro ja sai no lugar em que a tela devia estar nesta hora.
     if (t0 != null) andar(performance.now());

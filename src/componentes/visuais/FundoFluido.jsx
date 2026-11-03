@@ -11,7 +11,13 @@ const VERTICE = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
  * acendem, e o cinza sai em pontos de dither ordenado (Bayer 4x4, celula de 3 px). Cinza neutro,
  * sem cor: o acento nao entra. O tempo anda num circulo, entao o ciclo de 12 s fecha sem corte.
  */
-const FRAGMENTO = `precision mediump float;
+// highp, nao mediump: nos GPUs de celular mediump e de 16 bits, e o hash `fract(sin(..)*43758.5453)` vira 0 em todo pixel
+// (o ruido some, nenhuma crista acende e o fundo fica invisivel). No desktop mediump e 32 bits, por isso so aparecia no deploy mobile.
+const FRAGMENTO = `#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
 uniform vec2 r;uniform float t;uniform vec3 c3;
 float h(vec2 i){return fract(sin(dot(i,vec2(127.1,311.7)))*43758.5453);}
 float n(vec2 x){vec2 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);

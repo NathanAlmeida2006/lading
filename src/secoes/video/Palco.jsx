@@ -4,7 +4,7 @@ import { AppTrilha } from "./AppTrilha.jsx";
 import { CapaDaSessao } from "./CapaDaSessao.jsx";
 import { LogoLithium, MASCARA_DA_LOGO } from "./LogoLithium.jsx";
 import { preparar } from "./Modelo3D.jsx";
-import { TakeArsenal, TakeCalendario, TakeCarga, TakeFaca, TakeL3D, TakeManifesto, TakeNumeros } from "./Takes.jsx";
+import { TakeArsenal, TakeCalendario, TakeCarga, TakeFaca, TakeL3D, TakeManifesto, TakeNumeros, TakeRegistre } from "./Takes.jsx";
 import { BATIDA, CAPAS, ESTAGIOS, FIM_DA_MUSICA, OBJETOS_3D, REPLAY_APOS } from "./tempo.js";
 
 const logo = new Image();
@@ -33,6 +33,7 @@ export default function Palco({ estagio, agenda, origem, velocidade, aoRepetir }
       {estagio === ESTAGIOS.carga && <TakeCarga />}
       {estagio >= ESTAGIOS.capa && estagio < ESTAGIOS.trilha && <CapaDaSessao {...CAPAS[estagio - ESTAGIOS.capa]} origem={origem.current} />}
       {estagio === ESTAGIOS.trilha && <AppTrilha duracao={2 * BATIDA} inicioEm={agenda.current[ESTAGIOS.trilha]} aoMedir={(v) => { velocidade.current = v; }} />}
+      {estagio === ESTAGIOS.ponte && <TakeRegistre inicioEm={agenda.current[ESTAGIOS.ponte]} />}
       {estagio >= ESTAGIOS.mascara && estagio < ESTAGIOS.manifesto && <div className="absolute inset-0 z-4 bg-void" aria-hidden="true" />}
       {estagio >= ESTAGIOS.registro && estagio < ESTAGIOS.logo && <AppRegistro velocidade={velocidade.current} duracao={4 * BATIDA} mascarar={estagio >= ESTAGIOS.mascara} />}
       {estagio >= ESTAGIOS.logo && estagio < ESTAGIOS.manifesto && <LogoLithium quadro={(estagio - ESTAGIOS.logo) % 2} reinicio={estagio} />}

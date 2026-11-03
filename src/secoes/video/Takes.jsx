@@ -35,6 +35,35 @@ function useQuadros(inicioEm, tempos) {
 }
 
 /**
+ * A ponte (2 batidas) entre a Trilha e o Registro, as duas telas do app que rolam: o corte direto de uma rolagem para a outra
+ * piscava, e aqui ele e um take de proposito, em dois quadros de uma batida cada. O vermelho do L, "Treinou hoje?", batendo
+ * linha a linha, e, em corte seco, o osso, com o check e "Registre agora." (o ponto em rubro), que pede a tela do Registro.
+ */
+export function TakeRegistre({ inicioEm }) {
+  const quadro = useQuadros(inicioEm, [BATIDA]);
+  const texto = "text-[length:min(calc((100vw-48px)/4.2),calc((100svh-160px)/3.2),220px)] leading-[1.04] tracking-[0.01em]";
+  if (quadro === 0) {
+    return (
+      <div className={`${PAGINA} bg-acento text-void`} aria-hidden="true">
+        <div className={`${MIOLO} ${texto}`}>
+          <p {...bate(0)}>Treinou</p>
+          <p {...bate(BATIDA / 4)}>hoje?</p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className={`${PAGINA} bg-bone text-void`} aria-hidden="true">
+      <div className={`${MIOLO} ${texto}`}>
+        <svg viewBox="0 0 24 24" className="mb-[0.1em] block size-[1.1em] text-acento motion-safe:animate-bate" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="square" strokeLinejoin="miter"><path d="M3.5 12.5l5.5 5.5L20.5 6.5" /></svg>
+        <p {...bate(BATIDA / 4)}>Registre</p>
+        <p {...bate(BATIDA / 2)}>agora<span className="text-acento">.</span></p>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Take 1, o manifesto, em dois quadros: o preto, com "O feed esconde quem usa bomba." batendo palavra a palavra, e a
  * "bomba" em vermelho; e, em corte seco aos 1,3 s, o vermelho, com "Natural" e "Cresce." crescendo do pequeno ao tamanho cheio.
  */

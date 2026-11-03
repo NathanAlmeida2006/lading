@@ -23,7 +23,7 @@ export function Video() {
   const origem = useRef(0);
   const som = useRef(null);
   const agenda = useRef({}); // a hora (performance.now) em que cada estagio devia entrar: quem anima por dentro conta dela, e nao de quando montou
-  const velocidade = useRef(undefined); // a da rolagem da Trilha: o Registro anda igual (o match cut)
+  const velocidade = useRef(undefined); // a da rolagem da Trilha: o Registro anda na mesma velocidade
   const secao = useRef(null);
   useEffect(() => () => { relogios.current.forEach(clearTimeout); som.current?.parar(200); }, []);
 
