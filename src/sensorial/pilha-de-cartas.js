@@ -31,5 +31,5 @@ export function usePilhaDeCartas(raiz, lista) {
       ativo = false;
       window.removeEventListener("resize", aoRedimensionar);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intencional: raiz e lista sao refs estaveis e a pilha e medida uma vez na montagem, com o redimensionamento cuidando da largura; rodar de novo duplicaria os ouvintes
 }

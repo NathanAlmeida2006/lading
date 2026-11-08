@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { carregarCoreografias, abrirLeitura } from "./carregador.js";
+import { carregarCoreografias } from "./carregador.js";
+import { abrirLeitura } from "./leitura.js";
 import { aoMudarPreferencia, semMovimento } from "./tokens.js";
 import { estaPausado } from "./pausa.js";
 export { ligarLenis } from "./rolagem.js";
@@ -41,7 +42,7 @@ export function useMovimento(efeito, deps = []) {
     executar();
     const soltarPreferencia = aoMudarPreferencia(executar);
     return () => { montado = false; soltarPreferencia(); limparEscopo(); };
-  }, deps);
+  }, deps); // eslint-disable-line react-hooks/exhaustive-deps -- intencional: as deps sao as de quem chama o useMovimento (a regra o confere pelo additionalHooks) e o efeito e a funcao do chamador, que e lida na montagem de cada rodada
 }
 
 function chamar(nome, args, comSinal = false) {

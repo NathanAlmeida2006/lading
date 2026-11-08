@@ -3,8 +3,17 @@ import { CampoDePontos } from "../../componentes/visuais/CampoDePontos.jsx";
 import { aquecerFluido } from "../../componentes/visuais/FundoFluido.jsx";
 import { Pontas } from "../../componentes/visuais/FundoCapa.jsx";
 import { criarSom, prepararSom } from "./som.js";
+import { useLinhaDoTempo } from "./agenda.js";
 import { BATIDA_FACA, DROP, ESTAGIOS, FIM_DA_MUSICA, LINHA, batida } from "./tempo.js";
-import { bloco, botaoDoPlay, envelope } from "../../app/ui.js";
+import { bloco, envelope } from "../../app/ui.js";
+
+/** O botao de play da secao de video. */
+const botaoDoPlay =
+  "group relative [--u:min(1svh,1.7vw)] grid place-items-center size-40 lg:size-64 rounded-full bg-acento " +
+  "before:content-[''] before:absolute before:inset-0 before:rounded-full before:border-2 before:border-acento " +
+  "motion-safe:before:animate-anel text-void transition-transform duration-(--motion-fast) hover:scale-105 " +
+  "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-bone " +
+  "data-tocando:before:hidden data-tocando:pointer-events-none z-3";
 
 /**
  * Secao de video, codigo puro: tela cheia, fundo preto e o play no meio. O clique toca um som e abre
@@ -13,19 +22,19 @@ import { bloco, botaoDoPlay, envelope } from "../../app/ui.js";
  * Sob movimento reduzido nao ha circulo: o fundo vai direto ao vermelho.
  */
 export function Video() {
-  const [tocando, setTocando] = useState(false);
-  const [estagio, setEstagio] = useState(-1);
-  const [coberto, setCoberto] = useState(false); // o circulo vermelho ja cobriu a secao: a malha e as pontas dela, atras dele, deixam de ser desenhadas
-  const [rodada, setRodada] = useState(0); // cada repeticao remonta o play e o circulo, para as animacoes recomecarem
-  const [modulo, setModulo] = useState(null); // o modulo do palco; se a carga falhar, o video fica no vermelho e a pagina segue
-  const carregar = () => import("./Palco.jsx").then((m) => { setModulo(m); return m; });
-  const relogios = useRef([]);
+  const [tocando, definirTocando] = useState(false);
+  const [estagio, definirEstagio] = useState(-1);
+  const [coberto, definirCoberto] = useState(false); // o circulo vermelho ja cobriu a secao: a malha e as pontas dela, atras dele, deixam de ser desenhadas
+  const [rodada, definirRodada] = useState(0); // cada repeticao remonta o play e o circulo, para as animacoes recomecarem
+  const [modulo, definirModulo] = useState(null); // o modulo do palco; se a carga falhar, o video fica no vermelho e a pagina segue
+  const carregar = () => import("./Palco.jsx").then((m) => { definirModulo(m); return m; });
+  const tempo = useLinhaDoTempo(definirEstagio);
   const origem = useRef(0);
   const som = useRef(null);
   const agenda = useRef({}); // a hora (performance.now) em que cada estagio devia entrar: quem anima por dentro conta dela, e nao de quando montou
   const velocidade = useRef(undefined); // a da rolagem da Trilha: o Registro anda na mesma velocidade
   const secao = useRef(null);
-  useEffect(() => () => { relogios.current.forEach(clearTimeout); som.current?.parar(200); }, []);
+  useEffect(() => () => { som.current?.parar(200); }, []);
 
   // Perto de aparecer na tela, desce o palco, para o primeiro corte nao depender da rede; a musica so desce com a intencao de tocar.
   useEffect(() => {
@@ -36,9 +45,9 @@ export function Video() {
 
   const tocar = (repetindo = false) => {
     if (tocando && !repetindo) return;
-    relogios.current.forEach(clearTimeout);
+    tempo.parar();
     som.current?.parar(250);
-    if (repetindo) { setEstagio(-1); setCoberto(false); setRodada((r) => r + 1); }
+    if (repetindo) { definirEstagio(-1); definirCoberto(false); definirRodada((r) => r + 1); }
     const s = (som.current = criarSom());
     s.musica(DROP); // o fade-in sobe, suave, ate o drop
     s.efeito(batida(BATIDA_FACA));
@@ -46,12 +55,11 @@ export function Video() {
     carregar().then((m) => m.prepararModelos()).catch(() => {});
     const t0 = performance.now();
     origem.current = t0;
-    setTocando(true);
+    definirTocando(true);
     // Cada estagio entra na sua batida, no relogio do clique (nenhum depende de a rolagem acabar).
-    LINHA.forEach(([b, e]) => { agenda.current[e] = t0 + batida(b); });
-    relogios.current = LINHA.map(([b, e]) => setTimeout(() => setEstagio(e), batida(b) - (performance.now() - t0)));
+    Object.assign(agenda.current, tempo.iniciar(LINHA, t0));
     // A tela fica parada entre o fim do circulo e o L, que so anda aos 1500 ms.
-    relogios.current.push(setTimeout(aquecerFluido, 800));
+    tempo.depois(800, aquecerFluido);
   };
 
   // Da carga em diante tudo o que entra cobre a secao: o play (o L e o "ithium") e o vermelho que ficam atras nao tem mais o que
@@ -92,7 +100,7 @@ export function Video() {
         </div>
       </div>
 
-      {tocando && <div className={`absolute inset-0 z-2 pointer-events-none ${encoberto ? "bg-void" : "bg-acento"} motion-safe:animate-corte`} aria-hidden="true" onAnimationEnd={() => setCoberto(true)} key={rodada} />}
+      {tocando && <div className={`absolute inset-0 z-2 pointer-events-none ${encoberto ? "bg-void" : "bg-acento"} motion-safe:animate-corte`} aria-hidden="true" onAnimationEnd={() => definirCoberto(true)} key={rodada} />}
 
       {tocando && modulo && <modulo.default estagio={estagio} agenda={agenda} origem={origem} velocidade={velocidade} aoRepetir={() => tocar(true)} />}
     </section>

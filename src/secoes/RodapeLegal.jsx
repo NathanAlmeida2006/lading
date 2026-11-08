@@ -2,6 +2,7 @@ import { CampoDePontos } from "../componentes/visuais/CampoDePontos.jsx";
 import { Botao } from "../componentes/ui/Botao.jsx";
 import { Rotulo } from "../componentes/ui/Rotulo.jsx";
 import { Wordmark } from "../componentes/ui/Wordmark.jsx";
+import { conteudo } from "../conteudo/conteudo.js";
 import { config, contatoPublico } from "../infra/config.js";
 import { envelope, grade12 } from "../app/ui.js";
 import { urlDocumento } from "../infra/validacao.js";
@@ -37,7 +38,8 @@ const DOCUMENTOS = [
 
 export function RodapeLegal() {
   return (
-    <footer id="rodape-legal" className="rodape relative overflow-clip bg-void text-silver border-t border-line">
+    // data-oculta-doca: o rodape tem o proprio botao e a faixa de acento; a doca por cima dele seria o segundo acento na mesma tela.
+    <footer id="rodape-legal" data-oculta-doca="" className="rodape relative overflow-clip bg-void text-silver border-t border-line">
       <CampoDePontos variante="estelar" />
       <div
         className={`${envelope} relative z-1 grid grid-cols-[1fr_1fr] gap-x-6 gap-y-12 pt-16 pb-12 lg:grid-cols-[repeat(12,1fr)] lg:gap-x-8 lg:pt-24 lg:pb-16`}
@@ -110,7 +112,7 @@ export function RodapeLegal() {
         <div className={`${envelope} flex flex-col gap-8 ${grade12} lg:items-end`}>
           <Wordmark referencia className="block w-full text-void lg:col-[1/span_7]" />
           <p className="self-end max-w-[14ch] lg:max-w-none text-right text-void font-secundaria text-display normal-case tracking-[-0.005em] leading-[1.02] lg:col-[9/-1]">
-            O básico bem feito, provado, sem mágica.
+            {conteudo.rodape.tagline}
           </p>
         </div>
       </div>

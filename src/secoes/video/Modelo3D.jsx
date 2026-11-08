@@ -137,7 +137,7 @@ export function Modelo3D({ modelo, cor, className = "", origem, pose, flutua = t
     return () => {
       vivo = false; e.pedir = null; cancelAnimationFrame(quadro); observador.disconnect(); tela.remove();
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intencional: flutua, origem e pose sao lidos uma vez na montagem; o laco e o canvas vivem enquanto o componente vive e rodar de novo os recriaria; a troca de modelo e cor tem o efeito seguinte
 
   useEffect(() => {
     const e = estado.current;

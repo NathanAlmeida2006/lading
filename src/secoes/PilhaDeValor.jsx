@@ -4,7 +4,7 @@ import { Cronometro, OfertaLimitada } from "../componentes/ui/Cronometro.jsx";
 import { FundoCapa } from "../componentes/visuais/FundoCapa.jsx";
 import { mascaraDeLinha, revelar, revelarEmCascata, useMovimento } from "../sensorial/index.js";
 import { semMovimento } from "../sensorial/tokens.js";
-import { pilhaPronta as DADOS } from "../conteudo/pilha.js";
+import { pilhaPronta } from "../conteudo/pilha.js";
 import { bloco, envelope, mascara } from "../app/ui.js";
 
 const SERRILHA =
@@ -31,8 +31,9 @@ const ICONES = {
  * @param {object} props
  * @param {string} [props.id] Ancora da secao (`Aplicativo.jsx` reusa a pilha como `#oferta`).
  * @param {string} [props.posicao] Posicao do CTA para o checkout.
+ * @param {boolean} [props.ocultaDoca] A doca some enquanto a secao tiver qualquer pixel na tela.
  */
-export function PilhaDeValor({ id = "pilha-de-valor", posicao = "pilha" }) {
+export function PilhaDeValor({ id = "pilha-de-valor", posicao = "pilha", ocultaDoca = false }) {
   const raiz = useRef(null);
 
   useMovimento(() => {
@@ -46,11 +47,11 @@ export function PilhaDeValor({ id = "pilha-de-valor", posicao = "pilha" }) {
     revelar(no.querySelector(".chamada"));
   }, []);
 
-  if (!DADOS) return null;
-  const { cabecalho } = DADOS;
+  if (!pilhaPronta) return null;
+  const { cabecalho } = pilhaPronta;
 
   return (
-    <section id={id} aria-labelledby={`${id}-titulo`} className={`${bloco} isolate py-16 md:py-24`} ref={raiz}>
+    <section id={id} data-oculta-doca={ocultaDoca ? "" : undefined} aria-labelledby={`${id}-titulo`} className={`${bloco} isolate py-16 md:py-24`} ref={raiz}>
       <FundoCapa />
       <div className={`${envelope} relative z-1`}>
         <div className="max-w-[65ch] min-w-0 mx-auto">
@@ -64,7 +65,7 @@ export function PilhaDeValor({ id = "pilha-de-valor", posicao = "pilha" }) {
             </h2>
           </header>
 
-          <PilhaCartao dados={DADOS} />
+          <PilhaCartao dados={pilhaPronta} />
 
           <OfertaLimitada />
 

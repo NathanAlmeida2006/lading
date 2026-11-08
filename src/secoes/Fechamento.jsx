@@ -7,7 +7,7 @@ import { Rotulo } from "../componentes/ui/Rotulo.jsx";
 import { conteudo } from "../conteudo/conteudo.js";
 import { abrirPainel, useMovimento } from "../sensorial/index.js";
 import { contatoPublico } from "../infra/config.js";
-import { camada, crus, destaque, envelope, grao, linha, painel, vazado } from "../app/ui.js";
+import { camada, destaque, envelope, grao, linha, numerosCrus, painel, vazado } from "../app/ui.js";
 
 /**
  * Fechamento: a segunda capa.
@@ -18,7 +18,7 @@ import { camada, crus, destaque, envelope, grao, linha, painel, vazado } from ".
  * linhas espelha a dobra, com o proprio botao logo abaixo.
  *
  * Sem argumento novo (RF-L08). O que muda em relacao a dobra sao os numeros
- * crus: la anunciam o programa, aqui anunciam a entrega.
+ * numerosCrus: la anunciam o programa, aqui anunciam a entrega.
  */
 export function Fechamento() {
   const raiz = useRef(null);
@@ -44,7 +44,7 @@ export function Fechamento() {
 
       <div className="w-full flex-1 flex flex-col justify-center gap-2 py-3 relative z-1">
         <div className={`${envelope} flex flex-col items-start gap-2`}>
-          <Rotulo className="painel__kicker" margem="mb-2">o caminho começa aqui</Rotulo>
+          <Rotulo className="painel__kicker" margem="mb-2">{conteudo.fechamento.rotulo}</Rotulo>
 
           <Fio />
           <h2
@@ -67,16 +67,17 @@ export function Fechamento() {
 
         <div className="painel__acao w-full shrink-0 mt-4 relative z-1" data-revelar>
           <div className={`${envelope} flex flex-col items-center text-center`}>
-            <Botao posicao="fechamento" />
+            {/* ocultaDoca: o CTA do fechamento tem a propria acao na tela; a doca sai enquanto ele estiver visivel. */}
+            <Botao posicao="fechamento" ocultaDoca />
             <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
-              Pagamento único · acesso imediato e vitalício
+              {conteudo.fechamento.condicoes}
             </p>
           </div>
         </div>
       </div>
 
       <div className={`${envelope} painel__rodape pointer-events-none absolute inset-x-0 bottom-4 z-1 flex items-end justify-between gap-4 text-silver tela-rasa:hidden`} data-revelar>
-        <ul className={crus} role="list">
+        <ul className={numerosCrus} role="list">
           <li>
             <b className={destaque}>App</b> direto no celular
           </li>

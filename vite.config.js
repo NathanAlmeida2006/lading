@@ -6,7 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 // execucao (RNF-L08): tudo o que a pagina precisa sai deste bundle. O Tailwind
 // roda so no build (src/estilos/tailwind.css), com o tema apontando para os
 // tokens do ds-bundle.
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
   plugins: [react(), tailwindcss()],
   // O ano do rodape e o do build: `new Date()` no cliente divergiria do HTML
   // pre-renderizado na virada do ano e quebraria a hidratacao.
@@ -16,9 +16,14 @@ export default defineConfig({
     // dele o esbuild so transpilaria a toa. O CSS segue minificado como antes (`cssTarget`), byte a byte.
     target: ["chrome118", "edge118", "firefox146", "safari17.4"],
     cssTarget: "es2020",
+    // O Vite 8 minifica o CSS com o Lightning CSS por padrao; o esbuild mantem a saida do Vite 6 (regra do pixel).
+    // Exige o pacote esbuild em devDependencies (par opcional do Vite 8).
+    cssMinify: "esbuild",
     assetsInlineLimit: 2048,
     // `scripts/verificar-tamanho.mjs` ja mede o gzip contra o teto do RNF-L04, e a
     // conta do Vite refaz a mesma compressao em cada arquivo, so para imprimir.
     reportCompressedSize: false,
+    // O build SSR so gera servidor.js: nao copia public/ (8,2 MB sem uso).
+    copyPublicDir: !isSsrBuild,
   },
-});
+}));

@@ -1,6 +1,6 @@
 import { animate, createDrawable, splitText, stagger, steps, utils } from "animejs";
 import { aoMudarPreferencia, duracao, semMovimento } from "./tokens.js";
-import { abrirLeitura } from "./carregador.js";
+import { abrirLeitura } from "./leitura.js";
 
 // Dispara na borda da tela, e nao 80px dentro: com rolagem rapida o elemento ja estaria no meio
 // da tela quando a animacao comecasse, e apareceria "de repente".
@@ -122,7 +122,12 @@ export function revelarEmCascata(alvos, { intervalo = 70 } = {}) {
   return () => { for (const limpar of limpezas) limpar?.(); utils.set(lista, { opacity: 1, y: 0 }); };
 }
 
-/** Espera as fontes antes de dividir; uma desmontagem ou falha impede escrita tardia no DOM. */
+/**
+ * Divide o titulo em linhas (splitText, recorte em cada linha) e o revela pelo `revelar`.
+ * Hoje a mascara nao anima: so o bloco inteiro esmaece. Decisao pendente do dono, desde 02/10:
+ * tirar o splitText aperta o entrelinha, entao ele fica.
+ * Espera as fontes antes de dividir; uma desmontagem ou falha impede escrita tardia no DOM.
+ */
 export async function mascaraDeLinha(alvo, { atraso = 0 } = {}, sinal) {
   if (!alvo) return;
   if (!semMovimento()) await document.fonts.ready;
@@ -189,7 +194,7 @@ export function subirLinhas(linhas, { atraso = 0, intervalo = 110, tempo = 820 }
  * Desenha um traco de SVG quando ele chega a tela. Serve a moldura e os
  * fios do fechamento. Sob movimento reduzido o traco ja nasce inteiro e so aparece.
  */
-export function desenhar(alvos, { atraso = 0, tempo } = {}) {
+function desenhar(alvos, { atraso = 0, tempo } = {}) {
   const lista = Array.from(alvos ?? []).filter(Boolean);
   if (!lista.length) return;
   const reduzido = semMovimento();

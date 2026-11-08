@@ -41,7 +41,7 @@ export function Intro() {
       aria-hidden="true"
     >
       <div className={`${envelope} flex flex-col gap-3 animate-intro-bloco`}>
-        <span className="font-secundaria text-overline uppercase text-void">(protocolo 01 · hipertrofia)</span>
+        <span className="font-secundaria text-overline uppercase text-void">{conteudo.intro.rotulo}</span>
         <p className="flex flex-col w-full font-secundaria text-display-xxl uppercase tabular-nums">
           {conteudo.dobra.headline.linhas.map((linha) => (
             <span className="block overflow-clip pb-[0.04em] -mb-[0.04em] whitespace-nowrap" key={linha}>

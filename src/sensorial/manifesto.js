@@ -56,5 +56,5 @@ export function useManifesto(raiz) {
       sonda.remove();
       no.removeAttribute("data-cabe");
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intencional: raiz e ref estavel e o efeito mede e acende as palavras uma vez na montagem; rodar de novo duplicaria os ouvintes e o acender
 }

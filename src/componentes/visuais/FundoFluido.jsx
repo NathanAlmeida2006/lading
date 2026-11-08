@@ -36,19 +36,20 @@ void main(){
   gl_FragColor=vec4(c3*on,on); // premultiplicado: fora das cristas o canvas e transparente
 }`;
 
+// Item perdido sai do pool; restaurado recria o programa (`montar`); desmontar perdido descarta.
 // Pool de no maximo um contexto pronto: criar custa ~200 ms de thread, entao o aquecimento o cria antes
 // do corte e quem desmonta devolve. Manifesto e Faca nunca estao na tela juntos, por isso um basta.
 const piscina = [];
-function criar() {
-  const cv = document.createElement("canvas");
-  const gl = cv.getContext("webgl", { antialias: false, alpha: true });
-  if (!gl) return null;
-  const compila = (tipo, fonte) => { const s = gl.createShader(tipo); gl.shaderSource(s, fonte); gl.compileShader(s); return s; };
+// Compila e liga o programa no contexto dado. Qualquer falha perde o contexto e devolve null.
+function montar(gl) {
+  const compila = (tipo, fonte) => { const s = gl.createShader(tipo); gl.shaderSource(s, fonte); gl.compileShader(s); return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null; };
   const prog = gl.createProgram();
-  gl.attachShader(prog, compila(gl.VERTEX_SHADER, VERTICE));
-  gl.attachShader(prog, compila(gl.FRAGMENT_SHADER, FRAGMENTO));
+  const vs = compila(gl.VERTEX_SHADER, VERTICE);
+  if (vs) gl.attachShader(prog, vs);
+  const fs = compila(gl.FRAGMENT_SHADER, FRAGMENTO);
+  if (fs) gl.attachShader(prog, fs);
   gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+  if (!vs || !fs || !gl.getProgramParameter(prog, gl.LINK_STATUS)) { gl.getExtension("WEBGL_lose_context")?.loseContext(); return null; }
   gl.useProgram(prog);
   gl.uniform3f(gl.getUniformLocation(prog, "c3"), 0.42, 0.42, 0.42);
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -56,7 +57,23 @@ function criar() {
   const loc = gl.getAttribLocation(prog, "p");
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-  return { cv, gl, uR: gl.getUniformLocation(prog, "r"), uT: gl.getUniformLocation(prog, "t") };
+  return { uR: gl.getUniformLocation(prog, "r"), uT: gl.getUniformLocation(prog, "t") };
+}
+function criar() {
+  const cv = document.createElement("canvas");
+  const gl = cv.getContext("webgl", { antialias: false, alpha: true });
+  if (!gl) return null;
+  const m = montar(gl);
+  if (!m) return null;
+  const f = { cv, gl, ...m, perdido: false, aoRestaurar: null };
+  cv.addEventListener("webglcontextlost", (e) => {
+    e.preventDefault(); f.perdido = true;
+    const i = piscina.indexOf(f); if (i >= 0) piscina.splice(i, 1);
+  });
+  cv.addEventListener("webglcontextrestored", () => {
+    Object.assign(f, montar(gl) ?? {}); f.perdido = false; f.aoRestaurar?.();
+  });
+  return f;
 }
 export function aquecerFluido() {
   if (!piscina.length) { const f = criar(); if (f) piscina.push(f); }
@@ -79,12 +96,12 @@ export function FundoFluido() {
     function ligar() {
       const f = piscina.pop() ?? criar();
       if (!f) return;
-      const { cv, gl, uR, uT } = f;
+      const { cv, gl } = f;
       cv.className = "absolute inset-0 size-full pointer-events-none opacity-30 [image-rendering:pixelated]";
       cv.setAttribute("aria-hidden", "true");
       host.current.append(cv);
       const ajusta = () => { cv.width = Math.max(1, cv.clientWidth); cv.height = Math.max(1, cv.clientHeight); gl.viewport(0, 0, cv.width, cv.height); };
-      const desenha = (ms) => { gl.uniform2f(uR, cv.width, cv.height); gl.uniform1f(uT, (ms / 12000) * Math.PI * 2); gl.drawArrays(gl.TRIANGLES, 0, 3); };
+      const desenha = (ms) => { gl.uniform2f(f.uR, cv.width, cv.height); gl.uniform1f(f.uT, (ms / 12000) * Math.PI * 2); gl.drawArrays(gl.TRIANGLES, 0, 3); };
       let visivel = false, raf = 0, ultimo = -Infinity;
       const passo = toque() ? PASSO_TOQUE : 0;
       const laco = (ms) => { if (ms - ultimo >= passo) { ultimo = ms; desenha(ms); } raf = visivel && !estaPausado() ? requestAnimationFrame(laco) : 0; };
@@ -95,7 +112,8 @@ export function FundoFluido() {
       const ro = new ResizeObserver(() => { ajusta(); desenha(performance.now()); });
       ro.observe(cv);
       const desliga = aoMudarPausa(liga);
-      return () => { cancelAnimationFrame(raf); obs.disconnect(); ro.disconnect(); desliga(); cv.remove(); piscina.push(f); };
+      f.aoRestaurar = () => { ajusta(); desenha(performance.now()); };
+      return () => { cancelAnimationFrame(raf); obs.disconnect(); ro.disconnect(); desliga(); cv.remove(); f.aoRestaurar = null; if (!f.perdido) piscina.push(f); };
     }
     return () => { adiar.disconnect(); limpar?.(); };
   }, []);

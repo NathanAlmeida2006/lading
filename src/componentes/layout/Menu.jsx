@@ -1,8 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { idsDoIndice, secoesPorId } from "../../conteudo/secoes.js";
-import { doisDigitos, envelope, linkDoMenu } from "../../app/ui.js";
+import { doisDigitos, envelope } from "../../app/ui.js";
 import { Wordmark } from "../ui/Wordmark.jsx";
+
+/** Link de cada secao na lista do menu em tela cheia. */
+const linkDoMenu =
+  "flex items-baseline gap-4 py-[clamp(6px,1.5svh,18px)] text-void font-secundaria " +
+  "text-[length:clamp(2.5rem,4.5vw,3.5rem)] leading-none tracking-[0.02em] font-extrabold uppercase " +
+  "transition-transform duration-300 ease-(--ease-expo) hover:translate-x-4 focus-visible:translate-x-4 " +
+  "[&:hover_.menu-nome]:text-transparent [&:hover_.menu-nome]:[-webkit-text-stroke:1.5px_var(--void)] " +
+  "[&:focus-visible_.menu-nome]:text-transparent [&:focus-visible_.menu-nome]:[-webkit-text-stroke:1.5px_var(--void)]";
 
 const NOMES = { inicio: "Início" };
 
@@ -56,7 +64,7 @@ export function Menu() {
       document.removeEventListener("keydown", aoTecla, true);
       for (const elemento of fundo) elemento.inert = false;
       for (const elemento of rolagem) elemento.style.removeProperty("overflow");
-      const alvo = destino.current ? document.getElementById(destino.current) : acionador.current;
+      const alvo = destino.current ? document.getElementById(destino.current) : acionador.current; // eslint-disable-line react-hooks/exhaustive-deps -- acionador.current e lido na limpeza de proposito: o foco volta ao no atual, e isConnected descarta no trocado
       if (!alvo?.isConnected) return;
       const tabindex = alvo.getAttribute("tabindex");
       if (destino.current && tabindex === null) alvo.setAttribute("tabindex", "-1");

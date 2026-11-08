@@ -27,7 +27,7 @@ export function Objecoes() {
         <div className="min-w-0 lg:col-[1/span_5] lg:sticky lg:top-24 lg:self-start">
           <Rotulo>{conteudo.objecoesRotulo}</Rotulo>
           <h2 className={`titulo text-bone font-secundaria text-h1 uppercase lg:text-display ${mascara}`} data-revelar>
-            Perguntas frequentes
+            {conteudo.objecoesTitulo}
           </h2>
         </div>
         <div className="mt-6 min-w-0 lg:mt-0 lg:col-[6/span_7] lg:pt-4">

@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { conteudo } from "../conteudo/conteudo.js";
 import { CampoDePontos } from "../componentes/visuais/CampoDePontos.jsx";
 import { Botao } from "../componentes/ui/Botao.jsx";
-import { ImagemReservada } from "../componentes/ui/ImagemReservada.jsx";
+import { ImagemDoCard } from "../componentes/ui/ImagemDoCard.jsx";
 import { Rotulo } from "../componentes/ui/Rotulo.jsx";
 import { mascaraDeLinha, revelar, useMovimento } from "../sensorial/index.js";
 import { usePilhaDeCartas } from "../sensorial/pilha-de-cartas.js";
@@ -31,7 +31,7 @@ export function Espelho() {
       <CampoDePontos variante="estelar" />
       <div className={`${envelope} relative z-1 ${grade12} lg:items-start`}>
         <header className="mb-8 lg:mb-0 lg:col-[1/span_5] lg:sticky lg:top-12">
-          <Rotulo>hipertrofia · natural</Rotulo>
+          <Rotulo>{conteudo.espelho.rotulo}</Rotulo>
           <h2
             className={`titulo text-bone font-secundaria text-h1 uppercase lg:text-display [--text-h1:51.2px] lg:[--text-display:clamp(48px,6.2vw,89.6px)] ${mascara}`}
             data-revelar
@@ -55,7 +55,7 @@ export function Espelho() {
               style={{ "--ordem": indice }}
             >
               <div className="relative">
-                <ImagemReservada src={carta.src} sizes={SIZES} fixarProporcao className={`aspect-16/10${carta.src ? " brightness-60" : ""} ${carta.pos ?? ""}`} />
+                <ImagemDoCard src={carta.src} sizes={SIZES} esmaecida={!carta.src} className={`aspect-16/10${carta.src ? " brightness-60" : ""} ${carta.pos ?? ""}`} />
                 <span className="absolute left-3 top-3 px-3 py-1 bg-void border border-line-strong text-bone font-terciaria text-mono-reg tabular-nums" aria-hidden="true">
                   {doisDigitos(indice + 1)}
                 </span>

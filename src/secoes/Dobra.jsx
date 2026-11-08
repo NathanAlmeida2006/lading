@@ -6,7 +6,7 @@ import { Moldura } from "../componentes/ui/Moldura.jsx";
 import { Rotulo } from "../componentes/ui/Rotulo.jsx";
 import { Wordmark } from "../componentes/ui/Wordmark.jsx";
 import { conteudo } from "../conteudo/conteudo.js";
-import { camada, crus, destaque, envelope, grao, linha, painel, vazado } from "../app/ui.js";
+import { camada, destaque, envelope, grao, linha, numerosCrus, painel, vazado } from "../app/ui.js";
 
 const ENTRA = "animate-revelar motion-reduce:animate-none";
 
@@ -21,7 +21,8 @@ const ENTRA = "animate-revelar motion-reduce:animate-none";
  */
 export function Dobra() {
   return (
-    <section className={`${painel} ${grao} painel-capa pendente:[--base:300ms]`} id="inicio">
+    // data-oculta-doca: a doca fica sempre visivel, menos na dobra.
+    <section className={`${painel} ${grao} painel-capa pendente:[--base:300ms]`} id="inicio" data-oculta-doca="">
       <FundoCapa />
       <Moldura entrada="css" />
 
@@ -32,7 +33,7 @@ export function Dobra() {
       </div>
 
       <div className={`${envelope} flex-1 flex flex-col justify-center items-start gap-2 tela-rasa:gap-1 pt-3 tela-rasa:pt-1 pb-12 relative z-1`}>
-        <Rotulo className={`painel__kicker ${ENTRA}`} margem="mb-2 tela-rasa:mb-1">hipertrofia · natural</Rotulo>
+        <Rotulo className={`painel__kicker ${ENTRA}`} margem="mb-2 tela-rasa:mb-1">{conteudo.dobra.rotulo}</Rotulo>
 
         <Fio atraso={260} />
         <h1
@@ -54,7 +55,7 @@ export function Dobra() {
         <div className={`painel__acao w-full shrink-0 mt-4 tela-rasa:mt-2 ${ENTRA} [--atraso:80ms]`}>
           <Botao posicao="dobra" />
           <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
-            {conteudo.mecanismo.semanas} semanas · condições na oferta abaixo
+            {conteudo.mecanismo.semanas}{conteudo.dobra.condicoes}
           </p>
         </div>
       </div>
@@ -65,7 +66,7 @@ export function Dobra() {
           <span>pra ver</span>
           <span className="block mt-1 text-silver font-terciaria text-[18px] leading-none animate-seta motion-reduce:animate-none">&#8595;</span>
         </span>
-        <ul className={crus} role="list">
+        <ul className={numerosCrus} role="list">
           <li>
             <b className={destaque}>{conteudo.mecanismo.semanas}</b> semanas
           </li>

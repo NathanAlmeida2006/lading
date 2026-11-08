@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { doisDigitos, itemDaFaq } from "../../app/ui.js";
+import { doisDigitos } from "../../app/ui.js";
+
+/** Cada pergunta da lista de duvidas, em forma de acordeao. */
+const itemDaFaq =
+  "group/pergunta relative isolate min-w-0 border-b border-line-strong first:border-t data-aberto:text-void " +
+  "transition-colors duration-700 ease-(--ease-expo) before:content-[''] before:absolute before:inset-y-0 " +
+  "before:-inset-x-4 before:-z-10 before:bg-acento before:opacity-0 data-aberto:before:opacity-100 " +
+  "before:transition-opacity before:duration-700 before:ease-(--ease-expo)";
 
 /**
  * FAQ em acordeao, no layout do Rep Republic: pergunta e marca de mais/menos numa linha com fio

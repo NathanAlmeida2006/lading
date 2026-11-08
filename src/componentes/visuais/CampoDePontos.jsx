@@ -21,7 +21,7 @@ import { coresDoCampo, ligarCampo } from "../../sensorial/campo.js";
  * ATENCAO, e esta e a razao de o componente existir isolado: o `TR-03`
  * reprova peca com "faisca ou particula", e um campo de pontos animado cai
  * literalmente nessa palavra. A decisao esta registrada como campo em aberto
- * no `requisitos-landing.md` §6. Enquanto ela nao vier, o campo e feito
+ * nos requisitos da landing (hoje arquivados). Enquanto ela nao vier, o campo e feito
  * SOMENTE do material que o sistema ja usa:
  *
  *   - ponto de 1 bit em `--bone`, sem brilho, sem halo, sem gradiente;
@@ -42,7 +42,7 @@ import { coresDoCampo, ligarCampo } from "../../sensorial/campo.js";
  *   3. Densidade por area, com teto. Num monitor de 2560px a malha nao pode
  *      multiplicar por quatro o trabalho de cada quadro.
  *   4. O canvas e fatiado em ladrilhos de 320 px, e a cada quadro so os que estao na tela sao
- *      atualizados. A prova, com 1905 x 3482 px, derrubava a pagina a 20-30 quadros por segundo so
+ *      atualizados. Uma secao alta (medida em 1905 x 3482 px, ja removida) derrubava a pagina a 20-30 quadros por segundo so
  *      por reenviar 26 MB ao compositor a cada quadro. O desenho e o ciclo de vida (os mesmos de
  *      antes, byte a byte) estao em `sensorial/campo.js`; este componente so da a raiz onde os
  *      ladrilhos entram.
@@ -59,7 +59,7 @@ export function CampoDePontos({ variante = "malha", cores }) {
       // so os takes sobre fundo colorido trocam as cores (Takes.jsx)
       cores: { ...coresDoCampo(), ...cores },
     });
-  }, [variante, cores?.ponto]);
+  }, [variante, cores?.ponto]); // eslint-disable-line react-hooks/exhaustive-deps -- intencional: cores e um objeto novo a cada renderizacao e so cores.ponto vale como chave; rodar de novo recriaria o campo; hoje o unico uso de cores e uma constante de modulo (Takes.jsx)
 
   // Os ladrilhos (`canvas.campo`) entram aqui por JavaScript: o HTML pre-renderizado so tem a raiz,
   // e o canvas nunca teve nada para mostrar antes de o pacote rodar.

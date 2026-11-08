@@ -3,9 +3,7 @@ import bruto from "../../assets/wordmark.svg?raw";
 /**
  * O wordmark, em contornos convertidos (RF-G04).
  *
- * Nao e texto vivo: a assinatura precisa sair identica em toda peca (RF-G04). O SVG e gerado
- * da Secundaria (Big Shoulders Display, peso 800, tracking do token h1) por
- * `scripts/wordmark.py`, chamado pelo `npm run sync:ds`.
+ * Nao e texto vivo: a assinatura precisa sair identica em toda peca (RF-G04). O SVG e `src/assets/wordmark.svg`, o tracado de `public/lithium-wordmark.svg` (viewBox 3784x1296) em `currentColor`, versionado: nao e gerado por script.
  *
  * Inline, e nao <img>, porque `currentColor` precisa resolver nos dois temas.
  *

@@ -9,8 +9,8 @@ import { bloco, envelope, palavra as PALAVRA } from "../app/ui.js";
 // O texto vem do contrato editorial. O realce complementa a leitura: nenhuma
 // palavra depende da animação para ficar legível. Sem medição, tudo fica no fluxo.
 
-// Palavras em vermelho (o acento do protocolo, ja vermelho) dentro do texto.
-const DESTAQUE = /^(verdadeiro|potencial)\W*$/i;
+// Palavras em vermelho (o acento do protocolo, ja vermelho) dentro do texto. A lista vem de `conteudo.reconhecimento.destaques`.
+const DESTAQUES = new Set(conteudo.reconhecimento.destaques);
 
 export function Manifesto() {
   const raiz = useRef(null);
@@ -19,7 +19,8 @@ export function Manifesto() {
 
   // A altura do trilho, declarada na classe do section abaixo, e o RITMO de sensorial/manifesto.js andam juntos: mudar um pede mudar o outro.
   return (
-    <section id="reconhecimento" className={`${bloco} isolate group/manifesto data-cabe:min-h-[271svh] motion-reduce:min-h-0`} ref={raiz}>
+    // data-oculta-doca: a regua do treino esconde a doca enquanto tiver qualquer pixel na tela (a regua e alta; ver o threshold em Doca.jsx).
+    <section id="reconhecimento" data-oculta-doca="" className={`${bloco} isolate group/manifesto data-cabe:min-h-[271svh] motion-reduce:min-h-0`} ref={raiz}>
       <CampoDePontos variante="estelar" />
       <div className={`${envelope} manifesto__texto relative z-1 top-0 min-h-svh flex flex-col items-center justify-center group-data-cabe/manifesto:sticky motion-reduce:static`}>
         <div>
@@ -29,7 +30,7 @@ export function Manifesto() {
             // O espaco fica FORA do span: espaco no fim de um inline-block e
             // descartado pelo navegador, e as palavras colavam.
             <Fragment key={`${palavra}-${indice}`}>
-              <span className={DESTAQUE.test(palavra) ? `${PALAVRA} text-acento` : PALAVRA}>{palavra}</span>{" "}
+              <span className={DESTAQUES.has(palavra.replace(/\W+$/, "").toLowerCase()) ? `${PALAVRA} text-acento` : PALAVRA}>{palavra}</span>{" "}
             </Fragment>
           ))}
         </p>

@@ -7,11 +7,12 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: false,
-    copyPublicDir: false, // public/ ja foi copiado pelo build da landing; aqui so resolve /fonts/*
+    copyPublicDir: false, // public/ ja foi copiado pelo build da landing; aqui nao precisa de novo
     target: ["chrome118", "edge118", "firefox146", "safari17.4"],
     cssTarget: "es2020",
+    cssMinify: "esbuild",
     reportCompressedSize: false,
-    rollupOptions: {
+    rolldownOptions: {
       input: { privacidade: "privacidade.html", termos: "termos.html" },
       output: {
         entryFileNames: "documentos/[name]-[hash].js",

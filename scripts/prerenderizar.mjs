@@ -6,7 +6,8 @@
  * reprovaria o requisito e ainda atrasaria o LCP do RNF-L01. Pre-renderizar no
  * build resolve os dois de uma vez, e o cliente so hidrata.
  */
-import { readFile, stat, writeFile } from "node:fs/promises";
+import { readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { emailReal, textoReal as texto, urlDocumento } from "../src/infra/validacao.js";
@@ -143,4 +144,26 @@ if (/<\/style/i.test(css)) {
 saida = saida.replace(ligacao[0], () => `<style>${css}</style>`);
 
 await writeFile(molde, saida, "utf8");
+
+// A CSP de public/_headers admite o script inline so pelo hash; script alterado sem atualizar o _headers seria bloqueado em silencio na borda.
+const csp = (await readFile(join(raiz, "public", "_headers"), "utf8")).match(/^\s*Content-Security-Policy:\s*(.+)$/m)?.[1];
+if (!csp) {
+  console.error("prerender  public/_headers sem linha Content-Security-Policy");
+  process.exit(1);
+}
+const falhasCsp = [];
+for (const arquivo of (await readdir(join(raiz, "dist"))).filter((nome) => nome.endsWith(".html"))) {
+  const conteudoArquivo = await readFile(join(raiz, "dist", arquivo), "utf8");
+  for (const [, atributos, conteudo] of conteudoArquivo.matchAll(/<script(?![^>]*\bsrc\s*=)([^>]*)>([\s\S]*?)<\/script>/g)) {
+    const tipo = atributos.match(/\btype\s*=\s*["']?([^"'\s>]+)/i)?.[1];
+    if (tipo && !/^(module|text\/javascript|application\/javascript)$/i.test(tipo)) continue;
+    const hash = `sha256-${createHash("sha256").update(conteudo).digest("base64")}`;
+    if (!csp.includes(`'${hash}'`)) falhasCsp.push(`  - ${arquivo}: ${hash} ausente da CSP`);
+  }
+}
+if (falhasCsp.length) {
+  console.error(`${falhasCsp.join("\n")}\nprerender  script inline sem hash em public/_headers. Atualize o sha256 em script-src (E1.1) e rode o build de novo.`);
+  process.exit(1);
+}
+
 console.log("prerender  index.html com a pagina dentro; chunks tardios sem modulepreload");

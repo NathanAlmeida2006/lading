@@ -3,9 +3,9 @@ import { aoMudarPausa, estaPausado } from "./pausa.js";
 /**
  * O campo de pontos de UMA secao, desenhado em LADRILHOS.
  *
- * O campo cobre a secao inteira, e ha secoes de 3.482 px (a prova). Um canvas desse tamanho
+ * O campo cobre a secao inteira, e ha secoes altas (uma delas, ja removida, media 3.482 px). Um canvas desse tamanho
  * (1905 x 3482 = 6,6 MP, 26 MB) era redesenhado e reenviado ao compositor por quadro, e e isso, e
- * nao o desenho, que derrubava a pagina a 20-30 quadros por segundo ao rolar a prova: medido
+ * nao o desenho, que derrubava a pagina a 20-30 quadros por segundo ao rolar a secao: medido
  * com o buffer em um quarto da area, o problema some, e escondendo o canvas (`visibility`) ele
  * continua. O custo e o TAMANHO do buffer atualizado a cada quadro.
  *
@@ -62,6 +62,7 @@ class Campo {
     this.cores = cores;
     this.reduzido = reduzido;
     this.toque = toque;
+    // Ouvinte global INTENCIONAL: o primeiro campo em tela de toque liga um unico `scroll` passivo que serve a todos os campos (`ultimaRolagem`). E barato e um so para a pagina toda, por isso nunca e solto.
     if (toque && !ouvindoRolagem) {
       ouvindoRolagem = true;
       window.addEventListener("scroll", () => (ultimaRolagem = performance.now()), { passive: true });

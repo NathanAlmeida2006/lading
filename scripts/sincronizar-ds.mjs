@@ -7,15 +7,14 @@
  * roda de novo, e commita o resultado.
  *
  * Caminho da base sobrescrevivel por DS_BUNDLE, para quem clonar em outro lugar.
+ * O wordmark NAO e gerado aqui: src/assets/wordmark.svg e um tracado versionado e editado a mao
+ * (a assinatura aprovada); o sync nao o le nem o grava.
  */
 import { cp, mkdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { execFile } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
 
-const executar = promisify(execFile);
 const raiz = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const bundle = resolve(
   process.env.DS_BUNDLE ?? join(raiz, "..", "projetos", ".design-sync", "ds-bundle"),
@@ -40,8 +39,6 @@ const FONTES = [
   "big-shoulders-display-latin.woff2",
   "ibm-plex-sans-latin.woff2",
 ];
-
-const ASSINATURA = "big-shoulders-display-latin.woff2";
 
 async function main() {
   const destinoTokens = join(raiz, "src", "estilos", "tokens");
@@ -77,41 +74,8 @@ async function main() {
   }
   console.log(`sync:ds  ${FONTES.length} familias variaveis, subset latin`);
 
-  await prepararWordmark();
   await gerarFavicon();
 }
-
-/**
- * O wordmark sai em contornos convertidos, e nao em texto vivo, porque o
- * RF-G04 exige que a assinatura seja identica em toda peca.
- *
- * Sem python3 ou sem fontTools a pagina continua de pe com texto vivo, o que
- * quebra o RF-G04. O que se perde esta no aviso, nao em silencio.
- */
-async function prepararWordmark() {
-  const svg = join(raiz, "src", "assets", "wordmark.svg");
-  try {
-    const { stdout } = await executar("python3", [
-      join(raiz, "scripts", "wordmark.py"),
-      join(bundle, "fonts", ASSINATURA),
-      svg,
-    ]);
-    process.stdout.write(`sync:ds${stdout}`);
-  } catch (erro) {
-    await writeFile(svg, WORDMARK_TEXTO, "utf8");
-    console.warn(
-      `sync:ds  AVISO  wordmark.py falhou (${erro.code ?? erro.message}).\n` +
-        `         O wordmark virou texto vivo, o que quebra RF-G04. Instale\n` +
-        `         python3 e fonttools[woff] antes de publicar.`,
-    );
-  }
-}
-
-// Fallback so: texto vivo, com a cadeia de fallback do RF-G06.
-const WORDMARK_TEXTO =
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 110" role="img" aria-label="LITHIUM">` +
-  `<text x="0" y="88" fill="currentColor" font-size="100" font-weight="700" letter-spacing="2"` +
-  ` font-family="Big Shoulders Display, Oswald, Arial Narrow, sans-serif">LITHIUM</text></svg>`;
 
 /** Favicon: o ornamento do sigilo, SVG (RNF-L21), nos dois temas. */
 async function gerarFavicon() {

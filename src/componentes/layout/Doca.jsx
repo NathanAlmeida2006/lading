@@ -2,8 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { Botao } from "../ui/Botao.jsx";
 import { Cronometro } from "../ui/Cronometro.jsx";
 import { useConsentimento } from "../../infra/instrumentacao.js";
-import { pilhaPronta as OFERTA } from "../../conteudo/pilha.js";
-import { barraDaDoca } from "../../app/ui.js";
+import { pilhaPronta } from "../../conteudo/pilha.js";
+import { conteudo } from "../../conteudo/conteudo.js";
+
+/** A barra fixa de venda na base da pagina. */
+const barraDaDoca =
+  "doca hidden js:flex fixed inset-x-0 bottom-0 z-15 flex-wrap items-center justify-between gap-3 " +
+  "pl-[max(--spacing(4),env(safe-area-inset-left))] pr-[max(--spacing(4),env(safe-area-inset-right))] " +
+  "pt-3 pb-[max(--spacing(3),env(safe-area-inset-bottom))] bg-surface-1 text-bone border-t border-line-strong " +
+  "translate-y-full opacity-0 transition-[translate,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] " +
+  "[.com-consentimento_&]:hidden data-ativa:translate-y-0 data-ativa:opacity-100";
 
 /**
  * A doca de venda: barra fixa na base, com preco, Pix e o botao.
@@ -27,6 +35,7 @@ import { barraDaDoca } from "../../app/ui.js";
  * conta como "a vista" e a recolhe; nao ha como a entrada dela realimentar o observador.
  *
  * Falha fechada: sem os alvos, ou antes da primeira leitura, fica oculta.
+ * Os alvos sao os que levam `data-oculta-doca`; faltar um deles tira so aquele alvo.
  *
  * Inativa, ela e `inert`: so sai da tela por `translate`, e sem isso o Tab cairia
  * num botao que ninguem ve.
@@ -39,13 +48,9 @@ export function Doca() {
   const ativa = livre && !avisoAberto;
 
   useEffect(() => {
-    const inicio = document.getElementById("inicio");
-    // A doca fica sempre visivel, menos na dobra, na regua do treino (manifesto), com o CTA do fechamento visivel e no rodape.
-    const regua = document.getElementById("reconhecimento");
-    // O rodape tem o proprio botao e a faixa de acento: a doca por cima dele
-    // seria o segundo acento na mesma tela.
-    const rodape = document.getElementById("rodape-legal");
-    if (!inicio || !regua || !rodape) return;
+    // Os alvos se declaram: tudo o que carrega `data-oculta-doca` esconde a doca enquanto tiver qualquer pixel na tela.
+    const alvos = document.querySelectorAll("[data-oculta-doca]");
+    if (!alvos.length) return; // falha fechada: sem alvos, a doca fica oculta
     const naTela = new Set();
     const obs = new IntersectionObserver(
       (entradas) => {
@@ -57,11 +62,7 @@ export function Doca() {
       },
       { threshold: 0 }, // qualquer pixel do alvo na tela esconde a doca; a regua e alta, 12% dela ainda cobria a janela
     );
-    // O CTA do fechamento tem a propria acao na tela: a doca sai enquanto ele estiver visivel.
-    const ctaFechamento = document.querySelector('[data-posicao="fechamento"]');
-    // A pilha de valor tambem esconde a doca enquanto tiver qualquer pixel na tela; sem a secao, e nulo.
-    const pilha = document.getElementById("pilha-de-valor");
-    for (const alvo of [inicio, regua, rodape, ctaFechamento, pilha]) if (alvo) obs.observe(alvo);
+    alvos.forEach((alvo) => obs.observe(alvo));
     return () => {
       obs.disconnect();
       definirLivre(false);
@@ -100,12 +101,12 @@ export function Doca() {
       inert={!ativa}
     >
       <div className="flex flex-col gap-1 min-w-0 max-w-full text-silver">
-        <span className="font-secundaria text-label uppercase text-bone">Protocolo 01</span>
+        <span className="font-secundaria text-label uppercase text-bone">{conteudo.doca.rotulo}</span>
         <div className="font-terciaria text-mono-reg tabular-nums whitespace-nowrap">
-          {OFERTA ? `${OFERTA.moeda} ${OFERTA.oferta.preco} · Pix à vista` : "Pix à vista · preço a definir"}
+          {pilhaPronta ? `${pilhaPronta.moeda} ${pilhaPronta.oferta.preco} · Pix à vista` : "Pix à vista · preço a definir"}
         </div>
       </div>
-      {OFERTA ? <Cronometro classe="ml-auto text-mono-reg [&>span]:hidden" /> : null}
+      {pilhaPronta ? <Cronometro classe="ml-auto text-mono-reg [&>span]:hidden" /> : null}
       <Botao posicao="doca" compacto />
     </aside>
   );

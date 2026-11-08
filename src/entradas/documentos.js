@@ -2,6 +2,7 @@
  * Entrada das páginas legais (privacidade.html e termos.html): o mesmo scroll (Lenis) e o mesmo campo de
  * pontos `estelar` da landing, sem React. Build próprio: vite.documentos.config.js.
  */
+import "../estilos/documentos.css";
 import { coresDoCampo, ligarCampo } from "../sensorial/campo.js";
 import { aoMudarPausa, definirPausa, estaPausado } from "../sensorial/pausa.js";
 import { ligarLenis } from "../sensorial/rolagem.js";

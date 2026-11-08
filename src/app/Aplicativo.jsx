@@ -67,7 +67,8 @@ export function Aplicativo() {
         <div>
           <Manifesto />
           <Video />
-          <PilhaDeValor />
+          {/* ocultaDoca so na primeira pilha: ela esconde a doca enquanto tiver qualquer pixel na tela; a #oferta nao. */}
+          <PilhaDeValor ocultaDoca />
           <Espelho />
         </div>
         <Leva />

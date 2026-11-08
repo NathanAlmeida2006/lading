@@ -4,33 +4,7 @@ import { topoEm } from "../../sensorial/regua.js";
 
 const VELOCIDADE = 1100; // px por segundo, constante (se a tela nao pedir outra)
 
-/**
- * Uma tela do app Lithium, rolada por um usuario: a moldura de celular (430 px no desktop, a tela toda no celular)
- * e a rolagem rapida e de velocidade constante, que ja comeca andando (sem espera). `escopo` e a classe a que o CSS
- * da tela esta restrito (estilos/app-telas.css, @scope). Os `data-revelar` entram pela rolagem, como no app.
- *
- * Cada tela rola so um trecho, definido pelo que aparece na tela:
- *   `de`  { alvo, y }: comeca rolada ate o elemento `alvo` (seletor) ficar com o topo a `y` px do topo da tela;
- *   `ate` { alvo, y }: rola do topo ate o `alvo` chegar a `y`, em exatamente `duracao` ms (a velocidade sai da distancia, e vai
- *   para `aoMedir`, em px/s); sem `ate`, anda por `duracao` ms a `velocidade` px/s e para. Quem tira a tela de cena e o video
- *   (Video.jsx), na hora da batida. Sob movimento reduzido nao rola: fica em `de`.
- *
- * `inicioEm` (ms, no relogio de `performance.now()`): a hora em que o estagio devia entrar. A rolagem com `ate` conta dele, e nao do primeiro
- * quadro depois de montar: se o React monta tarde (celular, CPU carregada), a tela chega ao alvo na hora do corte seguinte, e
- * nao depois dele. Sem `inicioEm`, conta do primeiro quadro.
- *
- * Um dedo (toque translucido) arrasta para cima sobre a tela, em loop, enquanto ela rola.
- *
- * `mascarar`: a tela vira o recheio de uma forma (ver `MASCARA_DA_LOGO`): uma mascara que comeca tao grande que a forma
- * cobre a tela inteira e encolhe ate a forma ficar do tamanho final, no centro, com a tela rolando dentro dela. A tela e
- * escura e a forma sumiria no fundo preto: junto com a mascara, as cores se invertem (`invert` + `hue-rotate`, que mantem os
- * matizes), e a forma fica clara, com o app em tinta dentro, e se encaixa na logo branca do quadro seguinte.
- */
-export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidade = VELOCIDADE, aoMedir, mascarar, ligada = true, inicioEm }) {
-  const raiz = useRef(null);
-  const moldura = useRef(null);
-  const rolo = useRef(null);
-
+function useRolagemDaTela(rolo, { de, ate, duracao, velocidade, aoMedir, inicioEm }) {
   useLayoutEffect(() => {
     const no = rolo.current;
     const reduzido = semMovimento();
@@ -71,8 +45,10 @@ export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidad
     };
     quadro = requestAnimationFrame(passo);
     return () => { vivo = false; cancelAnimationFrame(quadro); obs.disconnect(); };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intencional: de, ate, duracao, velocidade, aoMedir e inicioEm sao lidos uma vez na montagem; rodar de novo reiniciaria a rolagem; rolo e ref estavel
+}
 
+function useMascaraDaLogo({ raiz, moldura, mascarar, ligada }) {
   // A mascara e o filtro nascem pausados no quadro 0 (a forma cobre a tela e a inversao e nula: nada muda na imagem) e so
   // `ligada` os faz andar. Criar a camada mascarada so na batida do corte dava um quadro preto, mais longo no celular.
   const mascaras = useRef([]);
@@ -105,7 +81,7 @@ export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidad
     mascaras.current = [forma, cor];
     if (!ligada) mascaras.current.forEach((a) => a.pause());
     return () => { cancelAnimationFrame(quadro); el.getAnimations().forEach((a) => a.cancel()); };
-  }, [Boolean(mascarar)]);
+  }, [Boolean(mascarar)]); // eslint-disable-line react-hooks/exhaustive-deps -- intencional: roda so quando a mascara passa a existir ou deixa de existir (por isso Boolean); mascarar e ligada sao lidos na montagem, e ligada so liga as animacoes ja criadas no efeito seguinte; raiz e ref estavel
 
   useLayoutEffect(() => {
     if (!mascarar || !ligada) return;
@@ -117,7 +93,37 @@ export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidad
     mold.style.transformOrigin = "50% 50%";
     const { largura, ms } = mascarar;
     mold.animate([{ transform: "scale(1)" }, { transform: `scale(${Math.max(1, largura(raiz.current.getBoundingClientRect().width) / mold.clientWidth)})` }], { duration: ms, easing: "cubic-bezier(0.7, 0, 0.15, 1)", fill: "both" });
-  }, [ligada]);
+  }, [ligada]); // eslint-disable-line react-hooks/exhaustive-deps -- intencional: dispara so quando ligada muda; mascarar vem da renderizacao dessa mudanca; moldura e raiz sao refs estaveis
+}
+
+/**
+ * Uma tela do app Lithium, rolada por um usuario: a moldura de celular (430 px no desktop, a tela toda no celular)
+ * e a rolagem rapida e de velocidade constante, que ja comeca andando (sem espera). `escopo` e a classe a que o CSS
+ * da tela esta restrito (estilos/app-telas.css, @scope). Os `data-revelar` entram pela rolagem, como no app.
+ *
+ * Cada tela rola so um trecho, definido pelo que aparece na tela:
+ *   `de`  { alvo, y }: comeca rolada ate o elemento `alvo` (seletor) ficar com o topo a `y` px do topo da tela;
+ *   `ate` { alvo, y }: rola do topo ate o `alvo` chegar a `y`, em exatamente `duracao` ms (a velocidade sai da distancia, e vai
+ *   para `aoMedir`, em px/s); sem `ate`, anda por `duracao` ms a `velocidade` px/s e para. Quem tira a tela de cena e o video
+ *   (Video.jsx), na hora da batida. Sob movimento reduzido nao rola: fica em `de`.
+ *
+ * `inicioEm` (ms, no relogio de `performance.now()`): a hora em que o estagio devia entrar. A rolagem com `ate` conta dele, e nao do primeiro
+ * quadro depois de montar: se o React monta tarde (celular, CPU carregada), a tela chega ao alvo na hora do corte seguinte, e
+ * nao depois dele. Sem `inicioEm`, conta do primeiro quadro.
+ *
+ * Um dedo (toque translucido) arrasta para cima sobre a tela, em loop, enquanto ela rola.
+ *
+ * `mascarar`: a tela vira o recheio de uma forma (ver `MASCARA_DA_LOGO`): uma mascara que comeca tao grande que a forma
+ * cobre a tela inteira e encolhe ate a forma ficar do tamanho final, no centro, com a tela rolando dentro dela. A tela e
+ * escura e a forma sumiria no fundo preto: junto com a mascara, as cores se invertem (`invert` + `hue-rotate`, que mantem os
+ * matizes), e a forma fica clara, com o app em tinta dentro, e se encaixa na logo branca do quadro seguinte.
+ */
+export function TelaDoApp({ escopo, children, de, ate, duracao = 1200, velocidade = VELOCIDADE, aoMedir, mascarar, ligada = true, inicioEm }) {
+  const raiz = useRef(null);
+  const moldura = useRef(null);
+  const rolo = useRef(null);
+  useRolagemDaTela(rolo, { de, ate, duracao, velocidade, aoMedir, inicioEm });
+  useMascaraDaLogo({ raiz, moldura, mascarar, ligada });
 
   return (
     <div className={`${escopo} absolute inset-0 z-4 flex justify-center bg-void`} ref={raiz} aria-hidden="true" inert>

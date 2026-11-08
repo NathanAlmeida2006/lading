@@ -13,6 +13,8 @@ import { VERBO_CURTO } from "../../infra/config.js";
  * `fantasma` e a variante em contorno, usada no rodape: mesmo verbo, mesmo destino, sem a
  * inundacao de acento.
  *
+ * `ocultaDoca` marca o botao como alvo da doca: ela some enquanto ele tiver qualquer pixel na tela.
+ *
  * O rotulo e duplicado dentro de um recorte e desliza no eixo Y no hover: e o
  * text roll, que os cinco sites da engenharia reversa usam sem excecao. Nao e
  * tique de template, e convencao do genero. A copia leva `aria-hidden`.
@@ -43,7 +45,7 @@ const ROTULO =
   "block whitespace-normal py-1 transition-[translate] duration-(--motion-base) ease-(--ease-default) " +
   "motion-safe:group-hover/botao:-translate-y-full motion-safe:group-focus-visible/botao:-translate-y-full";
 
-export function Botao({ posicao, compacto = false, fantasma = false, larguraTotal = false }) {
+export function Botao({ posicao, compacto = false, fantasma = false, larguraTotal = false, ocultaDoca = false }) {
   const referencia = useRef(null);
   const params = useParametros();
   function aoClicar() {
@@ -62,6 +64,7 @@ export function Botao({ posicao, compacto = false, fantasma = false, larguraTota
       onClick={aoClicar}
       onAuxClick={(event) => { if (event.button === 1) aoClicar(); }}
       data-posicao={posicao}
+      data-oculta-doca={ocultaDoca ? "" : undefined}
     >
       <span className="botao__rolo relative block min-w-0 overflow-clip">
         <span className={ROTULO}>{VERBO_CURTO}</span>

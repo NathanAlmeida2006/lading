@@ -1,6 +1,6 @@
 import { Fragment, useRef } from "react";
 import { CampoDePontos } from "../componentes/visuais/CampoDePontos.jsx";
-import { ImagemReservada } from "../componentes/ui/ImagemReservada.jsx";
+import { ImagemDoCard } from "../componentes/ui/ImagemDoCard.jsx";
 import { Rotulo } from "../componentes/ui/Rotulo.jsx";
 import { acenderEmSequencia, revelar, revelarEmCascata, useMovimento } from "../sensorial/index.js";
 import { conteudo } from "../conteudo/conteudo.js";
@@ -63,14 +63,14 @@ export function Leva() {
             90svh de espera. Aqui a margem da lista (140svh - 140px) soma, com o titulo centrado
             e ~280px de altura, esses mesmos 90svh. */}
         <header className="sticky top-[max(--spacing(12),calc(50svh-140px))] z-0 flex flex-col items-center py-8 text-center motion-reduce:static">
-          <Rotulo>Veja tudo que você terá direito</Rotulo>
+          <Rotulo>{conteudo.leva.rotulo}</Rotulo>
           <h2
             className="titulo text-bone font-secundaria text-display [font-size:clamp(31px,13.08vw,89.9px)] lg:[font-size:clamp(89.9px,10.1vw,125.8px)] normal-case tracking-[-0.005em] leading-[1.02]"
           >
             {conteudo.leva.titulo.split(" ").map((palavra, indice) => (
               <Fragment key={`${palavra}-${indice}`}>
                 <span className={PALAVRA}>{palavra}</span>{" "}
-                {indice === 1 ? <br /> : null}
+                {indice === conteudo.leva.quebraApos - 1 ? <br /> : null}
               </Fragment>
             ))}
           </h2>
@@ -86,7 +86,7 @@ export function Leva() {
                 key={voz.nome}
                 data-revelar
               >
-                <ImagemReservada src={voz.src} sizes={SIZES} className="absolute! inset-0 z-0! border-0" />
+                <ImagemDoCard src={voz.src} sizes={SIZES} className="absolute! inset-0 z-0! border-0" />
                 <span className="absolute! inset-0 z-0! bg-linear-to-t from-void/95 via-void/60 to-void/20" aria-hidden="true" />
                 <span
                   className="font-secundaria font-extrabold uppercase tracking-[0.02em] text-acento text-[48px] leading-[0.6]"

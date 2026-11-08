@@ -30,7 +30,7 @@ function useQuadros(inicioEm, tempos) {
   useEffect(() => {
     const relogios = tempos.map((ms, k) => setTimeout(() => definirQuadro(k + 1), atraso(inicioEm, ms)));
     return () => relogios.forEach(clearTimeout);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- inicioEm e tempos ficam de fora: os relogios nascem uma vez por montagem, e tempos e um array novo a cada render
   return quadro;
 }
 
@@ -122,13 +122,13 @@ export function TakeNumeros() {
   return (
     <div className={`${PAGINA} bg-void text-bone`} aria-hidden="true">
       <div className={`${MIOLO} !justify-stretch`}>
-        {conteudo.mapa.numeros.map(({ valor, rotulo }, i) => (
+        {conteudo.mapa.numeros.map(({ valor, rotulo, destaque }, i) => (
           <div
             className="flex flex-1 items-center justify-between gap-4 border-t border-line-strong motion-safe:animate-entra-lado"
             style={{ "--lado": i % 2 ? 1 : -1, animationDelay: `${i * BATIDA}ms` }}
             key={rotulo}
           >
-            <span className={`text-[length:min(calc(100svh/6),32vw)] leading-none tracking-[0.01em] ${valor === conteudo.mecanismo.semanas ? "text-acento" : ""}`}>
+            <span className={`text-[length:min(calc(100svh/6),32vw)] leading-none tracking-[0.01em] ${destaque ? "text-acento" : ""}`}>
               <Roleta valor={valor} atraso={i * BATIDA + 120} />
             </span>
             <span className="text-right text-[length:min(5svh,7vw)] leading-none tracking-[0.04em] text-silver">{rotulo}</span>

@@ -1,7 +1,7 @@
 /**
  * O som do video: a musica (tempo.js) e um unico efeito sonoro, o que abre o ultimo take. Um unico AudioContext vive na pagina:
  * `prepararSom()` o cria (suspenso) e baixa e decodifica a musica antes do clique, e `criarSom()`, no clique, o retoma e
- * devolve `musica`, `efeito`, `apagarEm` e `parar`, agendados no relogio do audio, nao em setTimeout. Sem audio disponivel, tudo e mudo.
+ * devolve `musica`, `efeito`, `apagarEm` e `parar`, agendados no relogio do audio, nao em setTimeout. Sem audio disponivel, tudo e mudo. A primeira falha vai ao console, uma vez.
  */
 import { EFEITO_FINAL, MUSICA } from "./tempo.js";
 
@@ -9,14 +9,16 @@ const VOLUME = 0.28; // o da musica (1 = o do arquivo): ela fica abaixo da voz d
 const VOLUME_EFEITO = 0.12; // o do efeito do ultimo take: o arquivo vem no maximo (0 dB), entao entra bem abaixo, so como um acento sobre a musica
 
 let ctx = null, trilha = null, buffer = null, carregando = null, bufferEfeito = null, carregandoEfeito = null;
+let falhou = false; // so a primeira falha de audio vai ao console; o video segue mudo
+const registrar = (e) => { if (!falhou) { falhou = true; console.error("som: falha de audio, o video segue sem som", e); } };
 
 const garantir = () => {
   if (ctx && ctx.state !== "closed") return ctx;
   try {
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx = new AudioContext();
     trilha = ctx.createGain();
     trilha.connect(ctx.destination);
-  } catch { /* o video segue mudo */ }
+  } catch (e) { registrar(e); /* o video segue mudo */ }
   return ctx;
 };
 
@@ -28,8 +30,8 @@ const garantir = () => {
 export function prepararSom() {
   if (!garantir()) return;
   const baixar = (url) => fetch(url).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then((b) => ctx.decodeAudioData(b));
-  if (!buffer && !carregando) carregando = baixar(MUSICA).then((b) => { buffer = b; }).catch(() => {}).finally(() => { carregando = null; });
-  if (!bufferEfeito && !carregandoEfeito) carregandoEfeito = baixar(EFEITO_FINAL).then((b) => { bufferEfeito = b; }).catch(() => {}).finally(() => { carregandoEfeito = null; });
+  if (!buffer && !carregando) carregando = baixar(MUSICA).then((b) => { buffer = b; }).catch(registrar).finally(() => { carregando = null; });
+  if (!bufferEfeito && !carregandoEfeito) carregandoEfeito = baixar(EFEITO_FINAL).then((b) => { bufferEfeito = b; }).catch(registrar).finally(() => { carregandoEfeito = null; });
 }
 
 export function criarSom() {
@@ -38,7 +40,7 @@ export function criarSom() {
   prepararSom(); // o que ainda nao chegou (ou falhou antes) e tentado de novo agora; `musica` espera por ele
   const quando = (em) => ctx.currentTime + em / 1000;
   let fonte = null, saida = null, apagar = null, parado = false, efeito = null;
-  const guard = (f) => (...a) => { try { f(...a); } catch { /* ignora */ } };
+  const guard = (f) => (...a) => { try { f(...a); } catch (e) { registrar(e); } };
   // O fade-out agendado (`apagarEm`), aplicado assim que a musica existe e a fonte e o `saida` estao ligados. O ouvido ouve em
   // decibeis, e nao em ganho: um fade reto em ganho parece lento no comeco e despenca no fim. Aqui a queda e em dB, em S (comeca
   // e termina devagar): de 0 a -45 dB (abaixo disso ja nao se ouve, e assim a queda audivel dura quase toda a duracao), e o ultimo ponto e o silencio. Se a hora ja passou (a musica chegou tarde), segue do ponto certo.

@@ -1,7 +1,7 @@
 import { CampoDePontos } from "../componentes/visuais/CampoDePontos.jsx";
 import { Fragment, useRef } from "react";
 import { Botao } from "../componentes/ui/Botao.jsx";
-import { ImagemReservada } from "../componentes/ui/ImagemReservada.jsx";
+import { ImagemDoCard } from "../componentes/ui/ImagemDoCard.jsx";
 import { Rotulo } from "../componentes/ui/Rotulo.jsx";
 import { conteudo } from "../conteudo/conteudo.js";
 import { revelar, revelarEmCascata, subirLinhas, useMovimento } from "../sensorial/index.js";
@@ -84,7 +84,7 @@ export function Semanas() {
     <section id="mapa" className={`${bloco} py-16 md:py-24`} ref={raiz}>
       <CampoDePontos variante="estelar" />
       <div className={`${envelope} relative z-1`}>
-        <Rotulo>as próximas doze semanas</Rotulo>
+        <Rotulo>{conteudo.mapa.rotulo}</Rotulo>
 
         {/* O fio a esquerda do titulo: 2px em acento, da altura do bloco de linhas. */}
         <div className={`relative mt-6 pl-6 lg:pl-8 ${grade12} before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-acento`}>
@@ -140,7 +140,7 @@ export function Semanas() {
                 </div>
                 <h3 className="text-bone font-secundaria text-h3">{estado.nome}</h3>
                 <p className="max-w-prose text-silver font-terciaria text-body lg:text-body-lg">{estado.texto}</p>
-                <ImagemReservada src={estado.src} sizes={SIZES} className={`aspect-11/6 ${estado.pos ?? ""}`} />
+                <ImagemDoCard src={estado.src} sizes={SIZES} className={`aspect-11/6 ${estado.pos ?? ""}`} />
               </li>
             ))}
           </ol>

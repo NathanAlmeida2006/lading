@@ -2,7 +2,7 @@
  * Validadores de dado real, usados pela tela (oferta, fechamento, rodape) e pelo build (`PUBLICAR=1`,
  * em scripts/prerenderizar.mjs). Uma regra so: o build nunca aprova o que a tela esconderia.
  */
-const PENDENTE = /\[(?:A DEFINIR|A CONFIRMAR)\]|DEFINIR/i;
+const PENDENTE = /\bA[\s_-]+(?:DEFINIR|CONFIRMAR)\b/i;
 
 /** Texto preenchido e sem marcador de pendencia. */
 export const textoReal = (valor) => typeof valor === "string" && valor.trim() !== "" && !PENDENTE.test(valor);
