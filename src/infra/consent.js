@@ -50,12 +50,13 @@ export function createConsent() {
 
   /**
    * A unica porta de entrada da resposta: grava, e quem assina (aviso, doca, alcance) reage.
-   * Qualquer valor que não seja `true` conta como recusa.
-   * @param {unknown} accepted - `true` quando o visitante aceitou; qualquer outro valor é recusa.
+   * `null` reabre a pergunta (o aviso volta e a medição para até nova resposta); qualquer outro
+   * valor que não seja `true` conta como recusa.
+   * @param {unknown} accepted - `true` quando o visitante aceitou; `null` para reabrir a escolha; qualquer outro valor é recusa.
    * @returns {void}
    */
   function answerConsent(accepted) {
-    consent = accepted === true;
+    consent = accepted === null ? null : accepted === true;
     writeSessionValue(CONSENT_STORAGE_KEY, consent);
     for (const subscriber of [...subscribers]) {
       try { subscriber(); } catch (error) { console.error(error); }

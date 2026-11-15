@@ -49,7 +49,7 @@ export const useConsent = consent.useConsent;
 
 /**
  * Grava a resposta do consentimento (ver `createConsent`).
- * @param {unknown} accepted - `true` quando o visitante aceitou; qualquer outro valor é recusa.
+ * @param {unknown} accepted - `true` quando o visitante aceitou; `null` para reabrir a escolha; qualquer outro valor é recusa.
  * @returns {void}
  */
 export const answerConsent = consent.answerConsent;

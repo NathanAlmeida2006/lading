@@ -5,6 +5,7 @@ import { Wordmark } from "../components/ui/Wordmark.jsx";
 import { CONTENT } from "../content/content.js";
 import { CONFIG, PUBLIC_CONTACT } from "../infra/config.js";
 import { ENVELOPE, GRID_12 } from "../app/ui.js";
+import { answerConsent } from "../infra/instrumentation.js";
 import { getDocumentUrl } from "../infra/validation.js";
 
 /**
@@ -94,6 +95,12 @@ export function LegalFooter() {
                 )}
               </li>
             ))}
+            <li>
+              {/* Reabre o aviso de cookies: a escolha pode ser trocada a qualquer momento (LGPD, revogacao). */}
+              <button type="button" className={`${LINK} cursor-pointer text-left`} onClick={() => answerConsent(null)}>
+                Gerenciar cookies
+              </button>
+            </li>
           </ul>
         </nav>
 

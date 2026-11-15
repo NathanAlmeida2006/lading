@@ -9,7 +9,31 @@ const TRACKING_PARAM_KEYS = [
   "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
   "fbclid", "src", "sck",
 ];
-const ALLOWED_VALUE_PATTERN = /^[\w.~:+%-]{1,100}$/;
+const ALLOWED_VALUE_PATTERN = /^[\w.~:+%-]+$/;
+// Teto por valor. O `fbclid` real passa de 100 caracteres e a Meta nao documenta o maximo: 500 deixa folga
+// e a URL do checkout segue muito abaixo dos limites de URL (cerca de 2000).
+const MAX_VALUE_LENGTH = { fbclid: 500 };
+const DEFAULT_MAX_VALUE_LENGTH = 100;
+
+/**
+ * Valor de texto, so com os caracteres permitidos e dentro do teto da chave.
+ * @param {string} key - Chave de rastreio.
+ * @param {unknown} value - Valor a conferir.
+ * @returns {boolean} `true` quando o valor pode seguir para o checkout.
+ */
+const isAllowedValue = (key, value) =>
+  typeof value === "string" && value.length <= (MAX_VALUE_LENGTH[key] ?? DEFAULT_MAX_VALUE_LENGTH) && ALLOWED_VALUE_PATTERN.test(value);
+
+/**
+ * O valor guardado so vale se for objeto simples, de chaves de rastreio com valor permitido; qualquer outra coisa e descartada.
+ * @param {unknown} saved - O que veio do sessionStorage.
+ * @returns {Record<string, string>} O guardado, ou `{}` quando corrompido.
+ */
+function sanitizeSavedParams(saved) {
+  if (saved === null || typeof saved !== "object" || Array.isArray(saved)) return {};
+  const entries = Object.entries(saved);
+  return entries.every(([key, value]) => TRACKING_PARAM_KEYS.includes(key) && isAllowedValue(key, value)) ? saved : {};
+}
 
 /* -------------------------------------------------------------------------
    Parametros de campanha
@@ -18,8 +42,10 @@ const ALLOWED_VALUE_PATTERN = /^[\w.~:+%-]{1,100}$/;
 /**
  * Le a URL uma vez e guarda o que veio (RF-L30). A gravacao e necessaria
  * porque a rolagem por ancora reescreve o hash, e um `history.replaceState`
- * de terceiro pode levar a query junto.
- * @returns {Record<string, string>} Os parametros de rastreio da visita, somados aos já guardados na sessão.
+ * de terceiro pode levar a query junto. Visita nova com campanha SUBSTITUI o
+ * guardado (nao mescla: UTMs de anuncios diferentes nao se misturam); sem
+ * campanha na URL, o guardado continua.
+ * @returns {Record<string, string>} Os parametros de rastreio da URL, ou os guardados na sessão quando a URL não traz nenhum.
  */
 export function captureCampaignParams() {
   const fromUrl = {};
@@ -28,10 +54,11 @@ export function captureCampaignParams() {
     const value = search.get(key);
     if (value) fromUrl[key] = value;
   }
-  const saved = readSessionValue(PARAMS_STORAGE_KEY) ?? {};
-  const merged = { ...saved, ...fromUrl };
-  if (Object.keys(fromUrl).length) writeSessionValue(PARAMS_STORAGE_KEY, merged);
-  return merged;
+  if (Object.keys(fromUrl).length) {
+    writeSessionValue(PARAMS_STORAGE_KEY, fromUrl);
+    return fromUrl;
+  }
+  return sanitizeSavedParams(readSessionValue(PARAMS_STORAGE_KEY));
 }
 
 const EMPTY_PARAMS = {};
@@ -68,7 +95,7 @@ export function buildCheckoutUrl(params = {}) {
   const allowed = {};
   for (const key of TRACKING_PARAM_KEYS) {
     const value = params?.[key];
-    if (typeof value === "string" && ALLOWED_VALUE_PATTERN.test(value)) allowed[key] = value;
+    if (isAllowedValue(key, value)) allowed[key] = value;
   }
   const appendIfMissing = (key, value) => {
     if (!base.searchParams.has(key)) base.searchParams.append(key, value);
