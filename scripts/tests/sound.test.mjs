@@ -1,0 +1,81 @@
+// Som do video (src/sections/video/sound.js) com AudioContext e fetch falsos: o `play` que roda depois do download fica sob o `guard`,
+// e nada e agendado antes de o contexto retomar (ctx.currentTime so anda depois do resume).
+import { test } from "node:test";
+import assert from "node:assert/strict";
+
+// Um mundo falso por teste: o modulo guarda o contexto e os buffers em variaveis de modulo, entao cada teste importa uma copia nova.
+async function montar({ falhaNaFonte = false } = {}) {
+  const fontes = [];
+  const efeitos = { resume: null };
+  const gain = () => ({ gain: { value: 0, setValueAtTime() {}, setValueCurveAtTime() {}, cancelScheduledValues() {}, linearRampToValueAtTime() {} }, connect: (alvo) => alvo });
+  globalThis.AudioContext = class {
+    state = "suspended"; currentTime = 10; destination = {};
+    createGain() { return gain(); }
+    createBufferSource() {
+      if (falhaNaFonte) throw new Error("contexto fechado");
+      const fonte = { connect: (alvo) => alvo, start: (...args) => (fonte.iniciada = args), stop() {} };
+      fontes.push(fonte);
+      return fonte;
+    }
+    decodeAudioData() { return Promise.resolve({}); }
+    resume() { return new Promise((resolve) => { efeitos.resume = () => { this.state = "running"; resolve(); }; }); }
+  };
+  let baixou;
+  const baixado = new Promise((resolve) => { baixou = resolve; });
+  globalThis.fetch = async () => { await baixado; return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) }; };
+  const sound = await import(`../../src/sections/video/sound.js?${Math.random()}`);
+  return { sound, fontes, efeitos, baixou, esperar: () => new Promise((resolve) => setTimeout(resolve, 20)) };
+}
+
+test("o play que roda depois do download esta sob o guard: falha vai ao console e nao vira rejeicao solta", async () => {
+  const { sound, efeitos, baixou, esperar } = await montar({ falhaNaFonte: true });
+  const erros = [];
+  const consoleError = console.error;
+  console.error = (...args) => erros.push(args);
+  let rejeicaoSolta = null;
+  const aoRejeitar = (motivo) => { rejeicaoSolta = motivo; };
+  process.on("unhandledRejection", aoRejeitar);
+  try {
+    sound.prepareSound();
+    const sessao = sound.createSound();
+    efeitos.resume();
+    sessao.music(0);
+    baixou();
+    await esperar();
+  } finally {
+    console.error = consoleError;
+    process.off("unhandledRejection", aoRejeitar);
+  }
+  assert.equal(rejeicaoSolta, null);
+  assert.equal(erros.length, 1);
+});
+
+test("depois de stop(), o que termina de baixar nao toca (musica e efeito)", async () => {
+  const { sound, fontes, efeitos, baixou, esperar } = await montar();
+  sound.prepareSound();
+  const sessao = sound.createSound();
+  efeitos.resume();
+  sessao.music(0);
+  sessao.effect(0);
+  sessao.stop(0);
+  baixou();
+  await esperar();
+  assert.equal(fontes.length, 0);
+});
+
+test("nada e agendado antes de o contexto retomar; depois do resume, musica e efeito entram", async () => {
+  const { sound, fontes, efeitos, baixou, esperar } = await montar();
+  sound.prepareSound();
+  baixou();
+  await esperar(); // o arquivo ja chegou: so o resume segura o som
+  const sessao = sound.createSound();
+  sessao.music(0);
+  sessao.effect(5000);
+  await esperar();
+  assert.equal(fontes.length, 0);
+  efeitos.resume();
+  await esperar();
+  assert.equal(fontes.length, 2);
+  const [, inicio] = [fontes[0].iniciada, fontes[1].iniciada];
+  assert.ok(inicio[0] > 10 && inicio[0] <= 15, `o efeito entra daqui a ~5 s do clique, e veio em ${inicio[0]}`);
+});

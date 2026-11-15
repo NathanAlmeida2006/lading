@@ -360,13 +360,13 @@ class Field {
     this.sync();
   }
 
-  // Mede de novo so quando o tamanho da CAIXA mudou. `resize` da janela dispara
+  // Mede de novo so quando o tamanho da CAIXA ou a densidade de pixels (`dpr`) mudou. `resize` da janela dispara
   // a cada vez que a barra do navegador entra ou sai no celular, e isso realocava
   // o buffer de cada canvas no meio da rolagem.
   setSize(rawWidth, rawHeight, dpr) {
     const width = Math.max(1, Math.round(rawWidth));
     const height = Math.max(1, Math.round(rawHeight));
-    if (width === this.width && height === this.height) return;
+    if (width === this.width && height === this.height && dpr === this.dpr) return;
     // Uma secao que cresce ou encolhe um pouco (o acordeao da FAQ, ao abrir) nao pode arrastar a onda
     // junto: o centro dela e `altura / 2`, e a cada quadro da animacao todos os pontos andavam e o
     // fundo cintilava. A geometria so muda com uma variacao grande ou com a largura.
@@ -398,7 +398,7 @@ class Field {
       this.measureTile(tile);
       // Pinta ja, no mesmo tick: com o laco vivo, esperar o proximo quadro deixava um quadro em branco
       // (o buffer foi limpo) a cada mudanca de altura, e o fundo piscava enquanto a FAQ animava.
-      this.paintTile(tile, this.isAlive ? this.lastTime : performance.now());
+      this.paintTile(tile, this.lastTime);
     }
   }
 

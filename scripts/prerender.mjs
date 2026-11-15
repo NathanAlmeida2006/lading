@@ -43,11 +43,11 @@ if (CONFIG.secoes.amostra.ativo) {
   afirmacao("secoes.amostra.origem", texto(CONFIG.secoes.amostra.origem));
 }
 
-afirmacao("oferta.preco", preco(CONFIG.oferta.preco), "preço à vista ausente ou inválido");
+afirmacao("oferta.preco", preco(CONFIG.pilhaDeValor.oferta.preco), "preço à vista ausente ou inválido");
 afirmacao("oferta.pix.ativo", CONFIG.oferta.pix?.ativo === true, "Pix precisa estar disponível");
 afirmacao("oferta.pix.valor", preco(CONFIG.oferta.pix?.valor), "valor em Pix não confirmado");
-if (preco(CONFIG.oferta.preco) && preco(CONFIG.oferta.pix?.valor)) {
-  afirmacao("oferta.pix.valor", valorNumericoPreco(CONFIG.oferta.pix.valor) === valorNumericoPreco(CONFIG.oferta.preco), "o valor em Pix diverge do preço exibido");
+if (preco(CONFIG.pilhaDeValor.oferta.preco) && preco(CONFIG.oferta.pix?.valor)) {
+  afirmacao("oferta.pix.valor", valorNumericoPreco(CONFIG.oferta.pix.valor) === valorNumericoPreco(CONFIG.pilhaDeValor.oferta.preco), "o valor em Pix diverge do preço exibido");
 }
 if (CONFIG.oferta.parcelamento != null) afirmacao("oferta.parcelamento", texto(CONFIG.oferta.parcelamento));
 afirmacao("oferta.garantiaDias", Number.isInteger(CONFIG.oferta.garantiaDias) && CONFIG.oferta.garantiaDias > 0, "prazo em dias ausente");

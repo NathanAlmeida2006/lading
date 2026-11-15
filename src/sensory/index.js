@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { loadChoreographies } from "./loader.js";
-import { openReadingMode } from "./reading.js";
+import { openReadingMode, REVEALED_SELECTOR } from "./reading.js";
 import { subscribeToMotionPreference, isMotionReduced } from "./tokens.js";
 import { isPaused } from "./pause.js";
 export { startLenis } from "./scroll.js";
@@ -152,7 +152,7 @@ export const openPanel = (...args) => callChoreography("openPanel", args);
 export function ensureVisibility() {
   let timer;
   const sweep = () => {
-    for (const element of document.querySelectorAll("[data-revelar]")) {
+    for (const element of document.querySelectorAll(REVEALED_SELECTOR)) {
       const box = element.getBoundingClientRect();
       if (box.top >= innerHeight || box.bottom <= 0) continue;
       if (parseFloat(getComputedStyle(element).opacity) < 0.99) {

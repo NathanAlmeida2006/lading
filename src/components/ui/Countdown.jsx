@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { padTwoDigits } from "../../app/ui.js";
+import { getValidPromotionEnd, readLocalValue, writeLocalValue } from "../../infra/storage.js";
 
 /**
  * Os cronometros da promocao: o `Countdown` (hh:mm:ss, no recibo das duas pilhas e na doca) e a
@@ -25,15 +26,12 @@ const LEAD_TIME = 30;
  * @returns {number} Instante do fim da promocao, em ms.
  */
 function getPromotionEnd() {
-  try {
-    const saved = Number(localStorage.getItem(STORAGE_KEY));
-    if (saved > 0) return saved;
-    const end = Date.now() + DURATION;
-    localStorage.setItem(STORAGE_KEY, String(end));
-    return end;
-  } catch {
-    return Date.now() + DURATION; // ponytail: sem storage o relogio reinicia a cada visita
-  }
+  const now = Date.now();
+  const saved = getValidPromotionEnd(readLocalValue(STORAGE_KEY), now, DURATION);
+  if (saved !== null) return saved;
+  const end = now + DURATION;
+  writeLocalValue(STORAGE_KEY, end); // sem storage o relogio reinicia a cada visita
+  return end;
 }
 
 let end; // lido uma vez por carga: sem storage, os cinco cronometros ainda contam o mesmo fim

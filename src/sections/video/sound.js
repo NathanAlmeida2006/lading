@@ -41,9 +41,11 @@ export function prepareSound() {
  */
 export function createSound() {
   if (!ensure()) return { music() {}, effect() {}, fadeOutIn() {}, stop() {} };
-  ctx.resume().catch(() => {});
+  // `ctx.currentTime` so anda depois do resume: nada se agenda antes dele, e o que ja passou desde o clique (`t0`) sai do atraso, para o som nao ficar atras do video.
+  const t0 = performance.now();
+  const ready = ctx.resume().catch(() => {});
   prepareSound(); // o que ainda nao chegou (ou falhou antes) e tentado de novo agora; `music` espera por ele
-  const when = (delayMs) => ctx.currentTime + delayMs / 1000;
+  const when = (delayMs) => ctx.currentTime + Math.max(0, delayMs - (performance.now() - t0)) / 1000;
   let source = null, output = null, fadeOut = null, stopped = false, effectSource = null;
   const guard = (fn) => (...args) => { try { fn(...args); } catch (error) { report(error); } };
   // O fade-out agendado (`fadeOutIn`), aplicado assim que a musica existe e a fonte e o `saida` estao ligados. O ouvido ouve em
@@ -63,10 +65,10 @@ export function createSound() {
      * arquivo ainda nao chegou, ela entra assim que chegar, ja no ponto certo e na altura certa do fade (o video nao espera por ela).
      */
     music: guard((fadeInMs = 2000) => {
-      const t0 = performance.now();
-      const play = () => {
+      const musicT0 = performance.now();
+      const play = guard(() => {
         if (!buffer || stopped) return;
-        const elapsed = (performance.now() - t0) / 1000, total = fadeInMs / 1000;
+        const elapsed = (performance.now() - musicT0) / 1000, total = fadeInMs / 1000;
         source = ctx.createBufferSource();
         source.buffer = buffer;
         const fadeIn = ctx.createGain();
@@ -81,29 +83,30 @@ export function createSound() {
         }
         source.start(0, elapsed);
         applyFadeOut();
-      };
-      // Sem o arquivo ainda: espera por ele e, se o download falhou, tenta mais uma vez.
-      if (buffer) play();
-      else loading?.then(() => { if (buffer) play(); else { prepareSound(); loading?.then(play); } });
+      });
+      // Sem o arquivo ainda: espera por ele e, se o download falhou, tenta mais uma vez. Em todo caminho o `play` roda sob o `guard`.
+      if (buffer) ready.then(play);
+      else loading?.then(() => { if (buffer) ready.then(play); else { prepareSound(); loading?.then(() => ready).then(play); } });
     }),
     /** Toca o efeito sonoro do ultimo take (`rdr.mp3`), daqui a `delayMs` ms, por cima da musica. */
     effect: guard((delayMs) => {
-      const t0 = ctx.currentTime;
-      const play = () => {
+      const play = guard(() => {
         if (!effectBuffer || stopped) return;
         effectSource = ctx.createBufferSource();
         effectSource.buffer = effectBuffer;
         const volume = ctx.createGain();
         volume.gain.value = EFFECT_VOLUME;
         effectSource.connect(volume).connect(ctx.destination);
-        effectSource.start(Math.max(ctx.currentTime, t0 + delayMs / 1000));
-      };
-      if (effectBuffer) play(); else loadingEffect?.then(play);
+        effectSource.start(when(delayMs));
+      });
+      if (effectBuffer) ready.then(play); else loadingEffect?.then(() => ready).then(play);
     }),
     /** Agenda o fade-out da musica: comeca daqui a `delayMs` ms e dura `duration` ms (curva suave, em dB), e a fonte para no fim. */
     fadeOutIn: guard((delayMs, duration = 1500) => {
-      fadeOut = { at: when(delayMs), duration: duration / 1000 };
-      applyFadeOut();
+      ready.then(guard(() => {
+        fadeOut = { at: when(delayMs), duration: duration / 1000 };
+        applyFadeOut();
+      }));
     }),
     /** Para a musica ja (replay, saida da pagina): um fade-out curto de `duration` ms. */
     stop: guard((duration = 250) => {

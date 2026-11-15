@@ -98,3 +98,11 @@ test("buildPresentableValueStack do bloco da config traz itens, total e oferta f
   assert.equal(forma.moeda, "R$");
   assert.equal(forma.oferta.preco, "79,99");
 });
+
+test("o preco a vista tem uma fonte so: a trava de publicacao valida o mesmo valor que a tela mostra", async () => {
+  const { readFile } = await import("node:fs/promises");
+  assert.equal("preco" in CONFIG.oferta, false);
+  const prerender = await readFile(new URL("../prerender.mjs", import.meta.url), "utf8");
+  assert.ok(prerender.includes('afirmacao("oferta.preco", preco(CONFIG.pilhaDeValor.oferta.preco)'));
+  assert.equal(formatReais(CONFIG.pilhaDeValor.oferta.preco), buildPresentableValueStack(CONFIG.pilhaDeValor).oferta.preco);
+});

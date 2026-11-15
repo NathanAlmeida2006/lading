@@ -39,7 +39,7 @@ export const CONFIG = {
 
   oferta: {
     disponivel: true, // oferta-base; false retira os CTAs fora de uma condição vigente
-    preco: null, // valor à vista em reais; RF-L23
+    // O preço à vista mora em `pilhaDeValor.oferta.preco` (RF-L23): a tela e a trava do PUBLICAR=1 leem dele.
     moeda: "R$",
     pix: { ativo: true, valor: null },
     parcelamento: null, // opcional, quando confirmado
