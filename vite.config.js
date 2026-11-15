@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 // Uma pagina so (RF-L01), build estatico (RF-L04), sem CDN em tempo de
 // execucao (RNF-L08): tudo o que a pagina precisa sai deste bundle. O Tailwind
-// roda so no build (src/estilos/tailwind.css), com o tema apontando para os
+// roda so no build (src/styles/tailwind.css), com o tema apontando para os
 // tokens do ds-bundle.
 export default defineConfig(({ isSsrBuild }) => ({
   plugins: [react(), tailwindcss()],
@@ -20,10 +20,10 @@ export default defineConfig(({ isSsrBuild }) => ({
     // Exige o pacote esbuild em devDependencies (par opcional do Vite 8).
     cssMinify: "esbuild",
     assetsInlineLimit: 2048,
-    // `scripts/verificar-tamanho.mjs` ja mede o gzip contra o teto do RNF-L04, e a
+    // `scripts/check-size.mjs` ja mede o gzip contra o teto do RNF-L04, e a
     // conta do Vite refaz a mesma compressao em cada arquivo, so para imprimir.
     reportCompressedSize: false,
-    // O build SSR so gera servidor.js: nao copia public/ (8,2 MB sem uso).
+    // O build SSR so gera server.js: nao copia public/ (8,2 MB sem uso).
     copyPublicDir: !isSsrBuild,
   },
 }));

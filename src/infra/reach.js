@@ -1,0 +1,76 @@
+import { CONFIG } from "./config.js";
+
+/* -------------------------------------------------------------------------
+   Alcance das secoes
+   ------------------------------------------------------------------------- */
+
+/**
+ * Fábrica da mensuração de alcance das seções: manda um evento por seção, uma vez por carga de página.
+ * @param {object} deps - Dependências da mensuração.
+ * @param {(subscriber: () => void) => () => void} deps.subscribeToConsent - Assina as mudanças do consentimento.
+ * @param {{isEligible: (isForSending?: boolean) => boolean, loadPixel: () => void, sendEvent: (name: string, data?: object) => boolean}} deps.pixel - A porta do pixel.
+ * @returns {{startMeasurement: (reachById?: object) => () => void}} A porta do alcance.
+ */
+export function createReach({ subscribeToConsent, pixel }) {
+  const { isEligible, loadPixel, sendEvent } = pixel;
+  const sentSections = new Set(); // impressoes de secao ja enviadas nesta carga de pagina
+
+  /**
+   * Liga a mensuracao da pagina e devolve o desligamento. `reachById` e o mapa de sections.js
+   * (id -> { etapa, canonico }); RF-L31 le as canonicas, e a oferta vira `ViewContent`:
+   * alcanca-la e o unico ponto da pagina que significa interesse pelo produto.
+   *
+   * Antes do aceite nao existe observador: nada e marcado nem desobservado. No aceite ele e
+   * criado, e a primeira entrega do IntersectionObserver e o estado DAQUELE instante: so conta
+   * o que esta na tela. O que ja passou nao e retransmitido, e volta a contar se for revisitado.
+   * A impressao so entra em `sentSections` depois de o evento ter saido de fato.
+   * @param {Record<string, {etapa: number, canonico: boolean|undefined}>} [reachById={}] - Mapa de alcance das seções (`REACH_BY_ID`).
+   * @returns {() => void} Desliga a mensuração: cancela a assinatura do consentimento e desconecta o observador.
+   */
+  function startMeasurement(reachById = {}) {
+    let observer;
+
+    function synchronize() {
+      observer?.disconnect();
+      observer = undefined;
+      loadPixel();
+      if (!isEligible()) return;
+      observer = new IntersectionObserver(
+        (entries) => {
+          for (const { isIntersecting, target } of entries) {
+            const id = target.id;
+            if (!isIntersecting || sentSections.has(id) || !reachById[id]) continue;
+            const { etapa: stage, canonico: isCanonical } = reachById[id];
+            const base = { secao: id, etapa: stage };
+            const isSent = id === "oferta"
+              ? sendEvent("ViewContent", { ...base, campanha: CONFIG.campanha })
+              : sendEvent("SecaoAlcancada", { ...base, canonico: isCanonical, campanha: CONFIG.campanha });
+            if (!isSent) continue;
+            sentSections.add(id);
+            observer?.unobserve(target);
+          }
+        },
+        // 40% DA JANELA, e nao 40% da secao: a oferta (a pilha de valor, que vira ViewContent) e mais alta que a tela, nunca mostra 40% de si
+        // de uma vez, e o evento dela nao disparava. A secao conta como alcancada quando o topo dela
+        // cruza a marca de 60% da altura da tela, que e o que 40% significava numa secao de uma tela.
+        // O 1px tirado do alto descarta o toque de borda: com a secao seguinte exatamente no topo da tela,
+        // a anterior encosta em y=0 sem mostrar nada, e o observador a daria como presente no aceite tardio.
+        { rootMargin: "-1px 0px -40% 0px", threshold: 0 },
+      );
+      for (const id of Object.keys(reachById)) {
+        const target = sentSections.has(id) ? null : document.getElementById(id);
+        if (target) observer.observe(target);
+      }
+    }
+
+    const cancel = subscribeToConsent(synchronize);
+    synchronize();
+    return () => {
+      cancel();
+      observer?.disconnect();
+      observer = undefined;
+    };
+  }
+
+  return { startMeasurement };
+}

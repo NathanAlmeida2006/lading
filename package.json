@@ -5,13 +5,13 @@
   "type": "module",
   "description": "Landing page do Projeto Fluor.",
   "scripts": {
-    "sync:ds": "node scripts/sincronizar-ds.mjs",
+    "sync:ds": "node scripts/sync-ds.mjs",
     "dev": "vite",
-    "build": "vite build && vite build -c vite.documentos.config.js && vite build --ssr src/entradas/servidor.jsx --outDir dist-ssr && node scripts/prerenderizar.mjs && node scripts/verificar-tamanho.mjs",
+    "build": "vite build && vite build -c vite.documents.config.js && vite build --ssr src/entries/server.jsx --outDir dist-ssr && node scripts/prerender.mjs && node scripts/check-size.mjs",
     "preview": "vite preview",
-    "test": "node --test scripts/testes/*.test.mjs",
+    "test": "node --test scripts/tests/*.test.mjs",
     "lint": "eslint . --max-warnings=0",
-    "size": "node scripts/verificar-tamanho.mjs"
+    "size": "node scripts/check-size.mjs"
   },
   "dependencies": {
     "animejs": "^4.0.2",

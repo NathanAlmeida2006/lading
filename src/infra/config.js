@@ -1,7 +1,7 @@
-import { emailReal } from "./validacao.js";
+import { isRealEmail } from "./validation.js";
 
 /** Dados comerciais da instância. null indica informação ainda não confirmada. */
-export const config = {
+export const CONFIG = {
   // Dados comerciais da seção de pilha de valor. null indica valor não confirmado. Só `confirmado`
   // true libera a publicação (PUBLICAR=1); `ativo` false retira a seção do preview.
   pilhaDeValor: {
@@ -79,7 +79,7 @@ export const config = {
 };
 
 // E-mail público único: o fechamento e o rodapé leem daqui. Nulo quando o e-mail não é válido.
-export const contatoPublico = emailReal(config.legal.contato) ? config.legal.contato.trim() : null;
+export const PUBLIC_CONTACT = isRealEmail(CONFIG.legal.contato) ? CONFIG.legal.contato.trim() : null;
 
 // O verbo do CTA (RF-L10). Nenhum botão mostra o preço: o valor fica na pilha de oferta.
-export const VERBO_CURTO = "Quero o Lithium vitalício";
+export const CTA_SHORT_VERB = "Quero o Lithium vitalício";
