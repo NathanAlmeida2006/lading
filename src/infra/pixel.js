@@ -4,7 +4,19 @@ import { CONFIG } from "./config.js";
    Pixel
    ------------------------------------------------------------------------- */
 
+/**
+ * @typedef Fbq O `fbq` que este módulo põe na página: o stub do snippet da Meta.
+ * @property {{apply: (thisArg: unknown, args: IArguments) => void}} [callMethod] - Aparece quando o script da Meta assume o stub; o stub o chama por `apply`, com os `arguments` crus.
+ * @property {unknown[]} queue - Fila de chamadas feitas antes de o script carregar.
+ * @property {unknown} push - O próprio stub.
+ * @property {boolean} loaded - Marca de carregado do snippet.
+ * @property {string} version - Versão do snippet.
+ */
+
+/** @typedef {((...args: unknown[]) => void) & Fbq} FbqFunction */
+
 // Tudo o que a pagina sabe enviar (RF-L28). Nome fora desta lista nao sai: `Purchase` nao tem como nascer aqui.
+/** @type {Record<import("./contracts.js").PixelEventName, "track"|"trackCustom">} */
 const PIXEL_METHOD_BY_EVENT = {
   PageView: "track",
   ViewContent: "track",
@@ -15,9 +27,24 @@ const PIXEL_METHOD_BY_EVENT = {
 const getPixelId = () => String(CONFIG.pixel.id ?? "").trim();
 
 /**
+ * A janela com os dois globais da Meta, ainda `unknown`: vêm de fora do código.
+ * @returns {Window & {fbq?: unknown, _fbq?: unknown}} A janela.
+ */
+const getTrackerWindow = () => window;
+
+/**
+ * O `fbq` da página, só se for função: `window.fbq` é `unknown` até passar por aqui.
+ * @returns {FbqFunction|undefined} O `fbq`, ou `undefined` quando não há função.
+ */
+function getFbq() {
+  const candidate = getTrackerWindow().fbq;
+  return typeof candidate === "function" ? /** @type {FbqFunction} */ (candidate) : undefined;
+}
+
+/**
  * Fábrica do pixel: injeta o script da Meta uma vez, só com aceite e id, e envia os eventos permitidos.
  * @param {() => (boolean|null)} readConsent - Lê a resposta do consentimento; só `true` libera o pixel.
- * @returns {{isEligible: (isForSending?: boolean) => boolean, loadPixel: () => void, sendEvent: (name: string, data?: object) => boolean, trackCheckoutStart: (ctaPosition: string) => void}} A porta do pixel.
+ * @returns {import("./contracts.js").PixelPort} A porta do pixel.
  */
 export function createPixel(readConsent) {
   let isPixelInjected = false; // o script que ESTE modulo pos na pagina; `window.fbq` alheio nao conta
@@ -33,7 +60,7 @@ export function createPixel(readConsent) {
    */
   function isEligible(isForSending = true) {
     if (readConsent() !== true || !getPixelId()) return false;
-    return !isForSending || (isPixelInjected && !hasPixelFailed && typeof window.fbq === "function");
+    return !isForSending || (isPixelInjected && !hasPixelFailed && getFbq() !== undefined);
   }
 
   /**
@@ -64,7 +91,7 @@ export function createPixel(readConsent) {
   function revokePixel() {
     if (!isPixelInjected || isRevoked) return;
     isRevoked = true;
-    try { window.fbq("consent", "revoke"); } catch { /* o tracker nao derruba a pagina */ }
+    try { getFbq()?.("consent", "revoke"); } catch { /* o tracker nao derruba a pagina */ }
     expirePixelCookies();
   }
 
@@ -80,14 +107,15 @@ export function createPixel(readConsent) {
     }
     if (!isEligible(false)) return;
     if (!isPixelInjected) {
-      if (window.fbq) return; // pixel de outra origem: este modulo nao assume o que nao carregou
+      if (getTrackerWindow().fbq) return; // pixel de outra origem: este modulo nao assume o que nao carregou
       try {
-        const fbq = function () {
+        const fbq = /** @type {FbqFunction} */ (function () {
           fbq.callMethod ? fbq.callMethod.apply(fbq, arguments) : fbq.queue.push(arguments);
-        };
+        });
         fbq.push = fbq; fbq.loaded = true; fbq.version = "2.0"; fbq.queue = [];
-        window.fbq = fbq;
-        window._fbq ??= fbq;
+        const trackerWindow = getTrackerWindow();
+        trackerWindow.fbq = fbq;
+        trackerWindow._fbq ??= fbq;
         const script = document.createElement("script");
         script.async = true;
         script.src = "https://connect.facebook.net/en_US/fbevents.js";
@@ -102,22 +130,24 @@ export function createPixel(readConsent) {
       }
     } else if (isRevoked) {
       isRevoked = false;
-      try { window.fbq("consent", "grant"); } catch { /* o tracker nao derruba a pagina */ }
+      try { getFbq()?.("consent", "grant"); } catch { /* o tracker nao derruba a pagina */ }
     }
     if (!hasPageViewSent) hasPageViewSent = sendEvent("PageView");
   }
 
   /**
    * Devolve se o evento saiu. Erro do tracker morre aqui: nunca chega a quem chamou.
-   * @param {string} name - Nome do evento; só os de `PIXEL_METHOD_BY_EVENT` saem.
-   * @param {object} [data] - Payload do evento, quando há.
+   * @param {import("./contracts.js").PixelEventName} name - Nome do evento; só os de `PIXEL_METHOD_BY_EVENT` saem.
+   * @param {import("./contracts.js").PixelPayload} [data] - Payload do evento, quando há.
    * @returns {boolean} `true` quando o evento saiu.
    */
   function sendEvent(name, data) {
     try {
-      if (!PIXEL_METHOD_BY_EVENT[name] || !isEligible()) return false;
-      if (data) window.fbq(PIXEL_METHOD_BY_EVENT[name], name, data);
-      else window.fbq(PIXEL_METHOD_BY_EVENT[name], name);
+      const method = PIXEL_METHOD_BY_EVENT[name];
+      const fbq = getFbq();
+      if (!method || !isEligible() || !fbq) return false;
+      if (data) fbq(method, name, data);
+      else fbq(method, name);
       return true;
     } catch {
       return false;
@@ -128,7 +158,7 @@ export function createPixel(readConsent) {
    * Intencao de compra no clique de um CTA: cada clique legitimo e um evento, sem deduplicar.
    * Sincrono e sem retorno: o clique nao espera nada daqui. Com checkout nao confirmado (o link
    * ainda e a ancora do preview) nao ha intencao a registrar.
-   * @param {string} ctaPosition - Posição do CTA clicado (vai no payload como `posicaoCTA`).
+   * @param {import("./contracts.js").CtaPosition} ctaPosition - Posição do CTA clicado (vai no payload como `posicaoCTA`).
    * @returns {void}
    */
   function trackCheckoutStart(ctaPosition) {

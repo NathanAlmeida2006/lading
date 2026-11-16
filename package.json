@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "node --test scripts/tests/*.test.mjs",
     "lint": "eslint . --max-warnings=0",
-    "size": "node scripts/check-size.mjs"
+    "size": "node scripts/check-size.mjs",
+    "typecheck": "tsc -p jsconfig.json"
   },
   "dependencies": {
     "animejs": "^4.0.2",
@@ -21,12 +22,14 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.5",
+    "@types/react": "^19.3.0",
     "@vitejs/plugin-react": "^6.2.1",
     "esbuild": "^0.28.2",
     "eslint": "^9.39.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "playwright-core": "1.44.1",
     "tailwindcss": "^4.3.5",
+    "typescript": "^7.0.2",
     "vite": "^8.3.6"
   },
   "volta": {

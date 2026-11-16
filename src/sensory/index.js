@@ -10,7 +10,8 @@ let currentScope = null;
 /**
  * Efeitos são opcionais: exceção ou import rejeitado nunca derruba a raiz.
  * @param {() => (void | (() => void))} effect - Efeito da seção; pode devolver a função que o desfaz.
- * @param {Array} [deps=[]] - Dependências de quem chama; o eslint as confere pelo `additionalHooks`.
+ * @param {import("react").DependencyList} [deps=[]] - Dependências de quem chama; o eslint as confere pelo `additionalHooks`.
+ * @returns {void}
  */
 export function useMotion(effect, deps = []) {
   useEffect(() => {
@@ -52,7 +53,7 @@ export function useMotion(effect, deps = []) {
 /**
  * Carrega o chunk de coreografias e chama a função `name` exportada por ele.
  * @param {string} name - Nome exportado por `choreographies.js`.
- * @param {Array} args - Argumentos da coreografia.
+ * @param {unknown[]} args - Argumentos da coreografia, na ordem que a função `name` espera.
  * @param {boolean} [withSignal=false] - Se true, passa o `AbortSignal` como último argumento.
  * @returns {() => void} Função que cancela e desfaz a coreografia.
  */
@@ -103,32 +104,32 @@ function callChoreography(name, args, withSignal = false) {
 
 /**
  * Aparição simples ligada à rolagem.
- * @param {...any} args - Alvo e opções de `reveal` (`delay`, `offset`).
+ * @param {Parameters<typeof import("./choreographies.js").reveal>} args - Alvo e opções de `reveal` (`delay`, `offset`).
  * @returns {() => void} Função que desfaz a animação.
  */
 export const reveal = (...args) => callChoreography("reveal", args);
 /**
  * Revela vários alvos em cascata, cada um com o próprio gatilho.
- * @param {...any} args - Alvos e opções de `revealInCascade` (`interval`).
+ * @param {Parameters<typeof import("./choreographies.js").revealInCascade>} args - Alvos e opções de `revealInCascade` (`interval`).
  * @returns {() => void} Função que desfaz as animações.
  */
 export const revealInCascade = (...args) => callChoreography("revealInCascade", args);
 /**
  * Revela o título linha a linha, com o recorte do `splitText`.
  * @param {Element} target - Título a dividir e revelar.
- * @param {object} [options={}] - Opções de `revealLineMask` (`delay`).
- * @returns {Promise<() => void>} Função que desfaz a divisão e a animação.
+ * @param {{delay?: number}} [options={}] - Opções de `revealLineMask` (`delay`).
+ * @returns {() => void} Função que cancela a divisão e a animação, mesmo antes de a coreografia carregar (a coreografia em si devolve uma Promise; este invólucro não).
  */
 export const revealLineMask = (target, options = {}) => callChoreography("revealLineMask", [target, options], true);
 /**
  * Sobe as linhas de dentro do recorte, escalonadas.
- * @param {...any} args - Linhas e opções de `raiseLines` (`delay`, `interval`, `duration`).
+ * @param {Parameters<typeof import("./choreographies.js").raiseLines>} args - Linhas e opções de `raiseLines` (`delay`, `interval`, `duration`).
  * @returns {() => void} Função que desfaz a animação.
  */
 export const raiseLines = (...args) => callChoreography("raiseLines", args);
 /**
  * Acende os alvos em sequência conforme a rolagem.
- * @param {...any} args - Alvos, contexto e opções de `lightUpInSequence`.
+ * @param {Parameters<typeof import("./choreographies.js").lightUpInSequence>} args - Alvos, contexto e opções de `lightUpInSequence`.
  * @returns {() => void} Função que remove o acendimento e os ouvintes.
  */
 export const lightUpInSequence = (...args) => callChoreography("lightUpInSequence", args);
@@ -140,7 +141,7 @@ export const lightUpInSequence = (...args) => callChoreography("lightUpInSequenc
 export const pulse = (target) => (isMotionReduced() || isPaused() ? undefined : callChoreography("pulse", [target]));
 /**
  * Entrada do painel de tela cheia do fechamento.
- * @param {...any} args - Partes do painel de `openPanel` (`frame`, `threads`, `kicker`, `lines`, `body`, `action`, `footer`).
+ * @param {Parameters<typeof import("./choreographies.js").openPanel>} args - Partes do painel de `openPanel` (`frame`, `threads`, `kicker`, `lines`, `body`, `action`, `footer`).
  * @returns {() => void} Função que desfaz as animações.
  */
 export const openPanel = (...args) => callChoreography("openPanel", args);

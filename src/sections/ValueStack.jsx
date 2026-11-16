@@ -30,7 +30,7 @@ const ICONS = {
  *
  * @param {object} props
  * @param {string} [props.id] Ancora da secao (`App.jsx` reusa a pilha como `#oferta`).
- * @param {string} [props.position] Posicao do CTA para o checkout.
+ * @param {import("../infra/contracts.js").CtaPosition} [props.position] Posicao do CTA para o checkout.
  * @param {boolean} [props.shouldHideDock] A doca some enquanto a secao tiver qualquer pixel na tela.
  * @returns {JSX.Element|null} A seção, ou null sem bloco válido.
  */

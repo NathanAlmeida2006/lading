@@ -27,8 +27,8 @@ import { ensureVisibility, startLenis, useMotion } from "../sensory/index.js";
 import { REACH_BY_ID, SECTIONS_BY_ID } from "../content/sections.js";
 import { KEYBOARD_TARGET } from "./ui.js";
 
-/** O registro em sections.js fixa ids, etapas e presença; a árvore preserva RF-L08. */
 /**
+ * O registro em sections.js fixa ids, etapas e presença; a árvore preserva RF-L08.
  * @returns {JSX.Element} A pagina inteira, na ordem das secoes.
  */
 export function App() {

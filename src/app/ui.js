@@ -39,8 +39,8 @@ export const PANEL = "relative flex flex-col min-h-svh py-4 lg:py-8 bg-void text
 export const RAW_NUMBERS =
   "flex flex-wrap justify-end gap-x-4 gap-y-2 text-right font-terciaria text-mono-reg tabular-nums";
 
-/** Numeracao de dois digitos ("03"), a dos indices, cards e cronometros. */
 /**
+ * Numeracao de dois digitos ("03"), a dos indices, cards e cronometros.
  * @param {number} n - Numero a formatar.
  * @returns {string} Dois digitos, com zero a esquerda.
  */

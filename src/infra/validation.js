@@ -17,7 +17,7 @@ export const isRealText = (value) => typeof value === "string" && value.trim() !
  * @returns {boolean} `true` quando o endereço é real e publicável.
  */
 export const isRealEmail = (value) =>
-  isRealText(value) && /^[^\s@:<>()\[\]\\,;"]+@[a-z\d-]+(?:\.[a-z\d-]+)+$/i.test(value.trim());
+  typeof value === "string" && isRealText(value) && /^[^\s@:<>()\[\]\\,;"]+@[a-z\d-]+(?:\.[a-z\d-]+)+$/i.test(value.trim());
 
 /**
  * Documento legal: arquivo local (`/termos.html`) ou URL HTTPS sem credenciais. A referencia, ou `null`.
@@ -25,7 +25,7 @@ export const isRealEmail = (value) =>
  * @returns {string|null} A referência limpa, ou `null` quando não é publicável.
  */
 export function getDocumentUrl(value) {
-  if (!isRealText(value)) return null;
+  if (typeof value !== "string" || !isRealText(value)) return null;
   const reference = value.trim();
   if (reference.includes("..") || /[\s\\]/.test(reference)) return null;
   if (/^\/(?!\/)[^?#]+$/.test(reference)) return reference;

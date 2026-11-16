@@ -1,0 +1,17 @@
+{
+  // Verificador de tipos (so leitura: `npm run typecheck`). O codigo segue JavaScript com JSDoc.
+  // Escopo desta rodada: infra/ e content/. Componentes (.jsx) e sensory/ ficam para a rodada dos componentes.
+  "compilerOptions": {
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "strict": true,
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "skipLibCheck": true
+  },
+  "include": ["src/infra/**/*.js", "src/content/**/*.js"]
+}

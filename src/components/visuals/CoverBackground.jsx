@@ -61,8 +61,8 @@ export function FloatingTips({ layer = "z-3" }) {
   ));
 }
 
-/** O fundo animado dos paineis de tela cheia: malha de pontos e as pontas soltas por cima. */
 /**
+ * O fundo animado dos paineis de tela cheia: malha de pontos e as pontas soltas por cima.
  * @returns {JSX.Element} O campo de pontos e as pontas soltas, em camadas.
  */
 export function CoverBackground() {

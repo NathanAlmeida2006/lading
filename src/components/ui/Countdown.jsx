@@ -21,8 +21,8 @@ const STORAGE_KEY = "promocao-fim";
 // Quanto antes da virada do segundo o relogio acorda para assentar no primeiro quadro depois dela.
 const LEAD_TIME = 30;
 
-/** Fim da promocao: 24 h a partir da primeira visita, guardado para o recarregar nao reiniciar. */
 /**
+ * Fim da promocao: 24 h a partir da primeira visita, guardado para o recarregar nao reiniciar.
  * @returns {number} Instante do fim da promocao, em ms.
  */
 function getPromotionEnd() {
@@ -82,9 +82,8 @@ function subscribe(listener) {
   };
 }
 
-/** Marca a `LimitedOffer` como perto da tela enquanto ela estiver a ate uma tela da janela. */
 /**
- * Marca a oferta como perto da tela enquanto ela estiver a ate uma tela da janela.
+ * Marca a `LimitedOffer` como perto da tela enquanto ela estiver a ate uma tela da janela.
  * @param {Element} element - Elemento observado.
  * @returns {(() => void)|undefined} Desliga o observador.
  */
@@ -105,8 +104,8 @@ function watch(element) {
   };
 }
 
-/** Restante em ms; `DURACAO` no servidor e na hidratacao, o valor real logo depois. */
 /**
+ * Restante em ms; `DURACAO` no servidor e na hidratacao, o valor real logo depois.
  * @returns {number} Restante em ms, arredondado para cima ao segundo.
  */
 function useRemaining() {
@@ -119,8 +118,8 @@ function useRemaining() {
   return remaining;
 }
 
-/** Contagem regressiva de 24 h; zerada, mostra o aviso de expiracao. Renderiza "24:00:00" no servidor. */
 /**
+ * Contagem regressiva de 24 h; zerada, mostra o aviso de expiracao. Renderiza "24:00:00" no servidor.
  * @param {object} props
  * @param {string} [props.className="text-body text-center"] - Classes do paragrafo.
  * @returns {JSX.Element}
@@ -148,8 +147,8 @@ const formatWithMillis = (remaining) => {
   const totalSeconds = Math.ceil(remaining / 1000);
   return `${Math.floor(totalSeconds / 86400)}d ${Math.floor(totalSeconds / 3600) % 24}h ${Math.floor(totalSeconds / 60) % 60}min ${padTwoDigits(totalSeconds % 60)}s ${String(remaining % 1000).padStart(3, "0")}ms`;
 };
-/** Oferta limitada: mesmo fim do `Countdown`, em "0d 23h 59min 59s 999ms" com os milesimos correndo. */
 /**
+ * Oferta limitada: mesmo fim do `Countdown`, em "0d 23h 59min 59s 999ms" com os milesimos correndo.
  * @returns {JSX.Element|null} Nulo depois que a promocao acaba.
  */
 export function LimitedOffer() {

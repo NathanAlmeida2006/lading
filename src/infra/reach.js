@@ -5,11 +5,20 @@ import { CONFIG } from "./config.js";
    ------------------------------------------------------------------------- */
 
 /**
+ * @typedef ReachDeps Dependências da mensuração.
+ * @property {(subscriber: () => void) => () => void} subscribeToConsent - Assina as mudanças do consentimento.
+ * @property {import("./contracts.js").PixelPort} pixel - A porta do pixel.
+ */
+
+/**
+ * @typedef ReachPort A porta do alcance.
+ * @property {(reachById?: import("./contracts.js").ReachById) => () => void} startMeasurement - Liga a mensuração e devolve o desligamento.
+ */
+
+/**
  * Fábrica da mensuração de alcance das seções: manda um evento por seção, uma vez por carga de página.
- * @param {object} deps - Dependências da mensuração.
- * @param {(subscriber: () => void) => () => void} deps.subscribeToConsent - Assina as mudanças do consentimento.
- * @param {{isEligible: (isForSending?: boolean) => boolean, loadPixel: () => void, sendEvent: (name: string, data?: object) => boolean}} deps.pixel - A porta do pixel.
- * @returns {{startMeasurement: (reachById?: object) => () => void}} A porta do alcance.
+ * @param {ReachDeps} deps - Dependências da mensuração.
+ * @returns {ReachPort} A porta do alcance.
  */
 export function createReach({ subscribeToConsent, pixel }) {
   const { isEligible, loadPixel, sendEvent } = pixel;
@@ -24,10 +33,11 @@ export function createReach({ subscribeToConsent, pixel }) {
    * criado, e a primeira entrega do IntersectionObserver e o estado DAQUELE instante: so conta
    * o que esta na tela. O que ja passou nao e retransmitido, e volta a contar se for revisitado.
    * A impressao so entra em `sentSections` depois de o evento ter saido de fato.
-   * @param {Record<string, {etapa: number, canonico: boolean|undefined}>} [reachById={}] - Mapa de alcance das seções (`REACH_BY_ID`).
+   * @param {import("./contracts.js").ReachById} [reachById={}] - Mapa de alcance das seções (`REACH_BY_ID`).
    * @returns {() => void} Desliga a mensuração: cancela a assinatura do consentimento e desconecta o observador.
    */
   function startMeasurement(reachById = {}) {
+    /** @type {IntersectionObserver|undefined} */
     let observer;
 
     function synchronize() {

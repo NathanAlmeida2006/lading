@@ -15,6 +15,7 @@ const getServerConsent = () => false;
  * @returns {{readConsent: () => (boolean|null), subscribeToConsent: (subscriber: () => void) => () => void, useConsent: () => (boolean|null), answerConsent: (accepted: unknown) => void}} A porta do consentimento.
  */
 export function createConsent() {
+  /** @type {boolean|null|undefined} */
   let consent; // undefined = ainda nao lido; depois true | false | null (sem resposta)
   const subscribers = new Set();
 

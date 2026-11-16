@@ -208,3 +208,15 @@ test("autoConfig desligado antes do init, com o id do pixel", async () => {
     assert.ok(ordem.indexOf("set") < ordem.indexOf("init") && ordem.indexOf("init") < ordem.indexOf("track"));
   });
 });
+
+// Fronteira: `window.fbq` vem de fora e e `unknown` ate ser funcao. Terceiro que o troca por outra coisa nao derruba a pagina.
+test("window.fbq trocado por nao-funcao: nada sai, nada lanca e a revogacao ainda expira os cookies", async () => {
+  await comPixel(({ m, cookies }) => {
+    m.answerConsent(true);
+    globalThis.window.fbq = "lixo";
+    CONFIG.checkout.urlConfirmada = true;
+    try { assert.doesNotThrow(() => m.trackCheckoutStart("dobra")); } finally { CONFIG.checkout.urlConfirmada = false; }
+    assert.doesNotThrow(() => m.answerConsent(false));
+    assert.ok(cookies.some((c) => c.startsWith("_fbp=; expires=Thu, 01 Jan 1970")), "cookie nao expirou");
+  });
+});

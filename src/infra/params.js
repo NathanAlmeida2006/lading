@@ -5,21 +5,33 @@ import { readSessionValue, writeSessionValue } from "./storage.js";
 const PARAMS_STORAGE_KEY = "fluor:params";
 
 // Lista permitida: so estas chaves sao lidas da URL e repassadas ao checkout.
-const TRACKING_PARAM_KEYS = [
+const TRACKING_PARAM_KEYS = /** @type {const} */ ([
   "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
   "fbclid", "src", "sck",
-];
+]);
+
+/** @typedef {(typeof TRACKING_PARAM_KEYS)[number]} TrackingParamKey Chave de rastreio permitida. */
+
+/** @typedef {Partial<Record<TrackingParamKey, string>>} CampaignParams Parâmetros da visita: só chaves de rastreio, com valor de texto permitido. */
+
+/**
+ * @param {string} key - Chave a conferir.
+ * @returns {key is TrackingParamKey} `true` quando a chave está na lista permitida.
+ */
+const isTrackingKey = (key) => TRACKING_PARAM_KEYS.some((known) => known === key);
+
 const ALLOWED_VALUE_PATTERN = /^[\w.~:+%-]+$/;
 // Teto por valor. O `fbclid` real passa de 100 caracteres e a Meta nao documenta o maximo: 500 deixa folga
 // e a URL do checkout segue muito abaixo dos limites de URL (cerca de 2000).
+/** @type {Partial<Record<TrackingParamKey, number>>} */
 const MAX_VALUE_LENGTH = { fbclid: 500 };
 const DEFAULT_MAX_VALUE_LENGTH = 100;
 
 /**
  * Valor de texto, so com os caracteres permitidos e dentro do teto da chave.
- * @param {string} key - Chave de rastreio.
+ * @param {TrackingParamKey} key - Chave de rastreio.
  * @param {unknown} value - Valor a conferir.
- * @returns {boolean} `true` quando o valor pode seguir para o checkout.
+ * @returns {value is string} `true` quando o valor pode seguir para o checkout.
  */
 const isAllowedValue = (key, value) =>
   typeof value === "string" && value.length <= (MAX_VALUE_LENGTH[key] ?? DEFAULT_MAX_VALUE_LENGTH) && ALLOWED_VALUE_PATTERN.test(value);
@@ -27,12 +39,12 @@ const isAllowedValue = (key, value) =>
 /**
  * O valor guardado so vale se for objeto simples, de chaves de rastreio com valor permitido; qualquer outra coisa e descartada.
  * @param {unknown} saved - O que veio do sessionStorage.
- * @returns {Record<string, string>} O guardado, ou `{}` quando corrompido.
+ * @returns {CampaignParams} O guardado, ou `{}` quando corrompido.
  */
 function sanitizeSavedParams(saved) {
   if (saved === null || typeof saved !== "object" || Array.isArray(saved)) return {};
   const entries = Object.entries(saved);
-  return entries.every(([key, value]) => TRACKING_PARAM_KEYS.includes(key) && isAllowedValue(key, value)) ? saved : {};
+  return entries.every(([key, value]) => isTrackingKey(key) && isAllowedValue(key, value)) ? /** @type {CampaignParams} */ (saved) : {};
 }
 
 /* -------------------------------------------------------------------------
@@ -45,9 +57,10 @@ function sanitizeSavedParams(saved) {
  * de terceiro pode levar a query junto. Visita nova com campanha SUBSTITUI o
  * guardado (nao mescla: UTMs de anuncios diferentes nao se misturam); sem
  * campanha na URL, o guardado continua.
- * @returns {Record<string, string>} Os parametros de rastreio da URL, ou os guardados na sessão quando a URL não traz nenhum.
+ * @returns {CampaignParams} Os parametros de rastreio da URL, ou os guardados na sessão quando a URL não traz nenhum.
  */
 export function captureCampaignParams() {
+  /** @type {CampaignParams} */
   const fromUrl = {};
   const search = new URLSearchParams(window.location.search);
   for (const key of TRACKING_PARAM_KEYS) {
@@ -61,6 +74,7 @@ export function captureCampaignParams() {
   return sanitizeSavedParams(readSessionValue(PARAMS_STORAGE_KEY));
 }
 
+/** @type {CampaignParams} */
 const EMPTY_PARAMS = {};
 
 const subscribeNoop = () => () => {};
@@ -75,7 +89,7 @@ const getEmptyParamsOnServer = () => EMPTY_PARAMS;
  * Limitacao: em build estatico sem JavaScript o link do checkout funciona e
  * aponta para a URL-base, mas as UTMs da visita nao sao repassadas, porque a
  * leitura e o repasse ocorrem no navegador.
- * @param {Record<string, unknown>} [params={}] - Parametros da visita; só as chaves de rastreio com valor de texto permitido entram.
+ * @param {Record<string, unknown>|CampaignParams} [params={}] - Parametros da visita; só as chaves de rastreio com valor de texto permitido entram.
  * @returns {string} A URL do checkout, com os parametros acrescentados, ou a URL-base intacta.
  */
 export function buildCheckoutUrl(params = {}) {
@@ -92,11 +106,16 @@ export function buildCheckoutUrl(params = {}) {
   } catch {
     return url;
   }
+  /** @type {CampaignParams} */
   const allowed = {};
   for (const key of TRACKING_PARAM_KEYS) {
     const value = params?.[key];
     if (isAllowedValue(key, value)) allowed[key] = value;
   }
+  /**
+   * @param {string} key - Chave a acrescentar.
+   * @param {string} value - Valor da chave.
+   */
   const appendIfMissing = (key, value) => {
     if (!base.searchParams.has(key)) base.searchParams.append(key, value);
   };
@@ -111,14 +130,15 @@ export function buildCheckoutUrl(params = {}) {
 /**
  * Fábrica dos parametros de campanha para o `CtaButton`:lidos aqui e nao recebidos por prop: nada atravessa a arvore, e so os
  * botoes re-renderizam quando a visita traz campanha. No servidor e na hidratacao, `{}`.
- * @returns {{useCampaignParams: () => Record<string, string>}} O hook que lê os parametros da visita.
+ * @returns {{useCampaignParams: () => CampaignParams}} O hook que lê os parametros da visita.
  */
 export function createCampaignParams() {
+  /** @type {CampaignParams|undefined} */
   let params; // capturados uma vez por carga, no primeiro pedido do navegador
 
   /**
    * Os parametros da visita; o mesmo `{}` quando nao ha campanha, para ninguem re-renderizar a toa.
-   * @returns {Record<string, string>} Os parametros da visita.
+   * @returns {CampaignParams} Os parametros da visita.
    */
   function readCampaignParams() {
     if (params === undefined) {
@@ -130,7 +150,7 @@ export function createCampaignParams() {
 
   /**
    * Hook: os parametros da visita, sem re-renderizar quando não mudam.
-   * @returns {Record<string, string>} Os parametros da visita.
+   * @returns {CampaignParams} Os parametros da visita.
    */
   function useCampaignParams() {
     return useSyncExternalStore(subscribeNoop, readCampaignParams, getEmptyParamsOnServer);

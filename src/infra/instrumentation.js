@@ -24,7 +24,7 @@ const reach = createReach({ subscribeToConsent: consent.subscribeToConsent, pixe
 
 /**
  * Hook: os parametros da visita (ver `createCampaignParams`).
- * @returns {Record<string, string>} Os parametros da visita.
+ * @returns {import("./params.js").CampaignParams} Os parametros da visita.
  */
 export const useCampaignParams = campaignParams.useCampaignParams;
 
@@ -56,14 +56,14 @@ export const answerConsent = consent.answerConsent;
 
 /**
  * Registra a intenção de checkout no clique de um CTA (ver `createPixel`).
- * @param {string} ctaPosition - Posição do CTA clicado.
+ * @param {import("./contracts.js").CtaPosition} ctaPosition - Posição do CTA clicado.
  * @returns {void}
  */
 export const trackCheckoutStart = pixel.trackCheckoutStart;
 
 /**
  * Liga a mensuração de alcance das seções (ver `createReach`).
- * @param {object} [reachById={}] - Mapa de alcance das seções.
+ * @param {import("./contracts.js").ReachById} [reachById={}] - Mapa de alcance das seções.
  * @returns {() => void} Desliga a mensuração.
  */
 export const startMeasurement = reach.startMeasurement;

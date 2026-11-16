@@ -1,6 +1,79 @@
 import { isRealEmail } from "./validation.js";
 
-/** Dados comerciais da instância. null indica informação ainda não confirmada. */
+/**
+ * @typedef ValueStackItem Item da pilha de valor.
+ * @property {string} id - Identificador estável do item.
+ * @property {string} nome - Nome mostrado na tela.
+ * @property {number} valor - Valor avulso, em reais.
+ */
+
+/**
+ * @typedef ValueStackBlock Bloco `pilhaDeValor`: o que a seção de oferta mostra.
+ * @property {boolean} ativo - `false` retira a seção do preview.
+ * @property {boolean} confirmado - Só `true` libera a publicação (`PUBLICAR=1`).
+ * @property {string} fonte - De onde vieram os valores.
+ * @property {string} moeda - Símbolo da moeda.
+ * @property {string} cabecalho - Título da seção.
+ * @property {ValueStackItem[]} itens - Itens da pilha.
+ * @property {string} totalRotulo - Rótulo do total declarado.
+ * @property {number} totalDeclarado - Total declarado, em reais; precisa bater com a soma dos itens.
+ * @property {{rotulo: string}} conector - Ligação entre o total e a oferta.
+ * @property {{rotulo: string, preco: number, subtexto: string}} oferta - O preço à vista e o texto que o acompanha.
+ */
+
+/**
+ * @typedef SampleSection Seção de amostra (RF-L08).
+ * @property {boolean} ativo - Seção exibida.
+ * @property {string|null} justificativaAusencia - Por que a seção não aparece; `null` quando aparece.
+ * @property {string|null} trechoReal - Trecho real do miolo; `null` até haver um aprovado.
+ * @property {string|null} origem - De onde o trecho veio; `null` até haver um.
+ */
+
+/**
+ * @typedef Bonus Bônus da oferta, quando confirmado.
+ * @property {string} id
+ * @property {string} nome
+ * @property {string} descricao
+ * @property {string} origem
+ * @property {boolean} confirmado
+ */
+
+/**
+ * @typedef PriceAnchor Ancoragem de preço, quando confirmada.
+ * @property {number|string} precoComparativo - Preço de comparação; texto no formato `1.234,56` também vale.
+ * @property {string} fundamento
+ * @property {string} fonte
+ * @property {boolean} confirmado
+ */
+
+/**
+ * @typedef Testimonial Depoimento aprovado: só texto público e referência opaca à autorização.
+ * @property {string} id
+ * @property {string} texto
+ * @property {string} identificacao
+ * @property {string} contexto
+ * @property {string} origem
+ * @property {string} autorizacaoRef
+ * @property {boolean} aprovado
+ */
+
+/**
+ * @typedef Config Dados comerciais da instância. `null` indica informação ainda não confirmada.
+ * @property {ValueStackBlock} pilhaDeValor - A seção de pilha de valor.
+ * @property {string} campanha - Identificador da campanha, enviado em todo evento do pixel.
+ * @property {{mapa: {ativo: boolean, justificativaAusencia: string|null}, amostra: SampleSection}} secoes - Seções opcionais (RF-L08).
+ * @property {{disponivel: boolean, moeda: string, pix: {ativo: boolean, valor: number|string|null}, parcelamento: string|null, garantiaDias: number|null, garantiaCondicoes: string|null, garantiaCanal: string|null, bonus: Bonus[], ancoragem: PriceAnchor|null}} oferta - Condições da oferta.
+ * @property {{formato: string, canal: string|null, modoDeAcesso: string|null, prazo: string|null}} entrega - Como o produto chega ao comprador (RF-L25).
+ * @property {{url: string, urlConfirmada: boolean, parametroRastreio: string|null, parametroConfirmado: boolean}} checkout - Destino único de todos os CTAs.
+ * @property {{id: string|null}} pixel - Pixel da Meta; `null` até o id existir.
+ * @property {{contato: string, politicaPrivacidade: string, termosDeUso: string}} legal - Contato público e documentos legais.
+ * @property {Testimonial[]} depoimentos - Depoimentos aprovados.
+ */
+
+/**
+ * Dados comerciais da instância. null indica informação ainda não confirmada.
+ * @type {Config}
+ */
 export const CONFIG = {
   // Dados comerciais da seção de pilha de valor. null indica valor não confirmado. Só `confirmado`
   // true libera a publicação (PUBLICAR=1); `ativo` false retira a seção do preview.

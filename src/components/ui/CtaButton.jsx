@@ -47,7 +47,7 @@ const LABEL =
 
 /**
  * @param {object} props
- * @param {string} props.position - Nome da posicao da pagina (dobra, espelho, doca...), enviado ao rastreador e a `data-posicao`.
+ * @param {import("../../infra/contracts.js").CtaPosition} props.position - Posicao do botao na pagina (dobra, espelho, doca...), enviada ao rastreador e a `data-posicao`.
  * @param {boolean} [props.isCompact=false] - Versao compacta, para a doca.
  * @param {boolean} [props.isGhost=false] - Variante em contorno, usada no rodape.
  * @param {boolean} [props.isFullWidth=false] - Ocupa a largura total do pai.

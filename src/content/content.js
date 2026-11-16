@@ -2,6 +2,64 @@
 import { CONFIG } from "../infra/config.js";
 import { formatReais } from "./valueStack.js";
 
+/**
+ * @typedef MirrorCard Carta da seção Espelho: o antes e o depois.
+ * @property {string} titulo - "Do X ao Y".
+ * @property {string} [src] - Imagem da carta; ausente quando a carta não tem imagem.
+ * @property {string} depois - O que o protocolo entrega.
+ * @property {string} lastro - Rótulo curto do que sustenta a promessa.
+ */
+
+/**
+ * @typedef MapState Estado do Mapa: uma tela do app.
+ * @property {string} capa - Número da capa (`"01"`).
+ * @property {string} src - Imagem da tela.
+ * @property {string} [pos] - Classe de enquadramento da imagem (`object-[...]`).
+ * @property {string} faixa - Faixa curta acima do nome.
+ * @property {string} nome - Nome do estado.
+ * @property {string} texto - Descrição.
+ */
+
+/**
+ * @typedef MapNumber Número em destaque do Mapa.
+ * @property {number} valor - O número.
+ * @property {string} rotulo - O que ele conta.
+ * @property {boolean} [destaque] - Marca o número em destaque.
+ */
+
+/**
+ * @typedef Voice Voz da Leva: um protocolo.
+ * @property {string} nome - Nome do protocolo.
+ * @property {string} governa - O que o protocolo governa.
+ * @property {string} onde - Onde ele vive.
+ * @property {string} fala - A fala do protocolo.
+ * @property {string} src - Imagem da tela do protocolo.
+ * @property {string} [pos] - Classe de enquadramento da imagem (`object-[...]`).
+ */
+
+/**
+ * @typedef FaqEntry Pergunta frequente e a resposta.
+ * @property {string} pergunta
+ * @property {string} resposta
+ */
+
+/**
+ * @typedef Content O texto público das seções.
+ * @property {{rotulo: string, condicoes: string, headline: {linhas: string[]}, promessa: {texto: string}, subheadline: {texto: string}}} dobra
+ * @property {{rotulo: string, destaques: string[], texto: string}} reconhecimento
+ * @property {{semanas: number, sessoesObrigatorias: number, sessoesOpcionais: number}} mecanismo
+ * @property {{rotulo: string}} intro
+ * @property {{rotulo: string}} doca
+ * @property {{rotulo: string, titulo: string, sub: string, cartas: MirrorCard[]}} espelho
+ * @property {{rotulo: string, linhas: string[], sub: string, estados: MapState[], frase: string, numeros: MapNumber[]}} mapa
+ * @property {{rotulo: string, quebraApos: number, titulo: string, sub: string, vozes: Voice[]}} leva
+ * @property {{headline: {linhas: string[]}, rotulo: string, condicoes: string}} fechamento
+ * @property {string} objecoesRotulo
+ * @property {string} objecoesTitulo
+ * @property {{tagline: string}} rodape
+ * @property {FaqEntry[]} objecoes
+ */
+
 const CORE_PROMISE = "O que não cresce é a comparação com quem não é natural.";
 const MECHANISM = {
   semanas: 12, sessoesObrigatorias: 3, sessoesOpcionais: 1,
@@ -9,10 +67,15 @@ const MECHANISM = {
 // As cifras do FAQ saem da pilha de valor (o mesmo número do recibo e do CTA): por semana e por sessão
 // obrigatória do ciclo.
 const { moeda: currency, totalDeclarado: declaredTotal, oferta: { preco: price } } = CONFIG.pilhaDeValor;
+/**
+ * @param {number} amount - Valor em reais.
+ * @returns {string} Valor com a moeda.
+ */
 const formatPrice = (amount) => `${currency} ${formatReais(amount)}`;
 const TOTAL_SESSIONS = MECHANISM.semanas * MECHANISM.sessoesObrigatorias;
 const PROTOCOL_LABEL = "hipertrofia · natural";
 
+/** @type {Content} */
 export const CONTENT = {
   dobra: {
     rotulo: PROTOCOL_LABEL,

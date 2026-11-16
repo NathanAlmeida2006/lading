@@ -5,13 +5,32 @@ import { CONFIG } from "../infra/config.js";
  * apresentável. Sem Date, window ou Intl: a saída é a mesma no servidor e no cliente.
  */
 
+/**
+ * @typedef PresentableValueStack A pilha de valor pronta para a tela: todo valor já formatado.
+ * @property {string} cabecalho - Título da seção.
+ * @property {{id: string, nome: string, valor: string}[]} itens - Itens, com o valor formatado.
+ * @property {string} totalRotulo - Rótulo do total declarado.
+ * @property {string} total - Total declarado, formatado.
+ * @property {string} moeda - Símbolo da moeda.
+ * @property {{rotulo: string}} conector - Ligação entre o total e a oferta.
+ * @property {{rotulo: string, preco: string, subtexto: string}} oferta - O preço à vista, formatado, e o texto que o acompanha.
+ */
+
+/**
+ * @param {number} amount - Valor em reais.
+ * @returns {number} O valor em centavos, inteiro.
+ */
 const toCents = (amount) => Math.round(amount * 100);
 
+/**
+ * @param {unknown} amount - Valor a conferir.
+ * @returns {amount is number} `true` quando é número finito e positivo.
+ */
 const isValidAmount = (amount) => typeof amount === "number" && Number.isFinite(amount) && amount > 0;
 
 /**
  * Lista de erros do bloco; vazia quando o bloco pode ser exibido.
- * @param {object|null|undefined} block - Bloco `pilhaDeValor` da configuração.
+ * @param {import("../infra/config.js").ValueStackBlock|null|undefined} block - Bloco `pilhaDeValor` da configuração.
  * @returns {string[]} Mensagens de erro; vazia quando o bloco pode ser exibido.
  */
 export function listValueStackErrors(block) {
@@ -44,11 +63,11 @@ export const formatReais = (amount) => (Number.isInteger(amount) ? String(amount
 
 /**
  * Forma pronta para a tela, com valores já formatados; `null` quando o bloco não pode ser exibido.
- * @param {object|null|undefined} block - Bloco `pilhaDeValor` da configuração.
- * @returns {object|null} A forma apresentável, ou `null` quando há erros de configuração.
+ * @param {import("../infra/config.js").ValueStackBlock|null|undefined} block - Bloco `pilhaDeValor` da configuração.
+ * @returns {PresentableValueStack|null} A forma apresentável, ou `null` quando há erros de configuração.
  */
 export function buildPresentableValueStack(block) {
-  if (listValueStackErrors(block).length) return null;
+  if (!block || listValueStackErrors(block).length) return null;
   return {
     cabecalho: block.cabecalho,
     itens: block.itens.map(({ id, nome, valor: amount }) => ({ id, nome, valor: formatReais(amount) })),
