@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { answerConsent, useConsent } from "../../infra/instrumentation.js";
 
 /**
@@ -11,6 +11,8 @@ import { answerConsent, useConsent } from "../../infra/instrumentation.js";
  * Renderiza `null` no primeiro passe para nao divergir do HTML pre-renderizado
  * (o servidor nao sabe o que este visitante ja respondeu).
  */
+const SHOW_DELAY_MS = 3000;
+
 const BUTTON =
   "flex-1 inline-flex items-center justify-center min-h-12 px-4 py-3 border rounded-xs cursor-pointer " +
   "font-secundaria text-label uppercase bg-transparent text-bone border-bone";
@@ -23,21 +25,29 @@ export function ConsentBanner() {
   const answer = useConsent();
   const isDecided = answer !== null;
 
+  // O aviso espera 3 s para nao brigar com a primeira dobra.
+  const [isReady, setIsReady] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsReady(true), SHOW_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, []);
+  const isVisible = isReady && !isDecided;
+
   // A folga evita que o aviso, preso na base da tela, cubra o fim da pagina.
   useEffect(() => {
-    document.body.classList.toggle("com-consentimento", !isDecided);
+    document.body.classList.toggle("com-consentimento", isVisible);
     return () => document.body.classList.remove("com-consentimento");
-  }, [isDecided]);
+  }, [isVisible]);
 
-  if (isDecided) return null;
+  if (!isVisible) return null;
 
   return (
     <aside
-      className="fixed inset-x-0 bottom-0 z-20 px-4 pt-3 pb-[max(--spacing(3),env(safe-area-inset-bottom))] sm:pt-4 sm:pb-[max(--spacing(4),env(safe-area-inset-bottom))] bg-surface-1 border-t border-line-strong"
+      className="fixed inset-x-0 bottom-0 z-20 px-4 pt-3 pb-[max(--spacing(3),env(safe-area-inset-bottom))] sm:pt-4 sm:pb-[max(--spacing(4),env(safe-area-inset-bottom))] bg-surface-1 border-t border-line-strong animate-sobe motion-reduce:animate-none"
       aria-label="Aviso de cookies"
     >
       <div className="flex flex-col gap-2 max-w-180 mx-auto sm:flex-row sm:items-center sm:gap-3">
-        <p className="font-terciaria text-caption max-w-prose">
+        <p className="font-terciaria text-body text-center sm:flex-1 max-w-prose">
           Aceitar cookies no site?
         </p>
         <div className="grid grid-cols-2 gap-3 sm:flex-none">

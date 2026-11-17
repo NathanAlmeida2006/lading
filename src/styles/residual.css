@@ -144,12 +144,14 @@ html:has(body.com-doca) {
   --animate-ithium-letra: ithium 380ms var(--ease-expo) both; /* uma letra do "ithium"; o atraso de cada uma vai inline */
   /* A onda que sai do play ao clique. */
   --animate-onda: onda 750ms var(--ease-expo) both;
+  --animate-sobe: sobe 600ms var(--ease-expo) both; /* o aviso de cookies sobe da base */
 
   /* `--u` (definida no botao) e a unidade do conjunto: o menor entre 1% da altura e 1,7% da largura da tela. */
   @keyframes letra {
     from { width: 50%; height: 50%; clip-path: polygon(35% 17%, 62% 33.5%, 89% 50%, 62% 66.5%, 35% 83%, 35% 50%); }
     to { width: calc(30 * var(--u)); height: calc(62 * var(--u)); clip-path: polygon(0 0, 38% 0, 38% 85%, 100% 85%, 100% 100%, 0 100%); }
   }
+  @keyframes sobe { from { transform: translateY(100%); } }
   @keyframes onda { from { transform: scale(1); opacity: 0.8; } to { transform: scale(2.6); opacity: 0; } }
   @keyframes ithium {
     from { opacity: 0; clip-path: inset(0 0 100% 0); }
