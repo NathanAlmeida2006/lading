@@ -44,10 +44,10 @@ test("imports frescos da porta nao compartilham o consentimento", async () => {
 });
 
 test("modulos novos de src/infra/ nao importam a porta de volta, e pixel, alcance e consentimento nao se importam", () => {
-  for (const arquivo of ["storage.js", "params.js", "consent.js", "pixel.js", "reach.js"]) {
+  for (const arquivo of ["storage.js", "params.js", "consent.js", "pixel.js", "clarity.js", "reach.js"]) {
     assert.ok(!importsRelativos(arquivo).some((i) => i.startsWith("instrumentation")), `${arquivo} importa instrumentation.js`);
   }
-  const irmaos = ["consent.js", "pixel.js", "reach.js"];
+  const irmaos = ["consent.js", "pixel.js", "clarity.js", "reach.js"];
   for (const arquivo of irmaos) {
     const outros = irmaos.filter((a) => a !== arquivo);
     for (const alvo of importsRelativos(arquivo)) {

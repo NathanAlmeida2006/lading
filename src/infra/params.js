@@ -120,6 +120,7 @@ export function buildCheckoutUrl(params = {}) {
     if (!base.searchParams.has(key)) base.searchParams.append(key, value);
   };
   for (const [key, value] of Object.entries(allowed)) appendIfMissing(key, value);
+  if (allowed.utm_source) appendIfMissing("src", allowed.utm_source); // Hotmart: src = origem
   const origin = allowed.utm_content ?? allowed.utm_campaign ?? allowed.src;
   if (origin && isTrackingParamConfirmed === true && typeof trackingParam === "string" && trackingParam.trim()) {
     appendIfMissing(trackingParam.trim(), origin);

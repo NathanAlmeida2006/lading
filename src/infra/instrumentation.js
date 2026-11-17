@@ -1,5 +1,5 @@
 /**
- * Instrumentacao: parametros, consentimento, pixel e alcance das secoes.
+ * Instrumentacao: parametros, consentimento, pixel, Clarity e alcance das secoes.
  *
  * Regra que organiza o arquivo inteiro (RF-L29): a landing reporta INTENCAO,
  * a Hotmart reporta o FATO. `Purchase` nao nasce aqui. Pixel que dispara compra
@@ -10,9 +10,11 @@
  * componente: sobrevive ao StrictMode e a remontagem, e a pagina tem um dono so
  * para "ja enviei isto?".
  */
-import { createCampaignParams } from "./params.js";
+import { createCampaignParams, captureCampaignParams } from "./params.js";
+import { CONFIG } from "./config.js";
 import { createConsent } from "./consent.js";
 import { createPixel } from "./pixel.js";
+import { createClarity } from "./clarity.js";
 import { createReach } from "./reach.js";
 
 export { captureCampaignParams, buildCheckoutUrl } from "./params.js";
@@ -20,7 +22,9 @@ export { captureCampaignParams, buildCheckoutUrl } from "./params.js";
 const campaignParams = createCampaignParams();
 const consent = createConsent();
 const pixel = createPixel(consent.readConsent);
-const reach = createReach({ subscribeToConsent: consent.subscribeToConsent, pixel });
+// `criativo` = utm_content do anuncio: filtra as gravacoes por criativo no painel do Clarity.
+const clarity = createClarity(consent.readConsent, () => ({ criativo: captureCampaignParams().utm_content }));
+const reach = createReach({ subscribeToConsent: consent.subscribeToConsent, pixel, clarity });
 
 /**
  * Hook: os parametros da visita (ver `createCampaignParams`).
@@ -55,11 +59,14 @@ export const useConsent = consent.useConsent;
 export const answerConsent = consent.answerConsent;
 
 /**
- * Registra a intenção de checkout no clique de um CTA (ver `createPixel`).
+ * Registra a intenção de checkout no clique de um CTA (ver `createPixel` e `createClarity`).
  * @param {import("./contracts.js").CtaPosition} ctaPosition - Posição do CTA clicado.
  * @returns {void}
  */
-export const trackCheckoutStart = pixel.trackCheckoutStart;
+export function trackCheckoutStart(ctaPosition) {
+  pixel.trackCheckoutStart(ctaPosition);
+  if (CONFIG.checkout.urlConfirmada === true) clarity.sendEvent("clicou_checkout");
+}
 
 /**
  * Liga a mensuração de alcance das seções (ver `createReach`).

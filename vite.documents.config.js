@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 
-// As páginas legais (privacidade.html, termos.html) são entradas HTML próprias, num segundo build que SOMA
+// As páginas legais (privacy.html, terms.html) são entradas HTML próprias, num segundo build que SOMA
 // ao dist da landing (emptyOutDir: false): o grafo de chunks da landing não muda. O JS delas vai para
 // dist/documents/, fora de dist/assets, que é o que scripts/check-size.mjs mede (RNF-L04).
 export default defineConfig({
@@ -13,7 +13,7 @@ export default defineConfig({
     cssMinify: "esbuild",
     reportCompressedSize: false,
     rolldownOptions: {
-      input: { privacidade: "privacidade.html", termos: "termos.html" },
+      input: { privacy: "privacy.html", terms: "terms.html" },
       output: {
         entryFileNames: "documents/[name]-[hash].js",
         chunkFileNames: "documents/[name]-[hash].js",

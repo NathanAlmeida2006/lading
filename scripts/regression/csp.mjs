@@ -22,7 +22,7 @@ const url = `http://127.0.0.1:${s.address().port}/`;
 console.log("cabecalhos de / :", JSON.stringify(cabecalhos("/index.html")));
 const nav = await chromium.launch({ executablePath: CHROME, headless: true, args: ["--autoplay-policy=no-user-gesture-required", "--mute-audio"] });
 let total = 0;
-for (const modo of ["normal", "reduzido"]) for (const pag of ["", "privacidade.html", "termos.html"]) {
+for (const modo of ["normal", "reduzido"]) for (const pag of ["", "privacy.html", "terms.html"]) {
   const ctx = await nav.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: modo === "reduzido" ? "reduce" : "no-preference" });
   await ctx.addInitScript(() => { window.__v = []; document.addEventListener("securitypolicyviolation", (e) => window.__v.push(`${e.violatedDirective} ${e.blockedURI} ${e.sourceFile}:${e.lineNumber}`)); });
   const p = await ctx.newPage(); const cons = []; p.on("console", (m) => { if (/Content Security Policy|Refused to/i.test(m.text())) cons.push(m.text().slice(0, 240)); }); p.on("pageerror", (e) => cons.push("pageerror " + String(e).slice(0, 200)));

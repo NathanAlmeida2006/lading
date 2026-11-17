@@ -96,3 +96,8 @@ test("object-src e exatamente 'none'", () => {
 test("bloco /documents/* tem Cache-Control: public, max-age=31536000, immutable", () => {
   assert.ok((blocos["/documents/*"] ?? []).includes("Cache-Control: public, max-age=31536000, immutable"));
 });
+
+test("Clarity liberado em script-src, connect-src e img-src", () => {
+  assert.ok(scriptSrc.includes("https://*.clarity.ms"));
+  for (const d of ["connect-src", "img-src"]) assert.ok(fontes(d).includes("https://*.clarity.ms"), d);
+});

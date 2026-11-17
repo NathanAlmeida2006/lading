@@ -60,7 +60,9 @@ afirmacao("checkout.url", urlHttps(CONFIG.checkout.url) && CONFIG.checkout.urlCo
   "URL HTTPS real do checkout ainda não confirmada na configuração");
 afirmacao("checkout.parametroRastreio", /^[a-zA-Z][\w-]*$/.test(CONFIG.checkout.parametroRastreio ?? "") && CONFIG.checkout.parametroConfirmado === true,
   "nome do parâmetro de rastreio ainda não confirmado na conta");
-afirmacao("pixel.id", /^\d+$/.test(String(CONFIG.pixel.id ?? "")), "ID do Pixel ausente");
+// O Vite injeta VITE_META_PIXEL_ID no bundle; aqui (Node puro) le-se o mesmo valor do .env ou do ambiente.
+try { process.loadEnvFile(join(raiz, ".env")); } catch { /* sem .env: vale o ambiente */ }
+afirmacao("pixel.id", /^\d+$/.test(String(CONFIG.pixel.id ?? process.env.VITE_META_PIXEL_ID ?? "")), "ID do Pixel ausente (VITE_META_PIXEL_ID)");
 afirmacao("legal.contato", isRealEmail(CONFIG.legal.contato), "e-mail de contato ausente ou inválido");
 
 // A mesma regra do rodape (src/infra/validation.js): o que ele esconderia, o build recusa.

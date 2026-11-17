@@ -66,6 +66,7 @@ import { isRealEmail } from "./validation.js";
  * @property {{formato: string, canal: string|null, modoDeAcesso: string|null, prazo: string|null}} entrega - Como o produto chega ao comprador (RF-L25).
  * @property {{url: string, urlConfirmada: boolean, parametroRastreio: string|null, parametroConfirmado: boolean}} checkout - Destino único de todos os CTAs.
  * @property {{id: string|null}} pixel - Pixel da Meta; `null` até o id existir.
+ * @property {{id: string|null}} clarity - Microsoft Clarity; `null` até o id existir.
  * @property {{contato: string, politicaPrivacidade: string, termosDeUso: string}} legal - Contato público e documentos legais.
  * @property {Testimonial[]} depoimentos - Depoimentos aprovados.
  */
@@ -133,17 +134,21 @@ export const CONFIG = {
   checkout: {
     url: "https://pay.hotmart.com/Y108171272A", // checkout da Hotmart: único destino de todos os CTAs
     urlConfirmada: true,
-    parametroRastreio: null,
-    parametroConfirmado: false,
+    parametroRastreio: "sck", // Hotmart: sck recebe utm_content (ou utm_campaign), ver buildCheckoutUrl
+    parametroConfirmado: true,
   },
 
-  pixel: { id: null },
+  // Só IDs públicos (nunca token da API de Conversões). Fora do build de produção ficam `null`, para o
+  // `npm run dev` não sujar as contas; `VITE_ENABLE_PIXEL_DEV=1` liga de propósito.
+  // `?.` porque os testes importam este arquivo em Node puro, onde `import.meta.env` não existe.
+  pixel: { id: (import.meta.env?.PROD || import.meta.env?.VITE_ENABLE_PIXEL_DEV) && import.meta.env?.VITE_META_PIXEL_ID || null },
+  clarity: { id: (import.meta.env?.PROD || import.meta.env?.VITE_ENABLE_PIXEL_DEV) && import.meta.env?.VITE_CLARITY_ID || null },
 
   legal: {
     contato: "suportelithiumbr@gmail.com", // e-mail de suporte: aparece no fechamento e no rodapé legal
     // Arquivos estáticos em public/ (ou URL HTTPS real). PUBLICAR=1 valida que existem no build.
-    politicaPrivacidade: "/privacidade.html",
-    termosDeUso: "/termos.html",
+    politicaPrivacidade: "/privacy.html",
+    termosDeUso: "/terms.html",
   },
 
   // Apenas texto público aprovado e referência opaca à autorização; nenhum

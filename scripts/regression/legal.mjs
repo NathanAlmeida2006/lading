@@ -8,7 +8,7 @@ import fs from "node:fs"; import path from "node:path"; import { chromium, CHROM
 const DIR = SAIDA; const [rot, buildArg] = process.argv.slice(2); const build = buildArg ?? rot;
 const { s, url } = await servir(path.join(DIR, "b", build, "dist"));
 const nav = await chromium.launch({ executablePath: CHROME, headless: true });
-for (const pag of ["privacidade", "termos"]) for (const tam of ["360x640", "768x1024", "1440x900"]) for (const modo of ["normal", "reduzido"]) {
+for (const pag of ["privacy", "terms"]) for (const tam of ["360x640", "768x1024", "1440x900"]) for (const modo of ["normal", "reduzido"]) {
   const [w, h] = tam.split("x").map(Number); const pasta = path.join(DIR, "l", rot, `${pag}-${tam}-${modo}`); fs.rmSync(pasta, { recursive: true, force: true }); fs.mkdirSync(pasta, { recursive: true });
   const ctx = await nav.newContext({ viewport: { width: w, height: h }, reducedMotion: modo === "reduzido" ? "reduce" : "no-preference", deviceScaleFactor: 1, colorScheme: "dark" });
   const p = await ctx.newPage(); const erros = []; p.on("pageerror", (e) => erros.push(String(e).slice(0, 200)));

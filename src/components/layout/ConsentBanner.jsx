@@ -4,7 +4,7 @@ import { answerConsent, useConsent } from "../../infra/instrumentation.js";
 /**
  * Consentimento antes do evento de terceiro (RNF-L23).
  *
- * O pixel nao carrega sozinho: ele espera o aceite. Recusar e uma opcao de
+ * O pixel e o Clarity nao carregam sozinhos: esperam o aceite. Recusar e uma opcao de
  * peso igual (os dois em contorno) na tela, e nao um link cinza no canto - o padrao escuro custaria
  * mais em confianca do que rende em evento.
  *
@@ -38,7 +38,7 @@ export function ConsentBanner() {
     >
       <div className="flex flex-col gap-2 max-w-180 mx-auto sm:flex-row sm:items-center sm:gap-3">
         <p className="font-terciaria text-caption max-w-prose">
-          Cookies medem de qual anúncio você veio.
+          Aceitar cookies no site?
         </p>
         <div className="grid grid-cols-2 gap-3 sm:flex-none">
           <button type="button" className={BUTTON} onClick={() => answerConsent(false)}>

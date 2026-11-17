@@ -31,3 +31,4 @@ scripts/medir-carga*
 scripts/retestar-*
 scripts/wordmark.py
 README.md
+!.env.example

@@ -45,6 +45,13 @@
  */
 
 /**
+ * @typedef ClarityPort A porta do Clarity (replay e mapa de calor).
+ * @property {() => void} loadClarity - Carrega o Clarity, uma vez, ou revoga o aceite quando ele foi retirado.
+ * @property {(key: string, value: string) => void} setTag - Grava uma tag na sessão; sem aceite não sai.
+ * @property {(name: string) => void} sendEvent - Envia um evento personalizado; sem aceite não sai.
+ */
+
+/**
  * @typedef {Record<string, {etapa: number, canonico?: boolean}>} ReachById
  * Mapa de alcance das seções: id estável da seção para a etapa canônica e a marca do RF-L31 (`REACH_BY_ID`).
  */

@@ -20,7 +20,7 @@ export const isRealEmail = (value) =>
   typeof value === "string" && isRealText(value) && /^[^\s@:<>()\[\]\\,;"]+@[a-z\d-]+(?:\.[a-z\d-]+)+$/i.test(value.trim());
 
 /**
- * Documento legal: arquivo local (`/termos.html`) ou URL HTTPS sem credenciais. A referencia, ou `null`.
+ * Documento legal: arquivo local (`/terms.html`) ou URL HTTPS sem credenciais. A referencia, ou `null`.
  * @param {unknown} value - Caminho local ou URL HTTPS do documento.
  * @returns {string|null} A referência limpa, ou `null` quando não é publicável.
  */

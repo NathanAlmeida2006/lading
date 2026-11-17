@@ -1,5 +1,5 @@
 /**
- * Entrada das páginas legais (privacidade.html e termos.html): o mesmo scroll (Lenis) e o mesmo campo de
+ * Entrada das páginas legais (privacy.html e terms.html): o mesmo scroll (Lenis) e o mesmo campo de
  * pontos `estelar` da landing, sem React. Build próprio: vite.documents.config.js.
  */
 import "../styles/documents.css";

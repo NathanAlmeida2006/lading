@@ -8,6 +8,7 @@ import { CONFIG } from "./config.js";
  * @typedef ReachDeps Dependências da mensuração.
  * @property {(subscriber: () => void) => () => void} subscribeToConsent - Assina as mudanças do consentimento.
  * @property {import("./contracts.js").PixelPort} pixel - A porta do pixel.
+ * @property {import("./contracts.js").ClarityPort} clarity - A porta do Clarity.
  */
 
 /**
@@ -20,7 +21,7 @@ import { CONFIG } from "./config.js";
  * @param {ReachDeps} deps - Dependências da mensuração.
  * @returns {ReachPort} A porta do alcance.
  */
-export function createReach({ subscribeToConsent, pixel }) {
+export function createReach({ subscribeToConsent, pixel, clarity }) {
   const { isEligible, loadPixel, sendEvent } = pixel;
   const sentSections = new Set(); // impressoes de secao ja enviadas nesta carga de pagina
 
@@ -44,6 +45,7 @@ export function createReach({ subscribeToConsent, pixel }) {
       observer?.disconnect();
       observer = undefined;
       loadPixel();
+      clarity.loadClarity();
       if (!isEligible()) return;
       observer = new IntersectionObserver(
         (entries) => {
@@ -56,6 +58,7 @@ export function createReach({ subscribeToConsent, pixel }) {
               ? sendEvent("ViewContent", { ...base, campanha: CONFIG.campanha })
               : sendEvent("SecaoAlcancada", { ...base, canonico: isCanonical, campanha: CONFIG.campanha });
             if (!isSent) continue;
+            if (id === "oferta") clarity.sendEvent("viu_preco");
             sentSections.add(id);
             observer?.unobserve(target);
           }

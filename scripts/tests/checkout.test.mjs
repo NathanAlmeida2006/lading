@@ -111,3 +111,11 @@ test("chamada sem argumento nao lanca e devolve a url-base", () => {
   assert.doesNotThrow(() => buildCheckoutUrl());
   assert.equal(buildCheckoutUrl(), CONFIG.checkout.url);
 });
+
+test("src recebe utm_source e sck recebe utm_content, sem sobrescrever o que a base ja traz", () => {
+  const url = busca(comCheckout({ parametroRastreio: "sck", parametroConfirmado: true }, () => buildCheckoutUrl({ utm_source: "fb", utm_content: "ad7" })));
+  assert.equal(url.get("src"), "fb");
+  assert.equal(url.get("sck"), "ad7");
+  const base = busca(comCheckout({ url: "https://pay.hotmart.com/Y108?src=meu&sck=meu", parametroRastreio: "sck", parametroConfirmado: true }, () => buildCheckoutUrl({ utm_source: "fb", utm_content: "ad7" })));
+  assert.deepEqual([base.get("src"), base.get("sck")], ["meu", "meu"]);
+});

@@ -53,13 +53,13 @@ test("isRealEmail recusa marcador de pendencia dentro do endereco", () => {
 });
 
 test("getDocumentUrl aceita arquivo local e URL https sem credenciais, devolvendo a referencia", () => {
-  assert.equal(getDocumentUrl("/termos.html"), "/termos.html");
+  assert.equal(getDocumentUrl("/terms.html"), "/terms.html");
   assert.equal(getDocumentUrl("https://x.com/a"), "https://x.com/a");
-  assert.equal(getDocumentUrl("  /termos.html  "), "/termos.html");
+  assert.equal(getDocumentUrl("  /terms.html  "), "/terms.html");
 });
 
 test("getDocumentUrl recusa '..', espaco, barra invertida, //, http, credenciais, ftp e texto invalido", () => {
-  const rejeitados = ["..", "/../termos.html", "/termos com espaco.html", "/a\\b.html", "//evil.com", "http://x.com", "https://u:p@x.com", "ftp://x.com", "texto invalido"];
+  const rejeitados = ["..", "/../terms.html", "/termos com espaco.html", "/a\\b.html", "//evil.com", "http://x.com", "https://u:p@x.com", "ftp://x.com", "texto invalido"];
   for (const valor of rejeitados) {
     assert.equal(getDocumentUrl(valor), null, valor);
   }
