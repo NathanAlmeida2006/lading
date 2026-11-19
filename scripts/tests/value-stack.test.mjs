@@ -93,8 +93,8 @@ test("buildPresentableValueStack devolve null para bloco invalido", () => {
 test("buildPresentableValueStack do bloco da config traz itens, total e oferta formatados, com moeda R$", () => {
   const forma = buildPresentableValueStack(CONFIG.pilhaDeValor);
   assert.notEqual(forma, null);
-  assert.deepEqual(forma.itens.map((item) => item.valor), ["90", "70", "55", "35", "50", "300"]);
-  assert.equal(forma.total, "600");
+  assert.deepEqual(forma.itens.map((item) => item.valor), ["30", "25", "20", "10", "15", "100"]);
+  assert.equal(forma.total, "200");
   assert.equal(forma.moeda, "R$");
   assert.equal(forma.oferta.preco, "79,99");
 });

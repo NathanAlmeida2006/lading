@@ -109,7 +109,7 @@ function ValueStackCard({ stackData }) {
       <p className="mt-4 pt-4 border-t border-dashed border-line-strong flex items-center justify-center gap-2 font-terciaria text-[12.8px] text-silver">
         {totalRotulo}{" "}
         <span className="sr-only">valor de referência </span>
-        <s className="font-secundaria text-[28.8px] text-acento tabular-nums decoration-1">{moeda} {total}</s>
+        <span className="font-secundaria text-[28.8px] text-acento tabular-nums">{moeda} {total}</span>
       </p>
 
       <p

@@ -1,4 +1,4 @@
-// Cifras do FAQ (src/content/content.js): saem da pilha de valor. Valores de hoje: preco 79,99, total 600, 12 semanas e 3 sessoes obrigatorias por semana.
+// Cifras do FAQ (src/content/content.js): saem da pilha de valor. Valores de hoje: preco 79,99, total 200, 12 semanas e 3 sessoes obrigatorias por semana.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CONTENT } from "../../src/content/content.js";
@@ -11,8 +11,8 @@ test("resposta de preco traz o preco R$ 79,99", () => {
   assert.ok(PRECO.includes("R$ 79,99"));
 });
 
-test("resposta de preco traz o total declarado R$ 600", () => {
-  assert.ok(PRECO.includes("R$ 600"));
+test("resposta de preco traz o total declarado R$ 200", () => {
+  assert.ok(PRECO.includes("R$ 200"));
 });
 
 test("resposta de preco traz R$ 6,67 por semana", () => {

@@ -38,6 +38,7 @@ export function createClarity(readConsent, getTags = () => ({})) {
   let hasFailed = false; // o script nao carregou (bloqueado): o stub enfileiraria para sempre
   let isRevoked = false;
   let hasTagged = false;
+  let hasWarned = false;
 
   /**
    * @param {boolean} [isForSending=true] - `false` para só carregar; `true` (padrão) para enviar.
@@ -61,7 +62,10 @@ export function createClarity(readConsent, getTags = () => ({})) {
       }
       return;
     }
-    if (!isEligible(false)) return;
+    if (!isEligible(false)) {
+      if (!hasWarned) { hasWarned = true; console.warn("[Clarity] ID não configurado ou inválido (VITE_CLARITY_ID): script não carregado"); }
+      return;
+    }
     if (!isInjected) {
       if (getTrackerWindow().clarity) return; // clarity de outra origem: este modulo nao assume o que nao carregou
       try {
@@ -72,7 +76,7 @@ export function createClarity(readConsent, getTags = () => ({})) {
         const script = document.createElement("script");
         script.async = true;
         script.src = `https://www.clarity.ms/tag/${getClarityId()}`;
-        script.onerror = () => { hasFailed = true; };
+        script.onerror = () => { hasFailed = true; console.warn("[Clarity] script bloqueado (CSP, adblock ou rede)"); };
         document.head.appendChild(script);
         isInjected = true;
       } catch {

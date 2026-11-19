@@ -11,7 +11,7 @@ import { answerConsent, useConsent } from "../../infra/instrumentation.js";
  * Renderiza `null` no primeiro passe para nao divergir do HTML pre-renderizado
  * (o servidor nao sabe o que este visitante ja respondeu).
  */
-const SHOW_DELAY_MS = 3000;
+const SHOW_DELAY_MS = 1500;
 
 const BUTTON =
   "flex-1 inline-flex items-center justify-center min-h-12 px-4 py-3 border rounded-xs cursor-pointer " +
@@ -25,7 +25,7 @@ export function ConsentBanner() {
   const answer = useConsent();
   const isDecided = answer !== null;
 
-  // O aviso espera 3 s para nao brigar com a primeira dobra.
+  // O aviso espera 1,5 s para nao brigar com a primeira dobra.
   const [isReady, setIsReady] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), SHOW_DELAY_MS);

@@ -65,13 +65,13 @@ export function App() {
 
       <main id="conteudo">
         <Fold />
+        <Video />
+        {/* shouldHideDock so na primeira pilha: ela esconde a doca enquanto tiver qualquer pixel na tela; a #oferta nao. */}
+        <ValueStack shouldHideDock />
         {/* A cortina pina o Manifesto, e este conteiner define ate onde o pino vale: a secao de
             baixo sobe por cima, e o pino termina com a de cima toda coberta. */}
         <div>
           <Manifesto />
-          <Video />
-          {/* shouldHideDock so na primeira pilha: ela esconde a doca enquanto tiver qualquer pixel na tela; a #oferta nao. */}
-          <ValueStack shouldHideDock />
           <Mirror />
         </div>
         <Batch />
