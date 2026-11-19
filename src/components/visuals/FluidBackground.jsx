@@ -115,18 +115,29 @@ export function FluidBackground() {
       canvas.setAttribute("aria-hidden", "true");
       host.current.append(canvas);
       const adjust = () => { canvas.width = Math.max(1, canvas.clientWidth); canvas.height = Math.max(1, canvas.clientHeight); gl.viewport(0, 0, canvas.width, canvas.height); };
+      // O relogio do shader nao anda com o laco parado (fora da tela, pausa): `offset` soma o tempo parado e `shown` guarda o ultimo instante
+      // desenhado. Sem isso, ao voltar a secao o fluido saltava para onde o relogio de parede o levaria. Nasce parado: o primeiro quadro e o instante 0.
+      let offset = 0, stoppedAt = performance.now(), shown = 0;
       const draw = (ms) => { gl.uniform2f(entry.uniformR, canvas.width, canvas.height); gl.uniform1f(entry.uniformT, (ms / 12000) * Math.PI * 2); gl.drawArrays(gl.TRIANGLES, 0, 3); };
       let isVisible = false, rafId = 0, lastTime = -Infinity;
       const frameStep = isTouchPointer() ? TOUCH_FRAME_STEP_MS : 0;
-      const loop = (ms) => { if (ms - lastTime >= frameStep) { lastTime = ms; draw(ms); } rafId = isVisible && !isPaused() ? requestAnimationFrame(loop) : 0; };
-      const tryStart = () => { if (!rafId && isVisible && !isMotionReduced() && !isPaused()) rafId = requestAnimationFrame(loop); };
+      const loop = (ms) => {
+        if (ms - lastTime >= frameStep) { lastTime = ms; shown = ms - offset; draw(shown); }
+        if (isVisible && !isPaused()) rafId = requestAnimationFrame(loop);
+        else { rafId = 0; stoppedAt = performance.now(); }
+      };
+      const tryStart = () => {
+        if (rafId || !isVisible || isMotionReduced() || isPaused()) return;
+        offset += performance.now() - stoppedAt;
+        rafId = requestAnimationFrame(loop);
+      };
       adjust(); draw(0);
       const observer = new IntersectionObserver(([event]) => { isVisible = event.isIntersecting; tryStart(); });
       observer.observe(canvas);
-      const resizeObserver = new ResizeObserver(() => { adjust(); draw(performance.now()); });
+      const resizeObserver = new ResizeObserver(() => { adjust(); draw(shown); });
       resizeObserver.observe(canvas);
       const unsubscribe = subscribeToPause(tryStart);
-      entry.onRestore = () => { adjust(); draw(performance.now()); };
+      entry.onRestore = () => { adjust(); draw(shown); };
       return () => { cancelAnimationFrame(rafId); observer.disconnect(); resizeObserver.disconnect(); unsubscribe(); canvas.remove(); entry.onRestore = null; if (!entry.isLost) pool.push(entry); };
     }
     return () => { deferObserver.disconnect(); cleanup?.(); };

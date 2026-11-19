@@ -69,8 +69,8 @@ export function Video() {
   const isCoveredByStage = stage >= STAGES.load;
   return (
     <section id="video" ref={section} className={`${BLOCK} flex flex-col justify-center min-h-svh py-16 md:py-24`}>
-      {/* A malha de pontos do player, atras de tudo; as pontas e o circulo do clique ficam por cima dela. */}
-      {!isCovered && <DotField />}
+      {/* O campo estelar de pontos do player, atras de tudo; as pontas e o circulo do clique ficam por cima dela. */}
+      {!isCovered && <DotField variant="estelar" />}
       {/* Os triangulos que surgem e somem, atras do play (z-1); o circulo vermelho do clique (z-2) os cobre. Sob movimento reduzido nao ha circulo nem evento: seguem montados (e parados). */}
       {!isCovered && <FloatingTips layer="z-1" />}
       <div className={ENVELOPE}>

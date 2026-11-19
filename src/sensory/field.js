@@ -72,7 +72,10 @@ class Field {
       window.addEventListener("scroll", () => (lastScrollTime = performance.now()), { passive: true });
     }
     // Toque: o tempo do quadro que o campo nao desenhou (congelado), descontado para a onda retomar sem salto de fase.
+    // O relogio do campo NAO anda com o laco parado (fora da tela, pausa, rolagem no toque): `discount` soma o tempo parado, e o
+    // desenho usa `time - discount`. Sem isso, ao voltar a secao a onda saltava para onde o relogio de parede a levaria. Nasce parado: o primeiro quadro e o instante 0.
     this.discount = 0;
+    this.stoppedAt = performance.now();
     this.previousTime = NaN; // o ultimo quadro do rAF visto pelo laco (pintado ou nao)
     this.paintedTime = -Infinity; // o ultimo quadro de fato pintado, para o teto de 30 fps
 
@@ -301,7 +304,7 @@ class Field {
 
   loop = (time) => {
     if (!this.isAlive) return;
-    if (!this.isTouch) this.paint(time);
+    if (!this.isTouch) this.paint(time - this.discount);
     else {
       const delta = time - (this.previousTime || time);
       this.previousTime = time;
@@ -323,10 +326,12 @@ class Field {
     const shouldRun = !this.isReduced && !this.isPausedByUser && this.tiles.some((tile) => tile.isActive && tile.isOnScreen);
     if (shouldRun && !this.isAlive) {
       this.isAlive = true;
+      this.discount += performance.now() - this.stoppedAt;
       this.previousTime = NaN;
       this.frame = requestAnimationFrame(this.loop);
     } else if (!shouldRun && this.isAlive) {
       this.isAlive = false;
+      this.stoppedAt = performance.now();
       cancelAnimationFrame(this.frame);
     }
   }

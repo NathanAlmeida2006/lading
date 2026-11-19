@@ -103,7 +103,7 @@ export function TakeManifesto({ startAt }) {
   }
   return (
     <div className={`${PAGE} bg-acento text-void`} aria-hidden="true">
-      <DotField colors={RED_DOT_COLORS} />
+      <DotField variant="estelar" colors={RED_DOT_COLORS} />
       <div className={INNER}>
         <p className="text-[length:min(calc((100vw-48px)/3.6),calc((100svh-200px)/2.8),220px)] leading-[1.04] tracking-[0.01em]">
           <span {...beat(0)}>Natural</span>
@@ -178,7 +178,7 @@ const LEGEND = [["Treino", "var(--rubro)"], ["Dieta", "var(--praga)"], ["Sono", 
 export function TakeCalendar() {
   return (
     <div className={`${PAGE} bg-void text-bone`} aria-hidden="true">
-      <DotField />
+      <DotField variant="estelar" />
       <div className={`${INNER} gap-4`}>
         <p className="font-secundaria text-overline tracking-[0.08em] text-silver">(disciplina visível)</p>
         <h2 className="text-[length:min(calc((100vw-48px)/4.2),calc((100svh-120px)/10.5),110px)] leading-[1.04] tracking-[0.01em]">

@@ -40,7 +40,7 @@ export default function Stage({ stage, schedule, origin, speed, onRepeat }) {
           Remontar o canvas a cada corte dava um piscar de um quadro e reiniciava a onda. As frentes abaixo sao transparentes. */}
       {stage >= STAGES.load && stage < STAGES.track && (
         <div className={`${GRAIN} absolute inset-0 z-4 bg-void`} aria-hidden="true">
-          <DotField />
+          <DotField variant="estelar" />
         </div>
       )}
       {stage === STAGES.load && <TakeLoad />}

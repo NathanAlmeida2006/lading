@@ -8,7 +8,6 @@ import "../styles/tailwind.css";
 
 import { ConsentBanner } from "../components/layout/ConsentBanner.jsx";
 import { Dock } from "../components/layout/Dock.jsx";
-import { Intro } from "../components/visuals/Intro.jsx";
 import { FixedIndex } from "../components/layout/FixedIndex.jsx";
 import { MotionPause } from "../components/visuals/MotionPause.jsx";
 import { Fold } from "../sections/Fold.jsx";
@@ -47,8 +46,6 @@ export function App() {
 
   return (
     <>
-      <Intro />
-
       {/* Primeiro alvo do teclado: fora da tela ate receber foco. */}
       <a
         className={`${KEYBOARD_TARGET} underline`}

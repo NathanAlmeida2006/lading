@@ -23,16 +23,9 @@
 
     <script>
       document.documentElement.classList.add("js");
-      // A cortina de introducao e decidida AQUI, antes da primeira pintura,
-      // para nao piscar por cima do heroi ja pre-renderizado. Em TODA carga,
-      // inclusive recarga no meio da pagina (decisao do gerente do projeto,
-      // 06/09/2026); nunca sob movimento reduzido. Ver componentes/visuais/Intro.jsx.
-      //
-      // Os dois relogios abaixo NAO dependem do pacote de JavaScript, e e esse o
-      // ponto: a cortina e CSS e este script a recolhe (display e trava de
-      // rolagem) aos 3,2 s; e se o pacote nao acordar em 8 s, a classe `js`
-      // sai e todo [data-revelar] e toda palavra apagada voltam a aparecer
-      // (RNF-L35). Aplicativo.jsx escreve `pronto` depois de hidratar. Se o pacote chegar
+      // O relogio abaixo NAO depende do pacote de JavaScript, e e esse o ponto:
+      // se o pacote nao acordar em 8 s, a classe `js` sai e todo [data-revelar]
+      // e toda palavra apagada voltam a aparecer (RNF-L35). Aplicativo.jsx escreve `pronto` depois de hidratar. Se o pacote chegar
       // depois da hora, a classe NAO volta: a pagina fica aberta, sem movimento.
       (function () {
         try {
@@ -55,10 +48,6 @@
             sessionStorage.removeItem("fluor:de-documento");
           } catch (e) {}
           if (deDocumento) raiz.classList.add("sem-entrada");
-          else if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            raiz.classList.add("intro-pendente");
-            setTimeout(function () { raiz.classList.remove("intro-pendente"); }, 3200);
-          }
           setTimeout(function () {
             if (!raiz.classList.contains("pronto")) raiz.classList.remove("js");
           }, 8000);
