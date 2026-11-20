@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { padTwoDigits } from "../../app/ui.js";
+import { trackFaqOpen } from "../../infra/instrumentation.js";
 
 /** Cada pergunta da lista de duvidas, em forma de acordeao. */
 const FAQ_ITEM =
@@ -43,7 +44,10 @@ export function Faq({ items }) {
               type="button"
               className="flex w-full items-start justify-between gap-4 py-5 text-left cursor-pointer font-secundaria text-h3 wrap-anywhere lg:items-center lg:gap-8 lg:py-7 lg:text-h2"
               aria-expanded={isOpen}
-              onClick={() => setOpenIndex(isOpen ? -1 : index)}
+              onClick={() => {
+                if (!isOpen) trackFaqOpen(index + 1);
+                setOpenIndex(isOpen ? -1 : index);
+              }}
             >
               <span className="hidden lg:block w-10 shrink-0 font-terciaria text-body tabular-nums opacity-60" aria-hidden="true">
                 {padTwoDigits(index + 1)}

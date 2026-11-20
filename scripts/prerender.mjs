@@ -169,4 +169,21 @@ if (falhasCsp.length) {
   process.exit(1);
 }
 
+const posthogHost = process.env.VITE_POSTHOG_HOST;
+if (posthogHost) {
+  const posthogUrl = new URL(posthogHost);
+  const posthogOrigins = new Set([posthogUrl.origin]);
+  if (/^[^.]+\.i\./.test(posthogUrl.hostname)) {
+    const assetsUrl = new URL(posthogUrl);
+    assetsUrl.hostname = assetsUrl.hostname.replace(/^([^.]+)\.i\./, "$1-assets.i.");
+    posthogOrigins.add(assetsUrl.origin);
+  }
+  const origens = [...posthogOrigins].join(" ");
+  const caminhoCabecalhos = join(raiz, "dist", "_headers");
+  let cabecalhos = await readFile(caminhoCabecalhos, "utf8");
+  cabecalhos = cabecalhos.replace(/(script-src[^;]*)(;)/, `$1 ${origens}$2`);
+  cabecalhos = cabecalhos.replace(/(connect-src[^;]*)(;)/, `$1 ${origens}$2`);
+  await writeFile(caminhoCabecalhos, cabecalhos, "utf8");
+}
+
 console.log("prerender  index.html com a pagina dentro; chunks tardios sem modulepreload");

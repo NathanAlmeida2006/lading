@@ -26,6 +26,24 @@ const pixel = createPixel(consent.readConsent);
 const clarity = createClarity(consent.readConsent, () => ({ criativo: captureCampaignParams().utm_content }));
 const reach = createReach({ subscribeToConsent: consent.subscribeToConsent, pixel, clarity });
 
+/** @param {(posthog: typeof import("./posthog.js").posthog) => void} callback */
+function withPostHog(callback) {
+  if (typeof window === "undefined") return;
+  void import("./posthog.js").then(({ isPostHogInitialized, posthog }) => {
+    if (isPostHogInitialized()) callback(posthog);
+  }).catch(() => {});
+}
+
+function syncPostHogConsent() {
+  if (typeof window === "undefined") return;
+  void import("./posthog.js").then(({ setPostHogConsent }) => {
+    setPostHogConsent(consent.readConsent());
+  }).catch(() => {});
+}
+
+consent.subscribeToConsent(syncPostHogConsent);
+syncPostHogConsent();
+
 /**
  * Hook: os parametros da visita (ver `createCampaignParams`).
  * @returns {import("./params.js").CampaignParams} Os parametros da visita.
@@ -64,8 +82,31 @@ export const answerConsent = consent.answerConsent;
  * @returns {void}
  */
 export function trackCheckoutStart(ctaPosition) {
+  withPostHog((posthog) => {
+    posthog.capture("checkout_started", { cta_position: ctaPosition });
+    posthog.captureLog({ body: "checkout intent recorded", level: "info", attributes: { cta_position: ctaPosition } });
+  });
   pixel.trackCheckoutStart(ctaPosition);
   if (CONFIG.checkout.urlConfirmada === true) clarity.sendEvent("clicou_checkout");
+}
+
+/** Registra o início da experiência de vídeo da página. */
+export function trackVideoStart() {
+  withPostHog((posthog) => {
+    posthog.capture("video_started");
+    posthog.captureLog({ body: "landing video started", level: "info" });
+  });
+}
+
+/**
+ * Registra a abertura de uma resposta de dúvida antes da compra.
+ * @param {number} faqPosition - Posição da pergunta na lista, começando em 1.
+ */
+export function trackFaqOpen(faqPosition) {
+  withPostHog((posthog) => {
+    posthog.capture("faq_opened", { faq_position: faqPosition });
+    posthog.captureLog({ body: "faq answer opened", level: "info", attributes: { faq_position: faqPosition } });
+  });
 }
 
 /**
