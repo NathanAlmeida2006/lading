@@ -13,7 +13,7 @@ const ENTER_CLASS = "animate-revelar motion-reduce:animate-none";
 /**
  * A dobra, em painel de tela cheia.A headline e tipografia como arquitetura: duas linhas
  * compostas a mao, encostando nas bordas do container, a segunda so em contorno de fio.
- * O tamanho da headline segue a coluna (a linha mais larga, "Desculpas", mede ~3,95x a fonte, medido): `--text-display-xxl` por faixa,
+ * O tamanho da headline segue a coluna (a linha mais larga, "Desculpas" (antes do texto virar "Improviso", que e mais estreita), mede ~3,95x a fonte, medido): `--text-display-xxl` por faixa,
  * para cada linha ficar numa linha so de 360 a 1440 px.
  *
  * `min-h-svh` e nao `vh`: no celular a barra do navegador entra e sai, e `vh` mede a

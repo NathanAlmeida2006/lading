@@ -90,6 +90,7 @@ export const CONFIG = {
       { id: "protocolo-sono", nome: "Protocolo Sono e Recuperação" },
       { id: "app", nome: "App Lithium Vitalício" },
       { id: "checklist-integrado", nome: "Checklist de Execução + Social Vibe" },
+      { id: "plano-retorno", nome: "Plano de retorno" },
     ],
     tituloItens: "Itens inclusos",
     conector: { rotulo: "Vitalício" },

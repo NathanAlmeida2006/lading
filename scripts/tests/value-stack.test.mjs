@@ -81,6 +81,7 @@ test("buildPresentableValueStack do bloco da config traz os itens (so nomes) e a
     "Protocolo Sono e Recuperação",
     "App Lithium Vitalício",
     "Checklist de Execução + Social Vibe",
+    "Plano de retorno",
   ]);
   assert.equal(forma.tituloItens, "Itens inclusos");
   assert.equal("total" in forma, false);

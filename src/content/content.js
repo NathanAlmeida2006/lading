@@ -83,15 +83,15 @@ const GUARANTEE = `${GUARANTEE_DAYS} dias de garantia`;
 export const CONTENT = {
   dobra: {
     rotulo: "hipertrofia · natural",
-    headline: { linhas: ["Chega de", "Desculpas"] },
+    headline: { linhas: ["Chega de", "Improviso"] },
     promessa: { texto: CORE_PROMISE },
     subheadline: {
       texto: `Treinar sem evoluir é perder tempo. O Lithium substitui o achismo por ${MECHANISM.semanas} semanas de método exato para naturais colocarem massa de verdade.`,
     },
-    cta: "Quero sair da estagnação",
+    cta: `Acesso imediato · ${GUARANTEE_DAYS} dias de garantia`,
     // Duas frases curtas na barra da base da dobra: o número em destaque e o que ele conta.
     destaques: [
-      { valor: 3, rotulo: "trilhas" },
+      { valor: 3, rotulo: "protocolos" },
       { valor: GUARANTEE_DAYS, rotulo: "dias de garantia" },
     ],
   },
