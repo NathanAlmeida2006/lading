@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { isMotionReduced } from "../../sensory/tokens.js";
+import { parseGlbEdges } from "./glb.js";
 
 // Vem do app-lithium (src/componentes/Modelo3D.jsx): o leitor de `.glb` em arestas e o desenho em canvas 2D,
 // sem Three.js. Aqui sem arrasto e sem fundo: o video so precisa do objeto girando, e a pose inicial e a
@@ -7,10 +8,8 @@ import { isMotionReduced } from "../../sensory/tokens.js";
 const FOV = 35 * Math.PI / 180;
 
 /**
- * As arestas de um `.glb`, em coordenadas do mundo: percorre os nós com suas matrizes e lê só as
- * primitivas de linha (modo 1). Devolve os vértices em pares, o centro e o raio da esfera do modelo.
- * ponytail: sem Three.js (172 KB gzip estourava o teto de JS); só lê o que estes modelos usam
- * (matriz por nó, posições float32 em linhas). Modelo com malha rala ou compressão Draco pede o Three de volta.
+ * Baixa e le as arestas de um `.glb` (a leitura e de glb.js). Sem a rede ou com um arquivo que o leitor nao suporta,
+ * a promessa rejeita: quem usa deixa o quadro sem o objeto, e a pagina segue.
  * @param {string} url - Endereço do .glb.
  * @returns {Promise<{segments: Float64Array, radius: number}>} Arestas e raio da esfera do modelo.
  */
@@ -29,51 +28,10 @@ export const prepareModel = (model) => getGlbEdges(getModelUrl(model));
 async function decodeGlb(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error("Modelo indisponível.");
-  const bin = await response.arrayBuffer();
-  const dataView = new DataView(bin);
-  const jsonSize = dataView.getUint32(12, true);
-  const json = JSON.parse(new TextDecoder().decode(new Uint8Array(bin, 20, jsonSize)));
-  const data = 20 + jsonSize + 8; // cabeçalho do glb, o pedaço JSON e o cabeçalho do pedaço BIN
-  const segments = [];
-
-  const read = (index) => {
-    const accessor = json.accessors[index], view = json.bufferViews[accessor.bufferView];
-    const start = data + (view.byteOffset || 0) + (accessor.byteOffset || 0);
-    return new Float32Array(bin.slice(start, start + accessor.count * 12));
-  };
-  const multiply = (a, b) => { // colunas, como no glTF
-    const r = new Array(16).fill(0);
-    for (let c = 0; c < 4; c++) for (let l = 0; l < 4; l++) for (let k = 0; k < 4; k++) r[c * 4 + l] += a[k * 4 + l] * b[c * 4 + k];
-    return r;
-  };
-  const visit = (index, parent) => {
-    const node = json.nodes[index];
-    const matrix = multiply(parent, node.matrix || [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
-    if (node.mesh != null) {
-      for (const primitive of json.meshes[node.mesh].primitives) {
-        if (primitive.mode !== 1) continue;
-        const p = read(primitive.attributes.POSITION);
-        for (let i = 0; i < p.length; i += 3) {
-          const [x, y, z] = [p[i], p[i + 1], p[i + 2]];
-          segments.push(
-            matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12],
-            matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13],
-            matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14],
-          );
-        }
-      }
-    }
-    (node.children || []).forEach((child) => visit(child, matrix));
-  };
-  const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-  json.scenes[json.scene || 0].nodes.forEach((n) => visit(n, identity));
-
-  const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
-  for (let i = 0; i < segments.length; i++) { const e = i % 3; min[e] = Math.min(min[e], segments[i]); max[e] = Math.max(max[e], segments[i]); }
-  const center = min.map((v, e) => (v + max[e]) / 2);
-  for (let i = 0; i < segments.length; i++) segments[i] -= center[i % 3];
-  return { segments: new Float64Array(segments), radius: Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]) / 2 };
+  return parseGlbEdges(await response.arrayBuffer());
 }
+const warned = new Set(); // um aviso por modelo: o motivo de nao desenhar vai ao console, sem repetir a cada montagem
+const warnOnce = (model, error) => { if (!warned.has(model)) { warned.add(model); console.warn(`Model3D: "${model}" nao foi desenhado: ${error.message}`); } };
 
 /**
  * Um modelo `.glb` de `public/models-3d`, so em arestas, girando e flutuando num canvas que preenche o pai (o `className` o posiciona e o dimensiona).
@@ -98,6 +56,7 @@ export function Model3D({ model, color, className = "", origin, pose, shouldFloa
     canvas.style.cssText = "display:block;width:100%;height:100%";
     node.appendChild(canvas);
     const ctx = canvas.getContext("2d");
+    if (!ctx) { canvas.remove(); return; } // sem contexto 2D (memoria do aparelho esgotada): fica so o fundo, a capa nao quebra
     const reduced = isMotionReduced();
     let frame = 0, alive = true, canvasWidth = 0, canvasHeight = 0, dpr = 1;
     const start = origin ?? performance.now(); // o giro conta desde `origin`: cortes seguidos continuam o mesmo giro
@@ -160,9 +119,10 @@ export function Model3D({ model, color, className = "", origin, pose, shouldFloa
       if (!current) return;
       state.model = m; state.color = color;
       state.request?.();
-    }).catch(() => {
-      // Sem o modelo, fica so o fundo: a capa nao pode herdar o objeto da anterior.
+    }).catch((error) => {
+      // Sem o modelo (rede, ou glb que o leitor nao suporta), fica so o fundo: a capa nao pode herdar o objeto da anterior.
       if (!current) return;
+      warnOnce(model, error);
       state.model = null;
       state.request?.();
     });

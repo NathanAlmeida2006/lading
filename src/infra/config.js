@@ -4,21 +4,19 @@ import { isRealEmail } from "./validation.js";
  * @typedef ValueStackItem Item da pilha de valor.
  * @property {string} id - Identificador estável do item.
  * @property {string} nome - Nome mostrado na tela.
- * @property {number} valor - Valor avulso, em reais.
  */
 
 /**
  * @typedef ValueStackBlock Bloco `pilhaDeValor`: o que a seção de oferta mostra.
  * @property {boolean} ativo - `false` retira a seção do preview.
- * @property {boolean} confirmado - Só `true` libera a publicação (`PUBLICAR=1`).
+ * @property {boolean} confirmado - Só `true` libera a publicação (o build recusa sem ele).
  * @property {string} fonte - De onde vieram os valores.
  * @property {string} moeda - Símbolo da moeda.
  * @property {string} cabecalho - Título da seção.
- * @property {ValueStackItem[]} itens - Itens da pilha.
- * @property {string} totalRotulo - Rótulo do total declarado.
- * @property {number} totalDeclarado - Total declarado, em reais; precisa bater com a soma dos itens.
- * @property {{rotulo: string}} conector - Ligação entre o total e a oferta.
- * @property {{rotulo: string, preco: number, subtexto: string}} oferta - O preço à vista e o texto que o acompanha.
+ * @property {ValueStackItem[]} itens - O que a compra inclui (só nomes: nenhum preço avulso é mostrado).
+ * @property {string} tituloItens - Título acima da lista, no lugar de uma marca por item (ex.: "Itens inclusos").
+ * @property {{rotulo: string}} conector - Ligação entre a lista e a oferta.
+ * @property {{rotulo: string, preco: number, comparacao: string, subtexto: string}} oferta - O preço à vista, a comparação sob ele e o detalhe do pagamento.
  */
 
 /**
@@ -62,12 +60,13 @@ import { isRealEmail } from "./validation.js";
  * @property {ValueStackBlock} pilhaDeValor - A seção de pilha de valor.
  * @property {string} campanha - Identificador da campanha, enviado em todo evento do pixel.
  * @property {{mapa: {ativo: boolean, justificativaAusencia: string|null}, amostra: SampleSection}} secoes - Seções opcionais (RF-L08).
- * @property {{disponivel: boolean, moeda: string, pix: {ativo: boolean, valor: number|string|null}, parcelamento: string|null, garantiaDias: number|null, garantiaCondicoes: string|null, garantiaCanal: string|null, bonus: Bonus[], ancoragem: PriceAnchor|null}} oferta - Condições da oferta.
+ * @property {{disponivel: boolean, moeda: string, pix: {ativo: boolean, valor: number|string|null, confirmado: boolean}, parcelamento: string|null, garantiaDias: number|null, garantiaCondicoes: string|null, garantiaCanal: string|null, bonus: Bonus[], ancoragem: PriceAnchor|null}} oferta - Condições da oferta.
  * @property {{formato: string, canal: string|null, modoDeAcesso: string|null, prazo: string|null}} entrega - Como o produto chega ao comprador (RF-L25).
+ * @property {{contato: string}} fornecedor - Contato: aparece no rodapé e nos documentos legais.
  * @property {{url: string, urlConfirmada: boolean, parametroRastreio: string|null, parametroConfirmado: boolean}} checkout - Destino único de todos os CTAs.
  * @property {{id: string|null}} pixel - Pixel da Meta; `null` até o id existir.
  * @property {{id: string|null}} clarity - Microsoft Clarity; `null` até o id existir.
- * @property {{contato: string, politicaPrivacidade: string, termosDeUso: string}} legal - Contato público e documentos legais.
+ * @property {{politicaPrivacidade: string, termosDeUso: string}} legal - Documentos legais.
  * @property {Testimonial[]} depoimentos - Depoimentos aprovados.
  */
 
@@ -76,26 +75,31 @@ import { isRealEmail } from "./validation.js";
  * @type {Config}
  */
 export const CONFIG = {
-  // Dados comerciais da seção de pilha de valor. null indica valor não confirmado. Só `confirmado`
-  // true libera a publicação (PUBLICAR=1); `ativo` false retira a seção do preview.
+  // Dados comerciais da seção de pilha de valor. Só `confirmado` true libera a publicação (o build recusa
+  // sem ele, salvo ALLOW_UNCONFIRMED=1); `ativo` false retira a seção do preview. Nenhum "preço antigo" nem
+  // preço avulso por item: a página só mostra o que a compra inclui e o preço real da Hotmart.
   pilhaDeValor: {
     ativo: true, // desliga a seção no preview
-    confirmado: false, // só barra PUBLICAR=1; vira true quando o gerente confirmar valores e fonte
-    fonte: "informado pelo usuário em 15/10/2026; sem lastro na base",
+    confirmado: true, // preço à vista confirmado na Hotmart
+    fonte: "checkout da Hotmart; preço confirmado pelo responsável em 19/11/2026",
     moeda: "R$",
-    cabecalho: "Veja tudo que você terá direito",
+    cabecalho: "Tudo o que você precisa para mudar de patamar",
     itens: [
-      { id: "protocolo-hipertrofia", nome: "Protocolo Hipertrofia", valor: 30 },
-      { id: "protocolo-dieta", nome: "Protocolo Dieta", valor: 25 },
-      { id: "protocolo-sono", nome: "Protocolo Sono", valor: 20 },
-      { id: "social-vibe", nome: "Social Vibe", valor: 10 },
-      { id: "checklist-integrado", nome: "Checklist Integrado", valor: 15 },
-      { id: "app", nome: "App", valor: 100 },
+      { id: "protocolo-hipertrofia", nome: "Protocolo Hipertrofia" },
+      { id: "protocolo-dieta", nome: "Protocolo Dieta para Naturais" },
+      { id: "protocolo-sono", nome: "Protocolo Sono e Recuperação" },
+      { id: "app", nome: "App Lithium Vitalício" },
+      { id: "checklist-integrado", nome: "Checklist de Execução + Social Vibe" },
     ],
-    totalRotulo: "Preço antigo:",
-    totalDeclarado: 200,
+    tituloItens: "Itens inclusos",
     conector: { rotulo: "Vitalício" },
-    oferta: { rotulo: "por apenas:", preco: 79.99, subtexto: "pagamento único / acesso vitalício" },
+    oferta: {
+      rotulo: "Acesso vitalício por pagamento único de:",
+      preco: 79.99,
+      // "Menos de R$ 2,25" vale para 79,99 / 36 treinos = 2,22; scripts/tests/faq.test.mjs trava a conta se o preço mudar.
+      comparacao: "Menos de R$ 2,25 por treino. Mais barato que um pote de creatina que acaba em 30 dias.",
+      subtexto: "Pix ou cartão via Hotmart · Acesso imediato · Zero mensalidades",
+    },
   },
 
   campanha: "cmp-2026-10-teto-natural",
@@ -113,22 +117,28 @@ export const CONFIG = {
 
   oferta: {
     disponivel: true, // oferta-base; false retira os CTAs fora de uma condição vigente
-    // O preço à vista mora em `pilhaDeValor.oferta.preco` (RF-L23): a tela e a trava do PUBLICAR=1 leem dele.
+    // O preço à vista mora em `pilhaDeValor.oferta.preco` (RF-L23): a tela e a trava do build leem dele.
     moeda: "R$",
-    pix: { ativo: true, valor: null },
+    // O valor do Pix tem de ser igual ao preço à vista da pilha (o build confere); a doca o lê daqui.
+    pix: { ativo: true, valor: 79.99, confirmado: true },
     parcelamento: null, // opcional, quando confirmado
-    garantiaDias: null,
-    garantiaCondicoes: null,
-    garantiaCanal: null,
+    garantiaDias: 7,
+    garantiaCondicoes: "Incondicional",
+    garantiaCanal: "Direto pela plataforma Hotmart",
     bonus: [], // { id, nome, descricao, origem, confirmado }
     ancoragem: null, // { precoComparativo, fundamento, fonte, confirmado }
   },
 
   entrega: {
-    formato: "app", // RF-L25; canal, modo e prazo ainda requerem confirmação
-    canal: null,
-    modoDeAcesso: null,
-    prazo: null,
+    formato: "app", // RF-L25
+    canal: "Web App (PWA) com e-mail de backup",
+    modoDeAcesso: "Redirecionamento imediato pós-compra",
+    prazo: "Imediato após aprovação do pagamento",
+  },
+
+  // Contato do fornecedor: rodapé e documentos legais (privacy.html, terms.html, pelo vite) leem daqui.
+  fornecedor: {
+    contato: "suportelithiumbr@gmail.com", // e-mail de suporte: aparece no fechamento, no rodapé e nos documentos legais
   },
 
   checkout: {
@@ -145,8 +155,7 @@ export const CONFIG = {
   clarity: { id: (import.meta.env?.PROD || import.meta.env?.VITE_ENABLE_PIXEL_DEV) && import.meta.env?.VITE_CLARITY_ID || null },
 
   legal: {
-    contato: "suportelithiumbr@gmail.com", // e-mail de suporte: aparece no fechamento e no rodapé legal
-    // Arquivos estáticos em public/ (ou URL HTTPS real). PUBLICAR=1 valida que existem no build.
+    // Arquivos estáticos em public/ (ou URL HTTPS real). O build valida que existem.
     politicaPrivacidade: "/privacy.html",
     termosDeUso: "/terms.html",
   },
@@ -157,7 +166,8 @@ export const CONFIG = {
 };
 
 // E-mail público único: o fechamento e o rodapé leem daqui. Nulo quando o e-mail não é válido.
-export const PUBLIC_CONTACT = isRealEmail(CONFIG.legal.contato) ? CONFIG.legal.contato.trim() : null;
+export const PUBLIC_CONTACT = isRealEmail(CONFIG.fornecedor.contato) ? CONFIG.fornecedor.contato.trim() : null;
 
-// O verbo do CTA (RF-L10). Nenhum botão mostra o preço: o valor fica na pilha de oferta.
+// O rótulo padrão do CTA: vale para o botão que não traz rótulo próprio (o do vídeo e o do rodapé). Os demais
+// levam o texto da sua seção, em src/content/content.js.
 export const CTA_SHORT_VERB = "Quero o Lithium vitalício";

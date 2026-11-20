@@ -57,7 +57,7 @@ for (const tam of TAMS) for (const modo of MODOS) {
   await p.waitForTimeout(modo === "normal" ? 4300 : 1500);
   const inicial = await coletar(p);
   const textoInicial = await p.evaluate(() => document.getElementById("raiz").textContent);
-  await p.click("text=Aceitar").catch(() => {}); await p.mouse.move(0, 0); await p.waitForTimeout(500);
+  await p.click('text="Aceitar"').catch(() => {}); await p.mouse.move(0, 0); await p.waitForTimeout(500);
   await rolarTudo(p);
   const final = await coletar(p);
   const hrefs = await p.evaluate(() => [...document.querySelectorAll("a[href]")].map((a) => a.getAttribute("href")));

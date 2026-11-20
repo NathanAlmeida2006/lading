@@ -1,4 +1,4 @@
-// Porta da LGPD (src/infra/instrumentation.js): exatamente os 9 nomes, cada um funcao; imports frescos nao dividem consentimento;
+// Porta da LGPD (src/infra/instrumentation.js): exatamente os 11 nomes, cada um funcao; imports frescos nao dividem consentimento;
 // os modulos novos de src/infra/ nao voltam a importar a porta nem se importam entre si.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -11,7 +11,7 @@ const infra = (arquivo) => join(raiz, "src", "infra", arquivo);
 
 const PORTA = [
   "captureCampaignParams", "useCampaignParams", "buildCheckoutUrl", "readConsent", "subscribeToConsent",
-  "useConsent", "answerConsent", "trackCheckoutStart", "startMeasurement",
+  "useConsent", "answerConsent", "trackCheckoutStart", "trackFaqOpen", "trackVideoStart", "startMeasurement",
 ].sort();
 
 // Imports relativos de um arquivo: `from "./x"`, `import "./x"` e `import("./x")`.
@@ -24,7 +24,7 @@ function importsRelativos(arquivo) {
   return achados;
 }
 
-test("instrumentation.js exporta exatamente os 9 nomes da porta", async () => {
+test("instrumentation.js exporta exatamente os 11 nomes da porta", async () => {
   const modulo = await import("../../src/infra/instrumentation.js");
   assert.deepEqual(Object.keys(modulo).sort(), PORTA);
 });

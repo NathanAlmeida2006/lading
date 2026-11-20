@@ -40,19 +40,19 @@ export const COVERS = [
 ];
 
 /**
- * Os estagios do video, na ordem: o L em 3D, a carga, as capas, a Trilha, a ponte (TakeRecord), o Registro, a mascara da logo, os quatro quadros
+ * Os estagios do video, na ordem: o L em 3D, a carga, as capas, a Trilha, a ponte (TakeRecord), os quatro quadros
  * da logo e os takes finais.
  */
-export const STAGES = { l3d: 0, load: 1, cover: 2, track: 2 + COVERS.length, bridge: 3 + COVERS.length, record: 4 + COVERS.length, mask: 5 + COVERS.length, logo: 6 + COVERS.length, manifesto: 10 + COVERS.length, numbers: 11 + COVERS.length, calendar: 12 + COVERS.length, arsenal: 13 + COVERS.length, doIt: 14 + COVERS.length };
+export const STAGES = { l3d: 0, load: 1, cover: 2, track: 2 + COVERS.length, bridge: 3 + COVERS.length, logo: 4 + COVERS.length, manifesto: 8 + COVERS.length, numbers: 9 + COVERS.length, calendar: 10 + COVERS.length, arsenal: 11 + COVERS.length, doIt: 12 + COVERS.length };
 
 /**
  * A linha do tempo, em batidas contadas do drop da musica (timing.js): [beat, stage]. O drop abre o L em 3D (6 batidas) e
- * a carga (4); cada capa (as tres sessoes e as tres abas da EU) dura 1 batida (0,5 s); a Trilha e a ponte (um corte entre as duas telas de rolagem: sem match cut), 2 cada (1 s); o Registro, 1, e vira recheio da
- * logo na batida 21 (a mascara leva 2) e segura 1; a logo bate quatro vezes, uma por batida; os takes finais duram 8, 6, 6 e 6
+ * a carga (4); cada capa (as tres sessoes e as tres abas da EU) dura 1 batida (0,5 s); a Trilha e a ponte ("Registre agora."), 2 cada (1 s); a logo bate quatro vezes, uma por batida (o take do Registro rolando
+ * foi cortado: tudo o que vem depois andou 4 batidas, um compasso, para tras e segue na grade da musica); os takes finais duram 8, 6, 6 e 6
  * batidas; o ultimo fica, e a musica se apaga a partir da entrada dele (5,5 s).
  */
-export const DO_IT_BEAT = 54; // o ultimo take ("Apenas faca.") entra na batida 54
-export const TIMELINE = [[0, STAGES.l3d], [6, STAGES.load], ...COVERS.map((_, i) => [10 + i, STAGES.cover + i]), [16, STAGES.track], [18, STAGES.bridge], [20, STAGES.record], [21, STAGES.mask], [24, STAGES.logo], [25, STAGES.logo + 1], [26, STAGES.logo + 2], [27, STAGES.logo + 3], [28, STAGES.manifesto], [36, STAGES.numbers], [42, STAGES.calendar], [48, STAGES.arsenal], [DO_IT_BEAT, STAGES.doIt]];
+export const DO_IT_BEAT = 50; // o ultimo take ("Apenas faca.") entra na batida 50
+export const TIMELINE = [[0, STAGES.l3d], [6, STAGES.load], ...COVERS.map((_, i) => [10 + i, STAGES.cover + i]), [16, STAGES.track], [18, STAGES.bridge], [20, STAGES.logo], [21, STAGES.logo + 1], [22, STAGES.logo + 2], [23, STAGES.logo + 3], [24, STAGES.manifesto], [32, STAGES.numbers], [38, STAGES.calendar], [44, STAGES.arsenal], [DO_IT_BEAT, STAGES.doIt]];
 export const MUSIC_END = { beat: DO_IT_BEAT, duration: 5500 }; // a musica comeca a se apagar quando o ultimo take entra e some em 5,5 s (1,5 s a menos que antes)
 export const REPLAY_AFTER_MS = 2000; // o botao de replay surge 2 s depois de a musica parar
 

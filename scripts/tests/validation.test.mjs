@@ -5,7 +5,7 @@ import { isRealText, isRealEmail, getDocumentUrl } from "../../src/infra/validat
 import { CONFIG } from "../../src/infra/config.js";
 
 test("isRealText barra marcadores de pendencia (colchetes, caixa e fronteira de palavra)", () => {
-  for (const valor of ["[A DEFINIR]", "[A CONFIRMAR]", "A DEFINIR", "A CONFIRMAR", "a definir", "texto a confirmar aqui"]) {
+  for (const valor of ["[A DEFINIR]", "[A CONFIRMAR]", "A DEFINIR", "A CONFIRMAR", "a definir", "texto a confirmar aqui", "[NOME OU RAZÃO SOCIAL]", "[CPF OU CNPJ]", "Rua X, [CIDADE/UF]"]) {
     assert.equal(isRealText(valor), false, valor);
   }
 });
@@ -30,8 +30,8 @@ test("isRealText aprova texto normal", () => {
   assert.equal(isRealText("Protocolo de hipertrofia"), true);
 });
 
-test("o e-mail e os documentos de CONFIG.legal continuam aprovados", () => {
-  assert.equal(isRealEmail(CONFIG.legal.contato), true);
+test("o e-mail do fornecedor e os documentos de CONFIG.legal continuam aprovados", () => {
+  assert.equal(isRealEmail(CONFIG.fornecedor.contato), true);
   assert.equal(getDocumentUrl(CONFIG.legal.politicaPrivacidade), CONFIG.legal.politicaPrivacidade);
   assert.equal(getDocumentUrl(CONFIG.legal.termosDeUso), CONFIG.legal.termosDeUso);
 });

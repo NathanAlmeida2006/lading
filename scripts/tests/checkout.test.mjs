@@ -46,26 +46,32 @@ test("chave fora da lista permitida e ignorada", () => {
   assert.equal(url.get("utm_source"), "a");
 });
 
-// Comportamento atual, [2.2-B]: regra vigente, pendente de decisao do responsavel. Se a regra mudar, este teste muda junto.
-test("valor com espaco e descartado (comportamento atual, [2.2-B])", () => {
-  assert.equal(busca(buildCheckoutUrl({ utm_source: "a b" })).has("utm_source"), false);
+// [2.2-B] decidido: espaco e letra acentuada passam; `searchParams.append` os codifica na saida.
+test("valor com espaco e aceito e sai codificado na URL", () => {
+  assert.equal(busca(buildCheckoutUrl({ utm_source: "a b" })).get("utm_source"), "a b");
+  assert.ok(buildCheckoutUrl({ utm_source: "a b" }).includes("utm_source=a+b"));
 });
 
-// Comportamento atual, [2.2-B]: regra vigente, pendente de decisao do responsavel.
-test("valor com letra acentuada e descartado (comportamento atual, [2.2-B])", () => {
-  assert.equal(busca(buildCheckoutUrl({ utm_source: "ação" })).has("utm_source"), false);
+test("valor com letra acentuada e aceito", () => {
+  assert.equal(busca(buildCheckoutUrl({ utm_source: "ação" })).get("utm_source"), "ação");
 });
 
-test("valor de 101 caracteres e descartado; o de 100 e aceito", () => {
-  assert.equal(busca(buildCheckoutUrl({ utm_source: "a".repeat(101) })).has("utm_source"), false);
-  assert.equal(busca(buildCheckoutUrl({ utm_source: "a".repeat(100) })).get("utm_source").length, 100);
+test("valor com `<`, `>`, aspas, `&`, `=` ou quebra de linha e descartado", () => {
+  for (const ruim of ["<b>", "a\"b", "a&b", "a=b", "a\nb", "   "]) {
+    assert.equal(busca(buildCheckoutUrl({ utm_source: ruim })).has("utm_source"), false, JSON.stringify(ruim));
+  }
+});
+
+test("valor de 129 caracteres e descartado; o de 128 e aceito", () => {
+  assert.equal(busca(buildCheckoutUrl({ utm_source: "a".repeat(129) })).has("utm_source"), false);
+  assert.equal(busca(buildCheckoutUrl({ utm_source: "a".repeat(128) })).get("utm_source").length, 128);
 });
 
 test("valor que nao e string (numero 5) e descartado", () => {
   assert.equal(busca(buildCheckoutUrl({ utm_source: 5 })).has("utm_source"), false);
 });
 
-for (const caractere of ["%", "+", ".", "~", ":", "-", "_"]) {
+for (const caractere of ["%", "+", ".", "~", ":", "-", "_", "/", "@"]) {
   test(`caractere ${caractere} e aceito dentro do valor`, () => {
     const valor = `a${caractere}b`;
     assert.equal(busca(buildCheckoutUrl({ utm_source: valor })).get("utm_source"), valor);

@@ -15,7 +15,8 @@ import { CTA_SHORT_VERB } from "../../infra/config.js";
  *
  * `shouldHideDock` marca o botao como alvo da doca: ela some enquanto ele tiver qualquer pixel na tela.
  *
- * O rotulo e duplicado dentro de um recorte e desliza no eixo Y no hover: e o
+ * O rotulo e o texto da secao onde o botao mora (`label`, de src/content/content.js); sem ele vale o padrao
+ * `CTA_SHORT_VERB`. Ele e duplicado dentro de um recorte e desliza no eixo Y no hover: e o
  * text roll, que os cinco sites da engenharia reversa usam sem excecao. Nao e
  * tique de template, e convencao do genero. A copia leva `aria-hidden`.
  */
@@ -52,9 +53,10 @@ const LABEL =
  * @param {boolean} [props.isGhost=false] - Variante em contorno, usada no rodape.
  * @param {boolean} [props.isFullWidth=false] - Ocupa a largura total do pai.
  * @param {boolean} [props.shouldHideDock=false] - Marca o botao como alvo da doca.
+ * @param {string} [props.label] - Texto do botao; sem ele, `CTA_SHORT_VERB`.
  * @returns {JSX.Element}
  */
-export function CtaButton({ position, isCompact = false, isGhost = false, isFullWidth = false, shouldHideDock = false }) {
+export function CtaButton({ position, label = CTA_SHORT_VERB, isCompact = false, isGhost = false, isFullWidth = false, shouldHideDock = false }) {
   const buttonRef = useRef(null);
   const params = useCampaignParams();
   function handleClick() {
@@ -76,9 +78,9 @@ export function CtaButton({ position, isCompact = false, isGhost = false, isFull
       data-oculta-doca={shouldHideDock ? "" : undefined}
     >
       <span className="botao__rolo relative block min-w-0 overflow-clip">
-        <span className={LABEL}>{CTA_SHORT_VERB}</span>
+        <span className={LABEL}>{label}</span>
         <span className={`${LABEL} absolute inset-x-0 top-full`} aria-hidden="true">
-          {CTA_SHORT_VERB}
+          {label}
         </span>
       </span>
       <span

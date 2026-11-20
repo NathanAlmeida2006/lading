@@ -1,4 +1,6 @@
 {
+  // ATENCAO: NAO renomeie "name" (o "lading" parece erro de digitacao, mas e o nome do projeto ativo na Cloudflare).
+  // Trocar o nome cria outro Worker e desconecta o dominio do projeto atual.
   "name": "lading",
   "compatibility_date": "2026-10-06",
   "assets": { "directory": "./dist" },

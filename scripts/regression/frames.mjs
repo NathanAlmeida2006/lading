@@ -20,7 +20,7 @@ for (const tam of TAMS) {
   await p.goto(url, { waitUntil: "load" }); await p.evaluate(() => document.fonts.ready);
   if (!(await esperar(p, () => document.documentElement.classList.contains("movimento-pronto"), 30000))) erros.push("sem movimento-pronto");
   await p.evaluate((f) => { const v = f - 23 * 3600e3; Date.now = () => v; }, FIM);
-  await p.click("text=Aceitar").catch(() => {}); await p.mouse.move(0, 0);
+  await p.click('text="Aceitar"').catch(() => {}); await p.mouse.move(0, 0);
   await p.addStyleTag({ content: 'canvas.campo,canvas[class*="pixelated"]{visibility:hidden!important}*,*::before,*::after{caret-color:transparent!important}' });
   await p.evaluate(() => document.querySelector("#video").scrollIntoView({ block: "start", behavior: "instant" })); await p.waitForTimeout(3000);
   await p.mouse.move(0, 0);

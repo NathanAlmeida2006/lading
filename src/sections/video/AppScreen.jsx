@@ -110,7 +110,7 @@ function useLogoMask({ root, frameRef, mask, isOn }) {
 /**
  * Uma tela do app Lithium, rolada por um usuario: a moldura de celular (430 px no desktop, a tela toda no celular)
  * e a rolagem rapida e de velocidade constante, que ja comeca andando (sem espera). `scope` e a classe a que o CSS
- * da tela esta restrito (styles/app-screens.css, @scope). Os `data-revelar` entram pela rolagem, como no app.
+ * da tela esta restrito (styles/app-screens.css, por prefixo de seletor). Os `data-revelar` entram pela rolagem, como no app.
  *
  * Cada tela rola so um trecho, definido pelo que aparece na tela:
  *   `from`  { alvo, y }: comeca rolada ate o elemento `target` (seletor) ficar com o topo a `y` px do topo da tela;
@@ -129,7 +129,7 @@ function useLogoMask({ root, frameRef, mask, isOn }) {
  * escura e a forma sumiria no fundo preto: junto com a mascara, as cores se invertem (`invert` + `hue-rotate`, que mantem os
  * matizes), e a forma fica clara, com o app em tinta dentro, e se encaixa na logo branca do quadro seguinte.
  * @param {object} props
- * @param {string} props.scope - Classe a que o CSS da tela está restrito (@scope).
+ * @param {string} props.scope - Classe a que o CSS da tela está restrito (prefixo de seletor).
  * @param {ReactNode} props.children - Conteúdo da tela.
  * @param {{target: string, y: number}} [props.from] - Trecho inicial: rola até `target` ficar a `y` px do topo.
  * @param {{target: string, y: number}} [props.to] - Trecho da rolagem: do topo até `target` chegar a `y` px.

@@ -22,7 +22,8 @@ export { captureCampaignParams, buildCheckoutUrl } from "./params.js";
 const campaignParams = createCampaignParams();
 const consent = createConsent();
 const pixel = createPixel(consent.readConsent);
-// `criativo` = utm_content do anuncio: filtra as gravacoes por criativo no painel do Clarity.
+// `criativo` = utm_content do anuncio: filtra as gravacoes por criativo no painel do Clarity. `captureCampaignParams`
+// so devolve valor ja validado (mesma regra do checkout), entao a URL nunca escreve texto livre na tag.
 const clarity = createClarity(consent.readConsent, () => ({ criativo: captureCampaignParams().utm_content }));
 const reach = createReach({ subscribeToConsent: consent.subscribeToConsent, pixel, clarity });
 

@@ -1,8 +1,10 @@
 /**
- * Validadores de dado real, usados pela tela (oferta, fechamento, rodape) e pelo build (`PUBLICAR=1`,
- * em scripts/prerender.mjs). Uma regra so: o build nunca aprova o que a tela esconderia.
+ * Validadores de dado real, usados pela tela (oferta, fechamento, rodape) e pelo build (a trava de
+ * publicacao, em scripts/prerender.mjs). Uma regra so: o build nunca aprova o que a tela esconderia.
  */
-const PENDING_MARKER_PATTERN = /\bA[\s_-]+(?:DEFINIR|CONFIRMAR)\b/i;
+// Marcador de pendencia: "A DEFINIR", "A CONFIRMAR" ou um texto entre colchetes (`[CPF OU CNPJ]`), que e como a config
+// guarda o dado que ainda falta preencher.
+const PENDING_MARKER_PATTERN = /\bA[\s_-]+(?:DEFINIR|CONFIRMAR)\b|\[[^\]]*\]/i;
 
 /**
  * Texto preenchido e sem marcador de pendencia.

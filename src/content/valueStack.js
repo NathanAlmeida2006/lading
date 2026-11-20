@@ -8,19 +8,12 @@ import { CONFIG } from "../infra/config.js";
 /**
  * @typedef PresentableValueStack A pilha de valor pronta para a tela: todo valor já formatado.
  * @property {string} cabecalho - Título da seção.
- * @property {{id: string, nome: string, valor: string}[]} itens - Itens, com o valor formatado.
- * @property {string} totalRotulo - Rótulo do total declarado.
- * @property {string} total - Total declarado, formatado.
+ * @property {{id: string, nome: string}[]} itens - O que a compra inclui.
+ * @property {string} tituloItens - Título acima da lista.
  * @property {string} moeda - Símbolo da moeda.
- * @property {{rotulo: string}} conector - Ligação entre o total e a oferta.
- * @property {{rotulo: string, preco: string, subtexto: string}} oferta - O preço à vista, formatado, e o texto que o acompanha.
+ * @property {{rotulo: string}} conector - Ligação entre a lista e a oferta.
+ * @property {{rotulo: string, preco: string, comparacao: string, subtexto: string}} oferta - O preço à vista, formatado, a comparação sob ele e o detalhe do pagamento.
  */
-
-/**
- * @param {number} amount - Valor em reais.
- * @returns {number} O valor em centavos, inteiro.
- */
-const toCents = (amount) => Math.round(amount * 100);
 
 /**
  * @param {unknown} amount - Valor a conferir.
@@ -41,16 +34,10 @@ export function listValueStackErrors(block) {
     errors.push("itens vazios");
   } else {
     block.itens.forEach((item, index) => {
-      if (!isValidAmount(item.valor)) errors.push(`itens[${index}].valor não finito ou não positivo`);
+      if (typeof item?.nome !== "string" || item.nome.trim() === "") errors.push(`itens[${index}].nome ausente`);
     });
   }
   if (!isValidAmount(block.oferta?.preco)) errors.push("oferta.preco inválido");
-  if (!isValidAmount(block.totalDeclarado)) {
-    errors.push("totalDeclarado inválido");
-  } else if (Array.isArray(block.itens)) {
-    const sum = block.itens.reduce((total, item) => total + toCents(item.valor), 0);
-    if (sum !== toCents(block.totalDeclarado)) errors.push(`soma dos itens (${sum / 100}) diverge do total declarado (${block.totalDeclarado})`);
-  }
   return errors;
 }
 
@@ -70,12 +57,11 @@ export function buildPresentableValueStack(block) {
   if (!block || listValueStackErrors(block).length) return null;
   return {
     cabecalho: block.cabecalho,
-    itens: block.itens.map(({ id, nome, valor: amount }) => ({ id, nome, valor: formatReais(amount) })),
-    totalRotulo: block.totalRotulo,
-    total: formatReais(block.totalDeclarado),
+    itens: block.itens.map(({ id, nome }) => ({ id, nome })),
+    tituloItens: block.tituloItens,
     moeda: block.moeda,
     conector: block.conector,
-    oferta: { rotulo: block.oferta.rotulo, preco: formatReais(block.oferta.preco), subtexto: block.oferta.subtexto },
+    oferta: { rotulo: block.oferta.rotulo, preco: formatReais(block.oferta.preco), comparacao: block.oferta.comparacao, subtexto: block.oferta.subtexto },
   };
 }
 

@@ -28,7 +28,7 @@ for (const modo of ["normal", "reduzido"]) for (const pag of ["", "privacy.html"
   const p = await ctx.newPage(); const cons = []; p.on("console", (m) => { if (/Content Security Policy|Refused to/i.test(m.text())) cons.push(m.text().slice(0, 240)); }); p.on("pageerror", (e) => cons.push("pageerror " + String(e).slice(0, 200)));
   await p.goto(url + pag, { waitUntil: "load" }); await p.waitForTimeout(1500);
   if (!pag) {
-    await p.click("text=Aceitar").catch(() => {});
+    await p.click('text="Aceitar"').catch(() => {});
     const h = await p.evaluate(() => document.documentElement.scrollHeight);
     for (let y = 0; y < h; y += 700) { await p.evaluate((v) => scrollTo(0, v), y); await p.waitForTimeout(120); }
     await p.evaluate(() => document.querySelector("#video")?.scrollIntoView()); await p.waitForTimeout(1500);

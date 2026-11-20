@@ -43,16 +43,13 @@ test("Closing: o CtaButton da posicao fechamento tem a prop shouldHideDock na ta
   assert.match(tagAbertura(ler("sections/Closing.jsx"), "CtaButton", 'position="fechamento"'), /\sshouldHideDock\b/);
 });
 
-test("App: a primeira ValueStack tem shouldHideDock; a #oferta nao", () => {
-  const texto = ler("app/App.jsx");
-  const pilhas = [...texto.matchAll(/<ValueStack\b[^>]*>/g)].map((m) => m[0]);
-  assert.equal(pilhas.length, 2, "esperava duas ValueStack");
-  assert.match(pilhas[0], /\sshouldHideDock\b/);
-  assert.match(pilhas[1], /id="oferta"/);
-  assert.doesNotMatch(pilhas[1], /\sshouldHideDock\b/);
+test("App: so uma ValueStack (a #oferta, unica ocorrencia do preco) e a doca nao a esconde", () => {
+  const pilhas = [...ler("app/App.jsx").matchAll(/<ValueStack\b[^>]*>/g)].map((m) => m[0]);
+  assert.equal(pilhas.length, 1, "esperava uma ValueStack");
+  assert.doesNotMatch(pilhas[0], /\sshouldHideDock\b/);
+  assert.match(ler("sections/ValueStack.jsx"), /<section id="oferta"/);
 });
 
-test("CtaButton.jsx e ValueStack.jsx renderizam data-oculta-doca a partir de shouldHideDock", () => {
+test("CtaButton.jsx renderiza data-oculta-doca a partir de shouldHideDock", () => {
   assert.ok(ler("components/ui/CtaButton.jsx").includes('data-oculta-doca={shouldHideDock ? "" : undefined}'), "CtaButton.jsx");
-  assert.ok(ler("sections/ValueStack.jsx").includes('data-oculta-doca={shouldHideDock ? "" : undefined}'), "ValueStack.jsx");
 });

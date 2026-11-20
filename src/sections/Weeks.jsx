@@ -141,7 +141,7 @@ export function Weeks() {
                   <span className="text-acento tabular-nums">{state.capa}</span>
                 </div>
                 <h3 className="text-bone font-secundaria text-h3">{state.nome}</h3>
-                <p className="max-w-prose text-silver font-terciaria text-body lg:text-body-lg">{state.texto}</p>
+                <p className="max-w-prose text-justify hyphens-auto text-silver font-terciaria text-body lg:text-body-lg">{state.texto}</p>
                 <CardImage src={state.src} sizes={SIZES} className={`aspect-11/6 ${state.pos ?? ""}`} />
               </li>
             ))}
@@ -167,7 +167,7 @@ export function Weeks() {
           </ul>
 
           <div className="self-start">
-            <CtaButton position="mapa" />
+            <CtaButton position="mapa" label={CONTENT.mapa.cta} />
           </div>
         </div>
       </div>

@@ -13,6 +13,8 @@ const ENTER_CLASS = "animate-revelar motion-reduce:animate-none";
 /**
  * A dobra, em painel de tela cheia.A headline e tipografia como arquitetura: duas linhas
  * compostas a mao, encostando nas bordas do container, a segunda so em contorno de fio.
+ * O tamanho da headline segue a coluna (a linha mais larga, "Desculpas", mede ~3,95x a fonte, medido): `--text-display-xxl` por faixa,
+ * para cada linha ficar numa linha so de 360 a 1440 px.
  *
  * `min-h-svh` e nao `vh`: no celular a barra do navegador entra e sai, e `vh` mede a
  * viewport grande - o botao cairia para fora da tela justamente em quem chega pelo anuncio
@@ -39,7 +41,7 @@ export function Fold() {
 
         <Thread delay={260} />
         <h1
-          className="painel__titulo flex flex-col w-full my-2 tela-rasa:my-1 break-words text-bone font-secundaria text-display-xxl uppercase tabular-nums tela-baixa:text-[length:clamp(56px,20vw,120px)]"
+          className="painel__titulo flex flex-col w-full my-2 tela-rasa:my-1 break-words text-bone font-secundaria text-display-xxl [--text-display-xxl:min(calc((100vw-32px)/4.05),169px)] md:[--text-display-xxl:162px] lg:[--text-display-xxl:min(calc((100vw-96px)/4.05),252px)] wide:[--text-display-xxl:324px] uppercase tabular-nums"
         >
           <span className={LINE}>
             <span className={`linha__texto block ${LAYER} animate-subir motion-reduce:animate-none`}>{CONTENT.dobra.headline.linhas[0]}</span>
@@ -55,10 +57,7 @@ export function Fold() {
         </p>
 
         <div className={`painel__acao w-full shrink-0 mt-4 tela-rasa:mt-2 ${ENTER_CLASS} [--atraso:80ms]`}>
-          <CtaButton position="dobra" />
-          <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
-            {CONTENT.mecanismo.semanas}{CONTENT.dobra.condicoes}
-          </p>
+          <CtaButton position="dobra" label={CONTENT.dobra.cta} />
         </div>
       </div>
 
@@ -69,15 +68,11 @@ export function Fold() {
           <span className="block mt-1 text-silver font-terciaria text-[18px] leading-none animate-seta motion-reduce:animate-none">&#8595;</span>
         </span>
         <ul className={RAW_NUMBERS} role="list">
-          <li>
-            <b className={HIGHLIGHT}>{CONTENT.mecanismo.semanas}</b> semanas
-          </li>
-          <li>
-            <b className={HIGHLIGHT}>{CONTENT.mecanismo.sessoesObrigatorias}</b> sessões por semana
-          </li>
-          <li>
-            <b className={HIGHLIGHT}>{CONTENT.mecanismo.sessoesOpcionais}</b> opcional
-          </li>
+          {CONTENT.dobra.destaques.map(({ valor, rotulo }) => (
+            <li key={rotulo}>
+              <b className={HIGHLIGHT}>{valor}</b> {rotulo}
+            </li>
+          ))}
         </ul>
       </div>
     </section>

@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { CtaButton } from "../ui/CtaButton.jsx";
-import { Countdown } from "../ui/Countdown.jsx";
 import { useConsent } from "../../infra/instrumentation.js";
 import { READY_VALUE_STACK } from "../../content/valueStack.js";
 import { CONTENT } from "../../content/content.js";
@@ -14,14 +13,14 @@ const DOCK_BAR =
   "[.com-consentimento_&]:hidden data-ativa:translate-y-0 data-ativa:opacity-100";
 
 /**
- * A doca de venda: barra fixa na base, com preco, Pix e o botao.
+ * A doca de venda: barra fixa na base, com a oferta (nome, preco e garantia, lidos da config) e o botao.
  *
  * Vem da barra flutuante do Nakula e da barra fixa do Kora, que sacrificam a
  * navegacao constante em troca de um CTA sempre visivel. Aqui nao ha
  * navegacao a sacrificar (RF-L01), entao a troca e so ganho.
  *
  * Ela e o CTA de quando nao ha CTA: so entra na janela do meio da pagina, com a dobra, a regua do
- * manifesto, a pilha de valor, o botao do fechamento e o rodape fora da tela, e nunca com o aviso de
+ * manifesto, o botao do fechamento e o rodape fora da tela, e nunca com o aviso de
  * cookies aberto. Os botoes do espelho, do mapa e da oferta NAO sao observados: com eles a doca pode
  * dividir a tela (pendencia B3, decisao do gerente). Entra e sai deslizando, com
  * ease suave de 500 ms. Tres coisas que ela NAO faz, cada uma uma trava: nenhuma barra
@@ -47,6 +46,10 @@ export function Dock() {
   // Os botoes de venda ficam sempre na pagina, entao a lista de alvos e fixa.
   const isConsentOpen = useConsent() === null;
   const isActive = isFree && !isConsentOpen;
+  // O preco vem da pilha conferida; sem ela a doca nao cita valor.
+  const parts = READY_VALUE_STACK
+    ? [CONTENT.doca.nome, `${READY_VALUE_STACK.moeda} ${READY_VALUE_STACK.oferta.preco}`, CONTENT.doca.garantia]
+    : ["Preço a confirmar"];
 
   useEffect(() => {
     // Os alvos se declaram: tudo o que carrega `data-oculta-doca` esconde a doca enquanto tiver qualquer pixel na tela.
@@ -101,14 +104,16 @@ export function Dock() {
       aria-hidden={!isActive}
       inert={!isActive}
     >
-      <div className="flex flex-col gap-1 min-w-0 max-w-full text-silver">
-        <span className="font-secundaria text-label uppercase text-bone">{CONTENT.doca.rotulo}</span>
-        <div className="font-terciaria text-mono-reg tabular-nums whitespace-nowrap">
-          {READY_VALUE_STACK ? `${READY_VALUE_STACK.moeda} ${READY_VALUE_STACK.oferta.preco} · Pix à vista` : "Pix à vista · preço a definir"}
-        </div>
-      </div>
-      {READY_VALUE_STACK ? <Countdown className="ml-auto text-mono-reg [&>span]:hidden" /> : null}
-      <CtaButton position="doca" isCompact />
+      {/* Cada trecho e inquebravel: em tela estreita a linha so quebra nos separadores. */}
+      <p className="w-full xs:w-auto xs:flex-1 min-w-0 text-center text-bone font-secundaria text-label uppercase tabular-nums text-balance">
+        {parts.map((part, index) => (
+          <Fragment key={part}>
+            {index > 0 && " · "}
+            <span className="whitespace-nowrap">{part}</span>
+          </Fragment>
+        ))}
+      </p>
+      <CtaButton position="doca" label={CONTENT.doca.cta} isCompact />
     </aside>
   );
 }

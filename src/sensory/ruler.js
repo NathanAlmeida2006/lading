@@ -157,12 +157,12 @@ export function useRailRuler(root, rail, steps, phrase) {
       measured ??= measureMarks(node);
       const { marks, trackHeight } = measured;
       // O caminho está lido quando o fim do último card entra na tela, antes do CTA.
-      const finalMark = { top: Math.max(marks.at(-1).top, trackHeight - viewportHeight / 2), step: steps };
+      const finalMark = { top: Math.max(marks[marks.length - 1].top, trackHeight - viewportHeight / 2), step: steps };
       // A posição acompanha a leitura dos cards, um passo por card.
       const lit = stepOnRail(readingLine - box.top, [...marks, finalMark], steps);
       write(lit, lit - 1);
       if (previous !== null && previous < steps && lit >= steps && !cleanupSwallow) {
-        cleanupSwallow = swallowRuler(items.at(-1), phrase);
+        cleanupSwallow = swallowRuler(items[items.length - 1], phrase);
       }
       previous = lit;
     };

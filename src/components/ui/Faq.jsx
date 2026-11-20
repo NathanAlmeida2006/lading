@@ -52,8 +52,8 @@ export function Faq({ items }) {
               <span className="hidden lg:block w-10 shrink-0 font-terciaria text-body tabular-nums opacity-60" aria-hidden="true">
                 {padTwoDigits(index + 1)}
               </span>
-              {/* Mobile: uma linha so. A maior pergunta mede ~19x o corpo em px, entao o corpo encolhe com a largura (20px no maximo). */}
-              <span className="whitespace-nowrap [font-size:min(20px,calc((100vw-68px)/19))] lg:whitespace-normal lg:[font-size:inherit] lg:flex-1">{pergunta}</span>
+              {/* A pergunta quebra em quantas linhas precisar: a maior passa de 80 caracteres, e uma linha so a estouraria em 360px. */}
+              <span className="min-w-0 flex-1">{pergunta}</span>
               <span className="relative shrink-0 w-4 h-4 mt-1 lg:mt-0 lg:w-5 lg:h-5 transition-transform duration-700 ease-(--ease-expo) group-data-aberto/pergunta:rotate-45" aria-hidden="true">
                 <span className="absolute inset-x-0 top-1/2 h-0.5 -mt-px bg-current" />
                 <span className="absolute inset-y-0 left-1/2 w-0.5 -ml-px bg-current" />

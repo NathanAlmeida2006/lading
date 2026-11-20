@@ -5,7 +5,7 @@ import "../../styles/app-screens.css";
 /**
  * A tela Trilha do app Lithium (hipertrofia, sem progresso). O HTML e o CSS saem do app em execucao (390 px,
  * `app-lithium/src/telas/Trilha.jsx` + Casca), sem a barra de navegacao e sem o objeto 3D e o que vem depois;
- * o CSS vive em styles/app-screens.css, restrito a `.app-trilha` (@scope). A rolagem e a de AppScreen: do topo ate o meio do mapa, em `duration` ms.
+ * o CSS vive em styles/app-screens.css, restrito a `.app-trilha` (prefixo de seletor). A rolagem e a de AppScreen: do topo ate o meio do mapa, em `duration` ms.
  * @param {object} props
  * @param {number} props.duration - Tempo da rolagem, em ms.
  * @param {(speed: number) => void} [props.onMeasure] - Recebe a velocidade medida, em px/s.

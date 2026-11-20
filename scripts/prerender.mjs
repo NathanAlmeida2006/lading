@@ -45,6 +45,7 @@ if (CONFIG.secoes.amostra.ativo) {
 
 afirmacao("oferta.preco", preco(CONFIG.pilhaDeValor.oferta.preco), "preço à vista ausente ou inválido");
 afirmacao("oferta.pix.ativo", CONFIG.oferta.pix?.ativo === true, "Pix precisa estar disponível");
+afirmacao("oferta.pix.confirmado", CONFIG.oferta.pix?.confirmado === true, "Pix não confirmado");
 afirmacao("oferta.pix.valor", preco(CONFIG.oferta.pix?.valor), "valor em Pix não confirmado");
 if (preco(CONFIG.pilhaDeValor.oferta.preco) && preco(CONFIG.oferta.pix?.valor)) {
   afirmacao("oferta.pix.valor", valorNumericoPreco(CONFIG.oferta.pix.valor) === valorNumericoPreco(CONFIG.pilhaDeValor.oferta.preco), "o valor em Pix diverge do preço exibido");
@@ -64,7 +65,7 @@ afirmacao("checkout.parametroRastreio", /^[a-zA-Z][\w-]*$/.test(CONFIG.checkout.
 try { process.loadEnvFile(join(raiz, ".env")); } catch { /* sem .env: vale o ambiente */ }
 afirmacao("pixel.id", /^\d+$/.test(String(CONFIG.pixel.id ?? process.env.VITE_META_PIXEL_ID ?? "")), "ID do Pixel ausente (VITE_META_PIXEL_ID)");
 afirmacao("clarity.id", /^[a-z0-9]+$/i.test(String(CONFIG.clarity.id ?? process.env.VITE_CLARITY_ID ?? "")), "ID do Clarity ausente (VITE_CLARITY_ID): sem ele o script nunca carrega em producao");
-afirmacao("legal.contato", isRealEmail(CONFIG.legal.contato), "e-mail de contato ausente ou inválido");
+afirmacao("fornecedor.contato", isRealEmail(CONFIG.fornecedor.contato), "e-mail de contato ausente ou inválido");
 
 // A mesma regra do rodape (src/infra/validation.js): o que ele esconderia, o build recusa.
 const documentoLegal = async (campo) => {
@@ -100,13 +101,16 @@ for (const [indice, depoimento] of CONFIG.depoimentos.entries()) {
 }
 afirmacao("oferta.disponivel", typeof CONFIG.oferta.disponivel === "boolean", "disponibilidade explícita da oferta-base obrigatória");
 
+// A trava vale por padrão, em qualquer build (local, CI, Cloudflare): pendência recusa o build. Só a flag explícita
+// ALLOW_UNCONFIRMED=1 a pula, para ver um preview local com dado ainda por confirmar.
 if (faltam.length) {
   const aviso = `prerender  ${faltam.length} pendência(s) de publicação:\n  - ${faltam.join("\n  - ")}`;
-  if (process.env.PUBLICAR === "1") {
-    console.error(`${aviso}\nPUBLICAR=1: build recusado.`);
+  if (process.env.ALLOW_UNCONFIRMED === "1") {
+    console.warn(`${aviso}\nALLOW_UNCONFIRMED=1: build de preview, NÃO publique este resultado.`);
+  } else {
+    console.error(`${aviso}\nBuild recusado. Preencha os dados em src/infra/config.js (ou, só para preview local, rode com ALLOW_UNCONFIRMED=1).`);
     process.exit(1);
   }
-  console.warn(`${aviso}\nPreview permitido; PUBLICAR=1 recusará o build.`);
 }
 
 const { render } = await import(

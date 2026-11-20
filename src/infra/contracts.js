@@ -9,7 +9,7 @@
  */
 
 /**
- * @typedef {"dobra"|"espelho"|"mapa"|"video"|"oferta"|"pilha"|"fechamento"|"rodape"|"doca"} CtaPosition
+ * @typedef {"dobra"|"espelho"|"mapa"|"video"|"oferta"|"fechamento"|"rodape"|"doca"} CtaPosition
  * Posição do botão de compra na página: vai ao pixel como `posicaoCTA` e ao DOM como `data-posicao`.
  */
 

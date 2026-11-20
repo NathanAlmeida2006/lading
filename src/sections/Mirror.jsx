@@ -69,16 +69,17 @@ export function Mirror() {
                 </span>
               </div>
               <div className="flex flex-col gap-2 px-2 pb-2">
-                <h3 className="text-bone font-secundaria text-h3-grande uppercase tracking-normal lg:text-h2-grande">
+                {/* Mobile: uma linha so. O maior titulo mede ~14x o corpo (medido), e a largura util do card e a tela menos 74px; do lg em diante quebra normal. */}
+                <h3 className="text-bone font-secundaria text-h3-grande [--text-h3-grande:min(24px,calc((100vw-74px)/14.4))] whitespace-nowrap uppercase tracking-normal lg:whitespace-normal lg:text-h2-grande">
                   {card.titulo}
                 </h3>
-                <p className="max-w-prose text-silver font-terciaria text-body lg:text-body-lg">{card.depois}</p>
+                <p className="max-w-prose text-justify hyphens-auto text-silver font-terciaria text-body lg:text-body-lg">{card.depois}</p>
               </div>
             </li>
           ))}
         </ol>
         <div className="mt-8">
-          <CtaButton position="espelho" />
+          <CtaButton position="espelho" label={CONTENT.espelho.cta} />
         </div>
         </div>
       </div>

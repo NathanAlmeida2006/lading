@@ -67,16 +67,15 @@ export function Batch() {
         <header className="sticky top-[max(--spacing(12),calc(50svh-140px))] z-0 flex flex-col items-center py-8 text-center motion-reduce:static">
           <Label>{CONTENT.leva.rotulo}</Label>
           <h2
-            className="titulo text-bone font-secundaria text-display [font-size:clamp(31px,13.08vw,89.9px)] lg:[font-size:clamp(89.9px,10.1vw,125.8px)] normal-case tracking-[-0.005em] leading-[1.02]"
+            className="titulo text-bone font-secundaria text-display [font-size:min(calc((100vw-32px)/4.65),147px)] md:[font-size:141px] lg:[font-size:min(calc((100vw-96px)/7.35),139px)] wide:[font-size:178px] uppercase tracking-[-0.005em] leading-[1.02]"
           >
             {CONTENT.leva.titulo.split(" ").map((word, index) => (
               <Fragment key={`${word}-${index}`}>
                 <span className={WORD}>{word}</span>{" "}
-                {index === CONTENT.leva.quebraApos - 1 ? <br /> : null}
               </Fragment>
             ))}
           </h2>
-          <p className="max-w-[46ch] mt-4 text-silver font-terciaria text-body-lg">{CONTENT.leva.sub}</p>
+          <p className="max-w-[46ch] mt-4 text-silver font-terciaria text-body-lg [--text-body-lg:16.2px]">{CONTENT.leva.sub}</p>
         </header>
 
         <ol className="relative z-1 flex flex-col gap-10 mt-[calc(140svh-140px)] motion-reduce:mt-16 lg:gap-0" role="list">
@@ -84,19 +83,19 @@ export function Batch() {
             const position = ZIGZAG[index % 3];
             return (
               <li
-                className={`voz relative flex flex-col gap-3 min-h-95 p-6 bg-surface-1 text-bone border border-line-strong *:relative *:z-1 lg:w-[calc((100%-2*--spacing(8))/3)] lg:min-h-115 lg:p-8 ${position} ${GRAIN} before:z-0`}
+                className={`voz relative flex flex-col gap-3 min-h-95 p-6 bg-surface-1 text-bone border border-line-strong *:relative *:z-1 lg:w-[calc((100%-2*--spacing(8))/3)] lg:min-h-115 lg:p-8 ${position} ${GRAIN} before:z-0${voice.zoom ? " overflow-clip" : ""}`}
                 key={voice.nome}
                 data-revelar
               >
-                <CardImage src={voice.src} sizes={SIZES} className="absolute! inset-0 z-0! border-0" />
-                <span className="absolute! inset-0 z-0! bg-linear-to-t from-void/95 via-void/60 to-void/20" aria-hidden="true" />
+                <CardImage src={voice.src} sizes={SIZES} className={`absolute! inset-0 z-0! border-0${voice.zoom ? " scale-105" : ""}`} />
+                <span className="absolute! inset-0 z-0! bg-linear-to-t from-void/95 via-void/80 to-void/65" aria-hidden="true" />
                 <span
                   className="font-secundaria font-extrabold uppercase tracking-[0.02em] text-acento text-[48px] leading-[0.6]"
                   aria-hidden="true"
                 >
                   &ldquo;
                 </span>
-                <p className="flex-auto text-left text-bone font-secundaria text-h3-voz lg:text-h3-voz-lg">
+                <p className="flex-auto text-left text-bone font-secundaria text-h3-voz lg:text-h3-voz-lg [text-shadow:0_1px_10px_var(--void)]">
                   {voice.fala}
                 </p>
                 <div className="flex flex-col gap-1">

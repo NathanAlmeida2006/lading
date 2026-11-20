@@ -35,7 +35,6 @@ export function Video() {
   const origin = useRef(0);
   const sound = useRef(null);
   const schedule = useRef({}); // a hora (performance.now) em que cada estagio devia entrar: quem anima por dentro conta dela, e nao de quando montou
-  const speed = useRef(undefined); // a da rolagem da Trilha: o Registro anda na mesma velocidade
   const section = useRef(null);
   useEffect(() => () => { sound.current?.stop(200); }, []);
 
@@ -106,7 +105,7 @@ export function Video() {
 
       {isPlaying && <div className={`absolute inset-0 z-2 pointer-events-none ${isCoveredByStage ? "bg-void" : "bg-acento"} motion-safe:animate-corte`} aria-hidden="true" onAnimationEnd={() => setIsCovered(true)} key={round} />}
 
-      {isPlaying && stageModule && <stageModule.default stage={stage} schedule={schedule} origin={origin} speed={speed} onRepeat={() => play(true)} />}
+      {isPlaying && stageModule && <stageModule.default stage={stage} schedule={schedule} origin={origin} onRepeat={() => play(true)} />}
     </section>
   );
 }

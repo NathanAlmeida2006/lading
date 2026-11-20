@@ -1,13 +1,13 @@
 import { useRef } from "react";
 import { Thread } from "../components/ui/Thread.jsx";
-import { FluidBackground } from "../components/visuals/FluidBackground.jsx";
+import { CoverBackground } from "../components/visuals/CoverBackground.jsx";
 import { CtaButton } from "../components/ui/CtaButton.jsx";
 import { Frame } from "../components/ui/Frame.jsx";
 import { Label } from "../components/ui/Label.jsx";
 import { CONTENT } from "../content/content.js";
 import { openPanel, useMotion } from "../sensory/index.js";
 import { PUBLIC_CONTACT } from "../infra/config.js";
-import { LAYER, HIGHLIGHT, ENVELOPE, GRAIN, LINE, RAW_NUMBERS, PANEL, OUTLINED } from "../app/ui.js";
+import { LAYER, HIGHLIGHT, ENVELOPE, GRAIN, LINE, RAW_NUMBERS, PANEL } from "../app/ui.js";
 
 /**
  * Fechamento: a segunda capa.
@@ -41,37 +41,37 @@ export function Closing() {
 
   return (
     <section id="fechamento" className={`${PANEL} ${GRAIN} painel-capa`} ref={root}>
-      <FluidBackground />
+      <CoverBackground />
       <Frame />
 
-      <div className="w-full flex-1 flex flex-col justify-center gap-2 py-3 relative z-1">
+      <div className="w-full flex-1 flex flex-col justify-center gap-2 pt-3 pb-20 relative z-1">
         <div className={`${ENVELOPE} flex flex-col items-start gap-2`}>
           <Label className="painel__kicker" margin="mb-2">{CONTENT.fechamento.rotulo}</Label>
 
           <Thread />
           <h2
-            className="painel__titulo flex flex-col w-full my-2 text-bone font-secundaria text-display-xxl uppercase tabular-nums tela-baixa:text-[length:clamp(56px,20vw,120px)]"
+            className="painel__titulo flex flex-col gap-[0.1em] w-full my-2 text-bone font-secundaria text-display-xxl [--text-display-xxl:min(calc((100vw-32px)/5.69),120px)] md:[--text-display-xxl:115px] lg:[--text-display-xxl:min(calc((100vw-96px)/5.69),179px)] wide:[--text-display-xxl:230px] [word-spacing:0.08em] uppercase"
             data-revelar
           >
             <span className={LINE}>
-              <span className={`linha__texto block ${LAYER} ${OUTLINED}`}>{CONTENT.fechamento.headline.linhas[0]}</span>
+              <span className={`linha__texto block ${LAYER}`}>{CONTENT.fechamento.titulo[0]}</span>
             </span>{" "}
             <span className={LINE}>
-              <span className={`linha__texto block ${LAYER}`}>{CONTENT.fechamento.headline.linhas[1]}</span>
+              <span className={`linha__texto block ${LAYER}`}>{CONTENT.fechamento.titulo[1]}</span>
             </span>
           </h2>
           <Thread />
 
           <p className="painel__corpo max-w-prose mt-3 text-silver font-terciaria text-body-lg" data-revelar>
-            {CONTENT.dobra.promessa.texto}
+            {CONTENT.fechamento.sub}
           </p>
         </div>
 
         <div className="painel__acao w-full shrink-0 mt-4 relative z-1" data-revelar>
           <div className={`${ENVELOPE} flex flex-col items-center text-center`}>
             {/* `shouldHideDock`: o CTA do fechamento tem a propria acao na tela; a doca sai enquanto ele estiver visivel. */}
-            <CtaButton position="fechamento" shouldHideDock />
-            <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums">
+            <CtaButton position="fechamento" shouldHideDock label={CONTENT.fechamento.cta} />
+            <p className="mt-3 text-silver font-terciaria text-mono-reg tabular-nums text-balance">
               {CONTENT.fechamento.condicoes}
             </p>
           </div>

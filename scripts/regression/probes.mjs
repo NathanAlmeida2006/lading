@@ -46,7 +46,7 @@ const saida = {};
   const p = await ctx.newPage(); const erros = []; p.on("pageerror", (e) => erros.push(String(e).slice(0, 160))); p.on("console", (m) => { if (m.type() === "error") erros.push(m.text().slice(0, 160)); });
   await p.goto(url, { waitUntil: "load" }); await p.evaluate(() => document.fonts.ready);
   await esperar(p, () => document.documentElement.classList.contains("movimento-pronto"), 30000);
-  await p.click("text=Aceitar").catch(() => {});
+  await p.click('text="Aceitar"').catch(() => {});
   await p.evaluate(() => document.querySelector("#video").scrollIntoView({ block: "start", behavior: "instant" })); await p.waitForTimeout(2500);
   await p.click('button[aria-label="Reproduzir vídeo"]'); const t0 = await p.evaluate(() => performance.now());
   await p.waitForTimeout(22000);

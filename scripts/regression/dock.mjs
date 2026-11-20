@@ -16,7 +16,7 @@ for (const [w, h] of [[390, 844], [1440, 900]]) for (const modo of ["normal", "r
   await p.goto(url, { waitUntil: "load" });
   await esperar(p, () => document.documentElement.classList.contains("movimento-pronto") || document.documentElement.classList.contains("movimento-falhou"), 20000);
   await p.waitForTimeout(modo === "normal" ? 3600 : 600);
-  await p.click("text=Aceitar").catch(() => {}); await p.waitForTimeout(300);
+  await p.click('text="Aceitar"').catch(() => {}); await p.waitForTimeout(300);
   const total = await p.evaluate(() => document.documentElement.scrollHeight);
   const seq = [];
   for (let y = 0; y <= total; y += 120) { await p.evaluate((v) => scrollTo({ top: v, behavior: "instant" }), y); await p.waitForTimeout(140); seq.push(await p.evaluate(() => (document.querySelector(".doca")?.hasAttribute("data-ativa") ? 1 : 0))); }

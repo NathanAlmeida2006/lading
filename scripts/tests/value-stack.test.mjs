@@ -8,9 +8,7 @@ import { CONFIG } from "../../src/infra/config.js";
 const blocoValido = (extra = {}) => ({
   ativo: true,
   cabecalho: "Veja tudo que você terá direito",
-  itens: [{ id: "a", nome: "A", valor: 79.99 }],
-  totalRotulo: "Preço antigo:",
-  totalDeclarado: 79.99,
+  itens: [{ id: "a", nome: "A" }],
   moeda: "R$",
   conector: { rotulo: "Vitalício" },
   oferta: { rotulo: "por apenas:", preco: 79.99, subtexto: "pagamento único" },
@@ -36,43 +34,27 @@ test("lista de itens vazia gera erro de itens vazios", () => {
   assert.ok(listValueStackErrors(blocoValido({ itens: [] })).includes("itens vazios"));
 });
 
-test("item com valor 0, negativo, NaN, Infinity ou string gera erro no proprio item", () => {
-  for (const valor of [0, -10, NaN, Infinity, "10"]) {
-    const erros = listValueStackErrors(blocoValido({ itens: [{ id: "a", nome: "A", valor }] }));
-    assert.ok(erros.includes("itens[0].valor não finito ou não positivo"), `valor=${valor}`);
+test("item sem nome (ausente, vazio ou so espacos) gera erro no proprio item", () => {
+  for (const item of [{ id: "a" }, { id: "a", nome: "" }, { id: "a", nome: "  " }, null]) {
+    assert.ok(listValueStackErrors(blocoValido({ itens: [item] })).includes("itens[0].nome ausente"), JSON.stringify(item));
   }
 });
 
-test("oferta.preco invalido (zero ou ausente) gera erro", () => {
-  assert.ok(listValueStackErrors(blocoValido({ oferta: { rotulo: "x", preco: 0 } })).includes("oferta.preco inválido"));
+test("oferta.preco invalido (zero, negativo, NaN, texto ou ausente) gera erro", () => {
+  for (const preco of [0, -1, NaN, "79,99"]) {
+    assert.ok(listValueStackErrors(blocoValido({ oferta: { rotulo: "x", preco } })).includes("oferta.preco inválido"), `preco=${preco}`);
+  }
   assert.ok(listValueStackErrors(blocoValido({ oferta: undefined })).includes("oferta.preco inválido"));
-});
-
-test("totalDeclarado invalido (zero) gera erro", () => {
-  assert.ok(listValueStackErrors(blocoValido({ totalDeclarado: 0 })).includes("totalDeclarado inválido"));
-});
-
-test("soma dos itens diferente do total declarado gera erro de soma", () => {
-  const erros = listValueStackErrors(blocoValido({ totalDeclarado: 80 }));
-  assert.ok(erros.some((e) => e.startsWith("soma dos itens")));
-});
-
-test("itens somando 79,99 batem com o total 79,99", () => {
-  const bloco = blocoValido({ itens: [{ id: "a", nome: "A", valor: 50.5 }, { id: "b", nome: "B", valor: 29.49 }] });
-  assert.deepEqual(listValueStackErrors(bloco), []);
-});
-
-test("soma em centavos: 0,29 + 0,29 batem com 0,58 (a conta e feita em centavos inteiros, com arredondamento)", () => {
-  const bloco = blocoValido({
-    itens: [{ id: "a", nome: "A", valor: 0.29 }, { id: "b", nome: "B", valor: 0.29 }],
-    totalDeclarado: 0.58,
-    oferta: { rotulo: "x", preco: 0.58 },
-  });
-  assert.deepEqual(listValueStackErrors(bloco), []);
 });
 
 test("bloco da config atual nao tem erros", () => {
   assert.deepEqual(listValueStackErrors(CONFIG.pilhaDeValor), []);
+});
+
+test("a config nao carrega preco 'antigo': nem total declarado, nem valor avulso por item", () => {
+  assert.equal("totalDeclarado" in CONFIG.pilhaDeValor, false);
+  assert.equal("totalRotulo" in CONFIG.pilhaDeValor, false);
+  for (const item of CONFIG.pilhaDeValor.itens) assert.equal("valor" in item, false, item.id);
 });
 
 test("formatReais: inteiro sai sem centavos (600 -> 600)", () => {
@@ -90,13 +72,25 @@ test("buildPresentableValueStack devolve null para bloco invalido", () => {
   assert.equal(buildPresentableValueStack(blocoValido({ ativo: false })), null);
 });
 
-test("buildPresentableValueStack do bloco da config traz itens, total e oferta formatados, com moeda R$", () => {
+test("buildPresentableValueStack do bloco da config traz os itens (so nomes) e a oferta formatada, com moeda R$", () => {
   const forma = buildPresentableValueStack(CONFIG.pilhaDeValor);
   assert.notEqual(forma, null);
-  assert.deepEqual(forma.itens.map((item) => item.valor), ["30", "25", "20", "10", "15", "100"]);
-  assert.equal(forma.total, "200");
+  assert.deepEqual(forma.itens.map((item) => item.nome), [
+    "Protocolo Hipertrofia",
+    "Protocolo Dieta para Naturais",
+    "Protocolo Sono e Recuperação",
+    "App Lithium Vitalício",
+    "Checklist de Execução + Social Vibe",
+  ]);
+  assert.equal(forma.tituloItens, "Itens inclusos");
+  assert.equal("total" in forma, false);
   assert.equal(forma.moeda, "R$");
   assert.equal(forma.oferta.preco, "79,99");
+  assert.ok(forma.oferta.comparacao && forma.oferta.subtexto);
+});
+
+test("o Pix da config tem o mesmo valor do preco a vista da pilha", () => {
+  assert.equal(CONFIG.oferta.pix.valor, CONFIG.pilhaDeValor.oferta.preco);
 });
 
 test("o preco a vista tem uma fonte so: a trava de publicacao valida o mesmo valor que a tela mostra", async () => {

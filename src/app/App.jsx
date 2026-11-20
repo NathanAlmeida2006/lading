@@ -63,8 +63,6 @@ export function App() {
       <main id="conteudo">
         <Fold />
         <Video />
-        {/* shouldHideDock so na primeira pilha: ela esconde a doca enquanto tiver qualquer pixel na tela; a #oferta nao. */}
-        <ValueStack shouldHideDock />
         {/* A cortina pina o Manifesto, e este conteiner define ate onde o pino vale: a secao de
             baixo sobe por cima, e o pino termina com a de cima toda coberta. */}
         <div>
@@ -73,8 +71,8 @@ export function App() {
         </div>
         <Batch />
         {SECTIONS_BY_ID.mapa.presente && <Weeks />}
-        {/* A oferta e a mesma pilha de valor, com a ancora `#oferta` e a posicao `oferta` do CTA. */}
-        <ValueStack id="oferta" position="oferta" />
+        {/* A unica oferta e preco da pagina: depois da dor, do mecanismo e do valor. A doca nao a esconde. */}
+        <ValueStack />
         <Objections />
         <Closing />
       </main>
