@@ -2,7 +2,6 @@ import { Fragment, useRef } from "react";
 import { CONTENT } from "../content/content.js";
 import { DotField } from "../components/visuals/DotField.jsx";
 import { useCurtain } from "../sensory/curtain.js";
-import { Label } from "../components/ui/Label.jsx";
 import { useManifesto } from "../sensory/manifesto.js";
 import { BLOCK, ENVELOPE, WORD } from "../app/ui.js";
 
@@ -31,7 +30,7 @@ export function Manifesto() {
       <DotField variant="estelar" />
       <div className={`${ENVELOPE} manifesto__texto relative z-1 top-0 min-h-svh flex flex-col items-center justify-center group-data-cabe/manifesto:sticky motion-reduce:static`}>
         <div>
-        <Label as="h2">{CONTENT.reconhecimento.rotulo}</Label>
+        <h2 className="sr-only">{CONTENT.reconhecimento.rotulo}</h2>
         <p className="font-secundaria font-bold text-[length:min(49.2px,calc(3.1svh_+_6vw_-_1.4px))] leading-[1.05] normal-case tracking-normal max-w-prose text-bone lg:text-[length:min(clamp(61px,6.93vw,86px),10.3svh)] lg:leading-none lg:max-w-[32ch]">
           {CONTENT.reconhecimento.texto.split(" ").map((word, index) => (
             // O espaco fica FORA do span: espaco no fim de um inline-block e

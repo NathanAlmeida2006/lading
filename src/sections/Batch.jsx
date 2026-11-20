@@ -1,7 +1,6 @@
 import { Fragment, useRef } from "react";
 import { DotField } from "../components/visuals/DotField.jsx";
 import { CardImage } from "../components/ui/CardImage.jsx";
-import { Label } from "../components/ui/Label.jsx";
 import { lightUpInSequence, reveal, revealInCascade, useMotion } from "../sensory/index.js";
 import { CONTENT } from "../content/content.js";
 import { BLOCK, padTwoDigits, ENVELOPE, GRAIN, WORD } from "../app/ui.js";
@@ -41,7 +40,6 @@ export function Batch() {
   useMotion(() => {
     const node = root.current;
     if (!node) return;
-    reveal(node.querySelector(".rotulo"));
     revealInCascade(node.querySelectorAll(".voz"), { interval: 80 });
     // O trilho `fixo` e o palco: 190svh, 90svh de titulo pinado. Ele nasce acima do
     // titulo (o titulo pina no meio da tela) para a conta comecar quando o titulo pina.
@@ -65,7 +63,6 @@ export function Batch() {
             90svh de espera. Aqui a margem da lista (140svh - 140px) soma, com o titulo centrado
             e ~280px de altura, esses mesmos 90svh. */}
         <header className="sticky top-[max(--spacing(12),calc(50svh-140px))] z-0 flex flex-col items-center py-8 text-center motion-reduce:static">
-          <Label>{CONTENT.leva.rotulo}</Label>
           <h2
             className="titulo text-bone font-secundaria text-display [font-size:min(calc((100vw-32px)/4.65),147px)] md:[font-size:141px] lg:[font-size:min(calc((100vw-96px)/7.35),139px)] wide:[font-size:178px] uppercase tracking-[-0.005em] leading-[1.02]"
           >

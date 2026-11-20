@@ -2,7 +2,6 @@ import { DotField } from "../components/visuals/DotField.jsx";
 import { Fragment, useRef } from "react";
 import { CtaButton } from "../components/ui/CtaButton.jsx";
 import { CardImage } from "../components/ui/CardImage.jsx";
-import { Label } from "../components/ui/Label.jsx";
 import { CONTENT } from "../content/content.js";
 import { reveal, revealInCascade, raiseLines, useMotion } from "../sensory/index.js";
 import { useRailRuler } from "../sensory/ruler.js";
@@ -62,7 +61,6 @@ export function Weeks() {
   useMotion(() => {
     const node = root.current;
     if (!node) return;
-    reveal(node.querySelector(".rotulo"));
     // `.linha` e `.linha__texto` sao o primitivo dos paineis, reusado: mesmo
     // recorte, mesma rede de seguranca do RNF-L35, mesma checagem no
     // `verificar`. Uma classe propria aqui ficaria fora das tres.
@@ -86,7 +84,6 @@ export function Weeks() {
     <section id="mapa" className={`${BLOCK} py-16 md:py-24`} ref={root}>
       <DotField variant="estelar" />
       <div className={`${ENVELOPE} relative z-1`}>
-        <Label>{CONTENT.mapa.rotulo}</Label>
 
         {/* O fio a esquerda do titulo: 2px em acento, da altura do bloco de linhas. */}
         <div className={`relative mt-6 pl-6 lg:pl-8 ${GRID_12} before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-acento`}>

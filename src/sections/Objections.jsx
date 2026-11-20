@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { DotField } from "../components/visuals/DotField.jsx";
 import { Faq } from "../components/ui/Faq.jsx";
-import { Label } from "../components/ui/Label.jsx";
 import { CONTENT } from "../content/content.js";
 import { revealLineMask, reveal, revealInCascade, useMotion } from "../sensory/index.js";
 import { isMotionReduced } from "../sensory/tokens.js";
@@ -18,7 +17,6 @@ export function Objections() {
     if (isMotionReduced()) return;
     const node = root.current;
     if (!node) return;
-    reveal(node.querySelector(".rotulo"));
     revealLineMask(node.querySelector(".titulo"), { delay: 60 });
     // Revelar o item inteiro preserva a resposta após recolher e reabrir.
     revealInCascade(node.querySelectorAll(".dialogo > div"), { interval: 90 });
@@ -29,7 +27,6 @@ export function Objections() {
       <DotField variant="estelar" />
       <div className={`${ENVELOPE} relative z-1 ${GRID_12}`}>
         <div className="min-w-0 lg:col-[1/span_5] lg:sticky lg:top-24 lg:self-start">
-          <Label>{CONTENT.objecoesRotulo}</Label>
           <h2 className={`titulo text-bone font-secundaria text-h1 uppercase lg:text-display ${MASK}`} data-revelar>
             {CONTENT.objecoesTitulo}
           </h2>

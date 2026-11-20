@@ -3,7 +3,6 @@ import { Thread } from "../components/ui/Thread.jsx";
 import { CoverBackground } from "../components/visuals/CoverBackground.jsx";
 import { Menu } from "../components/layout/Menu.jsx";
 import { Frame } from "../components/ui/Frame.jsx";
-import { Label } from "../components/ui/Label.jsx";
 import { Wordmark } from "../components/ui/Wordmark.jsx";
 import { CONTENT } from "../content/content.js";
 import { LAYER, HIGHLIGHT, ENVELOPE, GRAIN, LINE, RAW_NUMBERS, PANEL, OUTLINED } from "../app/ui.js";
@@ -37,7 +36,6 @@ export function Fold() {
       </div>
 
       <div className={`${ENVELOPE} flex-1 flex flex-col justify-center items-start gap-2 tela-rasa:gap-1 pt-3 tela-rasa:pt-1 pb-12 relative z-1`}>
-        <Label className={`painel__kicker ${ENTER_CLASS}`} margin="mb-2 tela-rasa:mb-1">{CONTENT.dobra.rotulo}</Label>
 
         <Thread delay={260} />
         <h1

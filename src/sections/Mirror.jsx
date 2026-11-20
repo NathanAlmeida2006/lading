@@ -3,7 +3,6 @@ import { CONTENT } from "../content/content.js";
 import { DotField } from "../components/visuals/DotField.jsx";
 import { CtaButton } from "../components/ui/CtaButton.jsx";
 import { CardImage } from "../components/ui/CardImage.jsx";
-import { Label } from "../components/ui/Label.jsx";
 import { revealLineMask, reveal, useMotion } from "../sensory/index.js";
 import { useCardStack } from "../sensory/card-stack.js";
 import { BLOCK, padTwoDigits, ENVELOPE, GRID_12, MASK } from "../app/ui.js";
@@ -25,7 +24,6 @@ export function Mirror() {
   useMotion(() => {
     const node = root.current;
     if (!node) return;
-    reveal(node.querySelector(".rotulo"));
     revealLineMask(node.querySelector(".titulo"), { delay: 60 });
     reveal(node.querySelector(".espelho__sub"), { delay: 200 });
   }, []);
@@ -36,7 +34,6 @@ export function Mirror() {
       <DotField variant="estelar" />
       <div className={`${ENVELOPE} relative z-1 ${GRID_12} lg:items-start`}>
         <header className="mb-8 lg:mb-0 lg:col-[1/span_5] lg:sticky lg:top-12">
-          <Label>{CONTENT.espelho.rotulo}</Label>
           <h2
             className={`titulo text-bone font-secundaria text-h1 uppercase lg:text-display [--text-h1:51.2px] lg:[--text-display:clamp(48px,6.2vw,89.6px)] ${MASK}`}
             data-revelar

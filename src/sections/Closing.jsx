@@ -3,7 +3,6 @@ import { Thread } from "../components/ui/Thread.jsx";
 import { CoverBackground } from "../components/visuals/CoverBackground.jsx";
 import { CtaButton } from "../components/ui/CtaButton.jsx";
 import { Frame } from "../components/ui/Frame.jsx";
-import { Label } from "../components/ui/Label.jsx";
 import { CONTENT } from "../content/content.js";
 import { openPanel, useMotion } from "../sensory/index.js";
 import { PUBLIC_CONTACT } from "../infra/config.js";
@@ -46,7 +45,6 @@ export function Closing() {
 
       <div className="w-full flex-1 flex flex-col justify-center gap-2 pt-3 pb-20 relative z-1">
         <div className={`${ENVELOPE} flex flex-col items-start gap-2`}>
-          <Label className="painel__kicker" margin="mb-2">{CONTENT.fechamento.rotulo}</Label>
 
           <Thread />
           <h2
