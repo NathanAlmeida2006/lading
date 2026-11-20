@@ -6,6 +6,7 @@ import { createSound, prepareSound } from "./sound.js";
 import { useTimeline } from "./schedule.js";
 import { DO_IT_BEAT, DROP_MS, STAGES, MUSIC_END, TIMELINE, getBeatTime } from "./timing.js";
 import { BLOCK, ENVELOPE } from "../../app/ui.js";
+import { trackVideoStart } from "../../infra/instrumentation.js";
 
 /** O botao de play da secao de video. */
 const playButton =
@@ -47,6 +48,7 @@ export function Video() {
 
   const play = (isRepeat = false) => {
     if (isPlaying && !isRepeat) return;
+    if (!isRepeat) trackVideoStart();
     timeline.stop();
     sound.current?.stop(250);
     if (isRepeat) { setStage(-1); setIsCovered(false); setRound((count) => count + 1); }
