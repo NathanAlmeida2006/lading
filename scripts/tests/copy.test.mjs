@@ -21,7 +21,7 @@ test("os textos de venda trazem o preco e a garantia da config", () => {
 test("cada secao tem o CTA proprio", () => {
   assert.deepEqual(
     [CONTENT.dobra.cta, CONTENT.espelho.cta, CONTENT.mapa.cta, CONTENT.fechamento.cta],
-    ["Acesso imediato · 7 dias de garantia", "Quero meu protocolo de 12 semanas", "Garantir meu acesso vitalício", "Começar minhas 12 semanas agora"],
+    ["Quero parar de improvisar", "Quero meu protocolo de 12 semanas", "Garantir meu acesso vitalício", "Começar minhas 12 semanas agora"],
   );
 });
 

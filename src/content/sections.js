@@ -15,7 +15,6 @@ import { CONFIG } from "../infra/config.js";
  */
 export const SECTIONS = [
   { id: "inicio", etapaCanonica: 1, rotulo: "Dobra", presente: true },
-  { id: "reconhecimento", etapaCanonica: 2, rotulo: "Reconhecimento", presente: true },
   { id: "espelho", etapaCanonica: 2, rotulo: "Espelho", presente: true },
   { id: "o-que-e", etapaCanonica: 3, rotulo: "O que é", presente: true },
   { id: "mapa", etapaCanonica: 4, rotulo: "Mapa do caminho", presente: CONFIG.secoes.mapa.ativo,
@@ -24,8 +23,8 @@ export const SECTIONS = [
     justificativaAusencia: "Ainda não há depoimento autorizado nem dado de prova real para exibir; a seção volta quando houver lastro." },
   { id: "amostra", etapaCanonica: 6, rotulo: "Amostra", presente: CONFIG.secoes.amostra.ativo,
     justificativaAusencia: CONFIG.secoes.amostra.justificativaAusencia },
-  { id: "oferta", etapaCanonica: 7, rotulo: "Oferta", presente: true },
   { id: "objecoes", etapaCanonica: 9, rotulo: "Objeções", presente: true },
+  { id: "oferta", etapaCanonica: 7, rotulo: "Oferta", presente: true },
   { id: "fechamento", etapaCanonica: 10, rotulo: "Fechamento", presente: true },
   { id: "rodape-legal", etapaCanonica: 11, rotulo: "Rodapé legal", presente: true },
 ];

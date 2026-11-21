@@ -4,7 +4,6 @@ import { DotField } from "../components/visuals/DotField.jsx";
 import { CtaButton } from "../components/ui/CtaButton.jsx";
 import { CardImage } from "../components/ui/CardImage.jsx";
 import { revealLineMask, reveal, useMotion } from "../sensory/index.js";
-import { useCardStack } from "../sensory/card-stack.js";
 import { BLOCK, padTwoDigits, ENVELOPE, GRID_12, MASK } from "../app/ui.js";
 
 // Situação e comportamento do protocolo; não são relatos nem antes/depois corporal.
@@ -13,21 +12,19 @@ const CARDS = CONTENT.espelho.cartas;
 const SIZES = "(min-width: 1440px) 718px, (min-width: 1024px) 550px, (min-width: 720px) 662px, calc(100vw - 58px)";
 
 /**
- * Espelho: as cartas de situação e comportamento do protocolo, empilhadas ao rolar. Não são relatos nem antes e depois corporal.
+ * Espelho: as cartas de situação e comportamento do protocolo, em fila. Não são relatos nem antes e depois corporal.
  * @param {object} props - Sem props.
  * @returns {JSX.Element} A seção Espelho.
  */
 export function Mirror() {
   const root = useRef(null);
-  const list = useRef(null);
-
+  
   useMotion(() => {
     const node = root.current;
     if (!node) return;
     revealLineMask(node.querySelector(".titulo"), { delay: 60 });
     reveal(node.querySelector(".espelho__sub"), { delay: 200 });
   }, []);
-  useCardStack(root, list);
 
   return (
     <section id="espelho" className={`${BLOCK} isolate py-16 md:py-24`} ref={root}>
@@ -49,12 +46,11 @@ export function Mirror() {
         </header>
 
         <div className="lg:col-[6/-1]">
-        <ol className="flex flex-col gap-4 lg:gap-6" role="list" ref={list}>
+        <ol className="flex flex-col gap-4 lg:gap-6" role="list">
           {CARDS.map((card, index) => (
             <li
-              className="carta sticky top-[calc(--spacing(6)+var(--ordem)*--spacing(12))] isolate flex flex-col gap-4 p-3 md:p-4 bg-surface-1 even:bg-void border border-line-strong motion-reduce:static [[data-solta]_&]:static"
+              className="carta isolate flex flex-col gap-4 p-3 md:p-4 bg-surface-1 even:bg-void border border-line-strong"
               key={card.titulo}
-              style={{ "--ordem": index }}
             >
               <div className="relative">
                 <CardImage src={card.src} sizes={SIZES} isDimmed={!card.src} className={`aspect-16/10${card.src ? " brightness-60" : ""} ${card.pos ?? ""}`} />

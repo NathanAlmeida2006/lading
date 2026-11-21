@@ -11,8 +11,10 @@ import { Dock } from "../components/layout/Dock.jsx";
 import { FixedIndex } from "../components/layout/FixedIndex.jsx";
 import { MotionPause } from "../components/visuals/MotionPause.jsx";
 import { Fold } from "../sections/Fold.jsx";
-import { Manifesto } from "../sections/Manifesto.jsx";
 import { ValueStack } from "../sections/ValueStack.jsx";
+import { AppShowcase } from "../sections/AppShowcase.jsx";
+import { Proof } from "../sections/Proof.jsx";
+import { Spectrum } from "../sections/Spectrum.jsx";
 import { Mirror } from "../sections/Mirror.jsx";
 import { Batch } from "../sections/Batch.jsx";
 import { Weeks } from "../sections/Weeks.jsx";
@@ -63,17 +65,15 @@ export function App() {
       <main id="conteudo">
         <Fold />
         <Video />
-        {/* A cortina pina o Manifesto, e este conteiner define ate onde o pino vale: a secao de
-            baixo sobe por cima, e o pino termina com a de cima toda coberta. */}
-        <div>
-          <Manifesto />
-          <Mirror />
-        </div>
+        <AppShowcase />
+        <Mirror />
+        <Spectrum />
         <Batch />
+        <Proof />
         {SECTIONS_BY_ID.mapa.presente && <Weeks />}
-        {/* A unica oferta e preco da pagina: depois da dor, do mecanismo e do valor. A doca nao a esconde. */}
-        <ValueStack />
         <Objections />
+        {/* A unica oferta e preco da pagina: depois da dor, do mecanismo, do valor e das objecoes. A doca nao a esconde. */}
+        <ValueStack />
         <Closing />
       </main>
 

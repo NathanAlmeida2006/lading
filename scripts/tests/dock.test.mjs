@@ -31,10 +31,6 @@ test("Fold: a section id=inicio carrega data-oculta-doca", () => {
   assert.match(tagAbertura(ler("sections/Fold.jsx"), "section", 'id="inicio"'), /\bdata-oculta-doca=""/);
 });
 
-test("Manifesto: a section id=reconhecimento carrega data-oculta-doca", () => {
-  assert.match(tagAbertura(ler("sections/Manifesto.jsx"), "section", 'id="reconhecimento"'), /\bdata-oculta-doca=""/);
-});
-
 test("LegalFooter: o footer id=rodape-legal carrega data-oculta-doca", () => {
   assert.match(tagAbertura(ler("sections/LegalFooter.jsx"), "footer", 'id="rodape-legal"'), /\bdata-oculta-doca=""/);
 });

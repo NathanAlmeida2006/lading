@@ -48,7 +48,7 @@ export function Closing() {
 
           <Thread />
           <h2
-            className="painel__titulo flex flex-col gap-[0.1em] w-full my-2 text-bone font-secundaria text-display-xxl [--text-display-xxl:min(calc((100vw-32px)/5.69),120px)] md:[--text-display-xxl:115px] lg:[--text-display-xxl:min(calc((100vw-96px)/5.69),179px)] wide:[--text-display-xxl:230px] [word-spacing:0.08em] uppercase"
+            className="painel__titulo flex flex-col w-full my-2 text-bone font-secundaria text-display-xxl [--text-display-xxl:min(calc((100vw-32px)/5.69),120px)] md:[--text-display-xxl:115px] lg:[--text-display-xxl:min(calc((100vw-96px)/5.69),179px)] wide:[--text-display-xxl:230px] [word-spacing:0.08em] uppercase"
             data-revelar
           >
             <span className={LINE}>

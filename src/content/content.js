@@ -47,13 +47,15 @@ import { formatReais } from "./valueStack.js";
 /**
  * @typedef Content O texto público das seções.
  * @property {{rotulo: string, cta: string, destaques: {valor: number|null, rotulo: string}[], headline: {linhas: string[]}, promessa: {texto: string}, subheadline: {texto: string}}} dobra - `promessa` alimenta o take 1 do vídeo.
- * @property {{rotulo: string, destaques: string[], texto: string}} reconhecimento
  * @property {{semanas: number, sessoesObrigatorias: number, sessoesOpcionais: number}} mecanismo
  * @property {{rotulo: string}} intro
  * @property {{nome: string, garantia: string, cta: string}} doca
  * @property {{rotulo: string, titulo: string, sub: string, cta: string, cartas: MirrorCard[]}} espelho
- * @property {{rotulo: string, linhas: string[], sub: string, estados: MapState[], frase: string, numeros: MapNumber[], cta: string}} mapa
- * @property {{rotulo: string, titulo: string, sub: string, vozes: Voice[]}} leva
+ * @property {{titulo: string, passos: {id: string, nome: string, texto: string}[]}} demo
+ * @property {{rotulo: string, titulo: string, depoimentos: {texto: string, nome: string, contexto: string}[]}} prova
+ * @property {{titulo: string, antes: string, depois: string, areas: {nome: string, antes: number, depois: number}[]}} espectro
+ * @property {{rotulo: string, estados: MapState[], numeros: MapNumber[], cta: string}} mapa
+ * @property {{rotulo: string, vozes: Voice[]}} leva
  * @property {{cta: string, garantia: {titulo: string, texto: string}}} oferta
  * @property {{headline: {linhas: string[]}, titulo: string[], rotulo: string, sub: string, cta: string, condicoes: string}} fechamento - `headline` alimenta o último take do vídeo; o site usa `titulo`.
  * @property {string} objecoesRotulo
@@ -88,17 +90,12 @@ export const CONTENT = {
     subheadline: {
       texto: `Treinar sem evoluir é perder tempo. O Lithium substitui o achismo por ${MECHANISM.semanas} semanas de método exato para naturais colocarem massa de verdade.`,
     },
-    cta: `Acesso imediato · ${GUARANTEE_DAYS} dias de garantia`,
+    cta: "Quero parar de improvisar",
     // Duas frases curtas na barra da base da dobra: o número em destaque e o que ele conta.
     destaques: [
       { valor: 3, rotulo: "protocolos" },
       { valor: GUARANTEE_DAYS, rotulo: "dias de garantia" },
     ],
-  },
-  reconhecimento: {
-    rotulo: "a mentira do feed",
-    destaques: ["hormônio", "cansaço", "régua"],
-    texto: "Sua genética não é o problema. O erro é copiar treino de quem usa hormônio e se matar em fichas genéricas que só acumulam cansaço. Natural precisa da régua certa para evoluir.",
   },
   mecanismo: MECHANISM,
   intro: { rotulo: "(protocolo 01 · hipertrofia)" },
@@ -110,17 +107,15 @@ export const CONTENT = {
     cta: `Quero meu protocolo de ${MECHANISM.semanas} semanas`,
     cartas: [
       // imagem: ebook genérico × protocolo Lithium
-      { titulo: "Do treino aleatório ao protocolo de guerra", depois: `Chega de escolher exercício na hora ou copiar ficha de instrutor desinteressado. São ${TOTAL_SESSIONS} treinos prontos em ${MECHANISM.semanas} semanas, com progressão exata para forçar hipertrofia natural.`, lastro: "Fim do achismo" },
+      { titulo: "Do treino aleatório ao protocolo de guerra", depois: `Sem improviso ou fichas genéricas: ${TOTAL_SESSIONS} treinos prontos em ${MECHANISM.semanas} semanas com a progressão exata para naturais.`, lastro: "Fim do achismo" },
       // imagem: tela do app Lithium
-      { titulo: "Da teoria inútil ao passo a passo no bolso", src: "/images/image1.webp", depois: "Nada de PDF esquecido na pasta de downloads. Você abre no celular e executa três fases claras: Aprender, Construir e Consolidar. Cada série tem um motivo para estar ali.", lastro: "Execução guiada" },
+      { titulo: "Da teoria inútil ao passo a passo no bolso", src: "/images/image1.webp", depois: "Chega de PDF perdido no celular: abra o app e execute 3 fases claras (Aprender, Construir e Consolidar), com propósito em cada série.", lastro: "Execução guiada" },
       // imagem: Semana Verde e Semana Amarela
       { titulo: "Da semana perdida ao Plano de Retorno", src: "/images/image2.webp", depois: "Faltou na academia e bateu vontade de largar tudo? O sistema de Semana Verde e Semana Amarela recalibra seu ritmo automaticamente. Você cai, ajusta e não volta para a estaca zero.", lastro: "Blindado contra falhas" },
     ],
   },
   mapa: {
     rotulo: "como funciona na prática",
-    linhas: ["Chega de", "começar", "e parar."],
-    sub: "Você não precisa de motivação. Precisa abrir o celular, ver a missão do dia e bater a meta.",
     cta: "Garantir meu acesso vitalício",
     estados: [
       // imagem: tela inicial do app · leitura: App Exclusivo (PWA) · origem: CONFIG.entrega
@@ -130,8 +125,6 @@ export const CONTENT = {
       // imagem: tela do Checklist Integrado · leitura: Checklist Integrado · origem: CONFIG.pilhaDeValor
       { capa: "03", src: "/images/image8.webp", faixa: "Disciplina diária", nome: "Checklist de Execução", texto: "O aplicativo cobra o que você prometeu fazer. Marque treino, dieta e sono no dia e veja na sua cara se você está evoluindo ou dando desculpa." },
     ],
-    // O texto que sobe quando a regua chega ao fim (motion, nao marcacao).
-    frase: "Apenas faça",
     numeros: [
       { valor: TOTAL_SESSIONS, rotulo: "TREINOS PRONTOS" },
       { valor: 3, rotulo: "PROTOCOLOS INTEGRADOS" },
@@ -139,10 +132,44 @@ export const CONTENT = {
       { valor: 1, rotulo: "PAGAMENTO ÚNICO" },
     ],
   },
+  // O celular navegando pelo app (AppShowcase.jsx): um passo por tela real do app, na ordem em que aparecem.
+  demo: {
+    titulo: "O app por dentro",
+    passos: [
+      { id: "hoje", nome: "Hoje", texto: "O dia em três toques: como foi a noite, o treino e o que você comeu." },
+      { id: "trilha", nome: "Trilha", texto: "Cada protocolo, passo a passo, uma etapa de cada vez." },
+      { id: "exercicios", nome: "Exercícios", texto: "O jeito certo de executar cada movimento, com o músculo trabalhado em destaque." },
+      { id: "treino", nome: "Treino", texto: "A ficha já vem com a carga. Marque cada série quando terminar." },
+    ],
+  },
+  // RASCUNHOS DE EXEMPLO (sem marca na tela): textos escritos para aprovar o layout,
+  // sem resultado nem numero. NAO sao relatos de clientes e nao podem ir ao ar como se fossem: o projeto so aceita
+  // depoimento real e autorizado (ver `depoimentos` em infra/config.js). Troque por textos reais antes de publicar.
+  prova: {
+    rotulo: "quem já usa o app",
+    titulo: "Usuários do app",
+    depoimentos: [
+      { texto: "Abro o app, vejo o treino do dia e faço. Parei de perder tempo decidindo o que fazer na academia.", nome: "Rafael M.", contexto: "Protocolo Hipertrofia" },
+      { texto: "O checklist me cobra todo dia. Fica difícil inventar desculpa com a tarefa marcada ali na tela.", nome: "Lucas A.", contexto: "Checklist de Execução" },
+      { texto: "Instalei direto na tela inicial, sem loja e sem anúncio. Treino e carga a um toque, até no meio da série.", nome: "Thiago S.", contexto: "App no celular" },
+      { texto: "Nunca tinha olhado para o sono como parte do treino. Agora ajusto os dois no mesmo lugar.", nome: "Bruno C.", contexto: "Protocolo Sono" },
+      { texto: "Parei de copiar ficha aleatória. Tenho a progressão de cada semana e sei por que cada série está ali.", nome: "Felipe R.", contexto: "Protocolo Hipertrofia" },
+    ],
+  },
+  espectro: {
+    titulo: "Espectro",
+    antes: "Antes",
+    depois: "Depois",
+    areas: [
+      { nome: "Estética", antes: 30, depois: 85 },
+      { nome: "Força", antes: 35, depois: 88 },
+      { nome: "Confiança", antes: 25, depois: 80 },
+      { nome: "Disciplina", antes: 30, depois: 90 },
+      { nome: "Admiração", antes: 20, depois: 82 },
+    ],
+  },
   leva: {
     rotulo: "o que você leva no arsenal",
-    titulo: "Fim da estagnação.",
-    sub: "O método exato para ganhar massa densa e natural, sem passar o dia na academia.",
     vozes: [
       // imagem: tela do Protocolo Hipertrofia
       { nome: "Protocolo Hipertrofia", governa: "Treino", onde: `${MECHANISM.semanas} semanas`, fala: "Volume cirúrgico para naturais. Menos lixo no treino, mais tensão mecânica e progressão de carga toda semana.", src: "/images/image3.webp" },

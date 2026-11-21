@@ -1,48 +1,18 @@
 import { DotField } from "../components/visuals/DotField.jsx";
-import { Fragment, useRef } from "react";
+import { useRef } from "react";
 import { CtaButton } from "../components/ui/CtaButton.jsx";
 import { CardImage } from "../components/ui/CardImage.jsx";
 import { CONTENT } from "../content/content.js";
-import { reveal, revealInCascade, raiseLines, useMotion } from "../sensory/index.js";
-import { useRailRuler } from "../sensory/ruler.js";
-import { BLOCK, LAYER, ENVELOPE, GRID_12, LINE } from "../app/ui.js";
+import { reveal, revealInCascade, useMotion } from "../sensory/index.js";
+import { BLOCK, ENVELOPE } from "../app/ui.js";
 
 /**
- * O mapa do caminho, na forma da secao "Lenis runs the web" do lenis.dev.
- *
- * Lida ao vivo em 07/09/2026: um fio vertical a esquerda, o titulo gigante em
- * linhas quebradas a mao ao lado dele, e o paragrafo de tese deslocado para a
- * direita E para baixo. Abaixo, a grade de cards com capa, nome e legenda, em
- * ziguezague vertical: nenhum card alinha com o vizinho. Fecha com a grade de
- * numeros e o CTA.
- *
- * Um card por item de `CONTENT.mapa.estados`: etiqueta, nome, texto e imagem.
- *
- * A regua acende e apaga com a posicao da pagina (RF-L11b): um passo por card.
- * O trilho em fluxo mede os cards; a regua fixa apenas exibe. Sob movimento
- * reduzido ela nasce inteira acesa, porque informa o caminho e informacao nao
- * depende de animacao.
+ * O mapa do caminho: a grade de cards com capa, nome e legenda, em ziguezague vertical (nenhum card alinha
+ * com o vizinho), a grade de numeros e o CTA. Um card por item de `CONTENT.mapa.estados`.
  * @param {object} props - Sem props.
  * @returns {JSX.Element} A seção Semanas, com o mapa do caminho.
  */
 const STATES = CONTENT.mapa.estados;
-// Um passo da regua por card.
-const STEPS = STATES.length;
-const LINES = CONTENT.mapa.linhas;
-
-/**
- * Um passo da regua: o ponto (::before) e o numero (::after, de um contador CSS).
- * Cor nunca sozinha (RNF-L14): aceso, o passo muda de PREENCHIMENTO e o numero de peso.
- */
-const STEP =
-  "regua__passo [counter-increment:semana] flex flex-col gap-2 " +
-  "before:block before:h-1.5 before:bg-transparent before:border before:border-line-strong " +
-  "before:transition-[background,border-color] before:duration-(--motion-fast) before:ease-(--ease-corte-2) " +
-  "data-acesa:before:bg-acento data-acesa:before:border-acento motion-reduce:before:bg-acento motion-reduce:before:border-acento " +
-  "after:content-[counter(semana,decimal-leading-zero)] after:text-silver after:font-terciaria after:text-mono-reg after:tabular-nums " +
-  "after:transition-[color] after:duration-(--motion-fast) after:ease-(--ease-corte-2) " +
-  "data-acesa:after:text-bone data-acesa:after:font-bold motion-reduce:after:text-bone " +
-  "data-atual:before:border-2 data-atual:after:underline";
 
 /**
  * Os cards em ziguezague: tres por linha no monitor, e o do meio desce uma
@@ -55,27 +25,10 @@ const SIZES = "(min-width: 1440px) 382px, (min-width: 1024px) 286px, (min-width:
 
 export function Weeks() {
   const root = useRef(null);
-  const rail = useRef(null);
-  useRailRuler(root, rail, STEPS, CONTENT.mapa.frase);
 
   useMotion(() => {
     const node = root.current;
     if (!node) return;
-    // `.linha` e `.linha__texto` sao o primitivo dos paineis, reusado: mesmo
-    // recorte, mesma rede de seguranca do RNF-L35, mesma checagem no
-    // `verificar`. Uma classe propria aqui ficaria fora das tres.
-    // Mais rapido que o padrao, e a razao e de CONTEXTO, nao de gosto. O
-    // padrao (820 ms com 110 ms de escalonamento) e o da dobra, onde a
-    // headline abre a pagina junto da cortina e a cerimonia cabe. Aqui o
-    // visitante ja esta rolando e olhando para o titulo: a ultima linha
-    // fechava so depois de 1 s, acima do teto de 0,8 s que as engenharias
-    // reversas fixam para movimento em interacao direta. 520 mais 60 poe o
-    // fim em 640 ms.
-    raiseLines(node.querySelectorAll(".semanas__titulo .linha__texto"), {
-      duration: 520,
-      interval: 60,
-    });
-    reveal(node.querySelector(".semanas__tese"), { delay: 160 });
     revealInCascade(node.querySelectorAll(".slide"), { interval: 80 });
     reveal(node.querySelector(".semanas__mais"));
   }, []);
@@ -85,47 +38,11 @@ export function Weeks() {
       <DotField variant="estelar" />
       <div className={`${ENVELOPE} relative z-1`}>
 
-        {/* O fio a esquerda do titulo: 2px em acento, da altura do bloco de linhas. */}
-        <div className={`relative mt-6 pl-6 lg:pl-8 ${GRID_12} before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-acento`}>
-          {/* Escala PROPRIA, menor que a dos paineis: o teto e o que faz a linha mais longa caber
-              na coluna, medido. O recorte de `.linha` e so vertical, entao uma palavra mais larga
-              que a coluna transborda em vez de sair cortada. */}
-          <h2
-            className="semanas__titulo flex flex-col text-bone font-secundaria font-extrabold uppercase tracking-[0.01em] leading-[1.08] tabular-nums text-[length:clamp(39.6px,18.9vw,86.4px)] lg:col-[1/span_8] lg:text-[length:clamp(64.8px,7.65vw,111.6px)]"
-            data-revelar
-          >
-            {LINES.map((text) => (
-              <Fragment key={text}>
-                <span className={LINE}>
-                  <span className={`linha__texto block [overflow-wrap:anywhere] ${LAYER}`}>{text}</span>
-                </span>{" "}
-              </Fragment>
-            ))}
-          </h2>
-
-          <p
-            className="semanas__tese max-w-[46ch] mt-8 text-silver font-terciaria text-body-lg lg:col-[8/-1] lg:self-end lg:mt-0 lg:pb-6"
-            data-revelar
-          >
-            {CONTENT.mapa.sub}
-          </p>
-        </div>
+        <h2 className="sr-only">{CONTENT.mapa.rotulo}</h2>
 
         <div className="semanas__caminho">
-          {/* A regua (1 a 3, um passo por card): acende e apaga com a rolagem (RF-L11b). Cor nunca sozinha (RNF-L14): o passo
-              aceso muda de PREENCHIMENTO, de vazado para cheio, e o numero muda de peso. */}
-          <ol
-            className="regua sticky top-0 z-2 bg-void pb-4 motion-reduce:static [counter-reset:semana] grid grid-cols-[repeat(3,1fr)] gap-x-2 gap-y-3 mt-12 pt-4 border-t border-line"
-            role="list"
-            aria-hidden="true"
-          >
-            {Array.from({ length: STEPS }, (_, i) => (
-              <li className={STEP} key={i} data-acesa />
-            ))}
-          </ol>
-
           {/* Cada card: etiqueta (faixa e valor), nome, texto e imagem. */}
-          <ol className="semanas__trilho flex flex-col gap-12 mt-16 lg:grid lg:grid-cols-[repeat(3,1fr)] lg:items-start lg:gap-x-8 lg:gap-y-16 lg:mt-24" role="list" ref={rail}>
+          <ol className="semanas__trilho flex flex-col gap-12 lg:grid lg:grid-cols-[repeat(3,1fr)] lg:items-start lg:gap-x-8 lg:gap-y-16" role="list">
             {STATES.map((state, index) => (
               <li
                 className={`slide relative isolate flex flex-col gap-3 p-4 border border-line-strong bg-surface-1 ${OFFSETS[index % 3]}`.trim()}

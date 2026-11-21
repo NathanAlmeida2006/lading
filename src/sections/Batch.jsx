@@ -1,13 +1,12 @@
-import { Fragment, useRef } from "react";
+import { useRef } from "react";
 import { DotField } from "../components/visuals/DotField.jsx";
 import { CardImage } from "../components/ui/CardImage.jsx";
-import { lightUpInSequence, reveal, revealInCascade, useMotion } from "../sensory/index.js";
+import { revealInCascade, useMotion } from "../sensory/index.js";
 import { CONTENT } from "../content/content.js";
-import { BLOCK, padTwoDigits, ENVELOPE, GRAIN, WORD } from "../app/ui.js";
+import { BLOCK, padTwoDigits, ENVELOPE, GRAIN } from "../app/ui.js";
 
 /**
- * O que voce leva. A cabeca fica centrada e grudada no meio da tela, e os cards
- * passam por cima dela ao rolar, em ziguezague de tres posicoes no monitor e
+ * O que voce leva: os cards direto, em ziguezague de tres posicoes no monitor e
  * empilhados no celular.
  *
  * A fala de cada card e o beneficio, na voz do parceiro de treino. Nao ha
@@ -35,47 +34,20 @@ const ZIGZAG = [
 
 export function Batch() {
   const root = useRef(null);
-  const stage = useRef(null);
 
   useMotion(() => {
     const node = root.current;
     if (!node) return;
     revealInCascade(node.querySelectorAll(".voz"), { interval: 80 });
-    // O trilho `fixo` e o palco: 190svh, 90svh de titulo pinado. Ele nasce acima do
-    // titulo (o titulo pina no meio da tela) para a conta comecar quando o titulo pina.
-    lightUpInSequence(node.querySelectorAll(".titulo .palavra"), stage.current, {
-      isFixed: true,
-      currentAttribute: "data-atual",
-    });
   }, []);
 
   return (
     <section id="o-que-e" className={`${BLOCK} py-20 md:py-32`} ref={root}>
-      <DotField />
+      <DotField variant="estelar" />
 
       <div className={`${ENVELOPE} relative z-1`}>
-        <div
-          className="absolute inset-x-0 top-[calc(140px-50svh)] h-[190svh] pointer-events-none motion-reduce:hidden"
-          ref={stage}
-          aria-hidden="true"
-        />
-        {/* O titulo fica pinado ate os cards chegarem: o palco tem 190svh com 100svh pinado,
-            90svh de espera. Aqui a margem da lista (140svh - 140px) soma, com o titulo centrado
-            e ~280px de altura, esses mesmos 90svh. */}
-        <header className="sticky top-[max(--spacing(12),calc(50svh-140px))] z-0 flex flex-col items-center py-8 text-center motion-reduce:static">
-          <h2
-            className="titulo text-bone font-secundaria text-display [font-size:min(calc((100vw-32px)/4.65),147px)] md:[font-size:141px] lg:[font-size:min(calc((100vw-96px)/7.35),139px)] wide:[font-size:178px] uppercase tracking-[-0.005em] leading-[1.02]"
-          >
-            {CONTENT.leva.titulo.split(" ").map((word, index) => (
-              <Fragment key={`${word}-${index}`}>
-                <span className={WORD}>{word}</span>{" "}
-              </Fragment>
-            ))}
-          </h2>
-          <p className="max-w-[46ch] mt-4 text-silver font-terciaria text-body-lg [--text-body-lg:16.2px]">{CONTENT.leva.sub}</p>
-        </header>
-
-        <ol className="relative z-1 flex flex-col gap-10 mt-[calc(140svh-140px)] motion-reduce:mt-16 lg:gap-0" role="list">
+        <h2 className="sr-only">{CONTENT.leva.rotulo}</h2>
+        <ol className="relative z-1 flex flex-col gap-10 lg:gap-0" role="list">
           {CONTENT.leva.vozes.map((voice, index) => {
             const position = ZIGZAG[index % 3];
             return (

@@ -27,6 +27,35 @@
 }
 
 @theme {
+  /* A regua do carrossel de prova social: enche em 5 s, o tempo de cada depoimento (Proof.jsx avanca no fim dela). */
+  --animate-regua: regua 5s linear forwards;
+  @keyframes regua {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  /* O celular da secao do app (AppShowcase.jsx): a tela rola de cima ate `--rola` (definido por tela), segura 1,2 s no topo; o toque
+     no icone da aba acontece no fim dos 7,5 s do passo, um instante antes do corte para a tela seguinte. */
+  --animate-app-rola: app-rola 5.2s cubic-bezier(0.45, 0, 0.2, 1) 1.2s both;
+  @keyframes app-rola {
+    from { transform: translateY(0); }
+    to { transform: translateY(var(--rola)); }
+  }
+  /* O brilho vermelho atras do celular: respira e deriva devagar, so em transform e opacity. */
+  --animate-app-brilho: app-brilho 9s ease-in-out infinite;
+  @keyframes app-brilho {
+    0%, 100% { transform: translate(0, 0) scale(0.92); opacity: 0.7; }
+    33% { transform: translate(10%, -7%) scale(1.12); opacity: 1; }
+    66% { transform: translate(-9%, 8%) scale(1); opacity: 0.85; }
+  }
+  --animate-app-toque: app-toque 7.5s linear both;
+  @keyframes app-toque {
+    0%, 84% { opacity: 0; transform: scale(0.5); }
+    88% { opacity: 1; transform: scale(1); }
+    97% { opacity: 0; transform: scale(1.5); }
+    100% { opacity: 0; }
+  }
+
   /* px, e nao rem: o original e todo em px (tokens/shape-spacing.css), entao nem a
      preferencia de fonte do navegador nem o zoom de texto do `verificar`
      (RNF-L12, `html { font-size: 32px }`) mexem em espaco ou breakpoint.
