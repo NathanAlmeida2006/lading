@@ -109,5 +109,5 @@ export function createClarity(readConsent, getTags = () => ({})) {
     try { if (isEligible()) getClarity()?.("event", name); } catch { /* o tracker nao derruba a pagina */ }
   }
 
-  return { loadClarity, setTag, sendEvent };
+  return { isEligible, loadClarity, setTag, sendEvent };
 }

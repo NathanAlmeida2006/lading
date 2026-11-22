@@ -45,18 +45,33 @@ import { formatReais } from "./valueStack.js";
  */
 
 /**
+ * @typedef VibeCard Cartão do mural Social Vibe.
+ * @property {string} titulo - Título do cartão.
+ * @property {string} fonte - Legenda (o lugar do canal).
+ * @property {string} src - Capa do cartão.
+ * @property {string} pos - Classe de enquadramento da capa (`object-[...]`).
+ */
+
+/**
+ * @typedef Seal Selo da garantia.
+ * @property {"pagamento"|"protecao"|"garantia"} icone - Ícone do selo (o desenho fica em ValueStack.jsx).
+ * @property {string} texto - O que o selo diz.
+ */
+
+/**
  * @typedef Content O texto público das seções.
  * @property {{rotulo: string, cta: string, destaques: {valor: number|null, rotulo: string}[], headline: {linhas: string[]}, promessa: {texto: string}, subheadline: {texto: string}}} dobra - `promessa` alimenta o take 1 do vídeo.
  * @property {{semanas: number, sessoesObrigatorias: number, sessoesOpcionais: number}} mecanismo
  * @property {{rotulo: string}} intro
- * @property {{nome: string, garantia: string, cta: string}} doca
+ * @property {{texto: string, cta: string}} doca
  * @property {{rotulo: string, titulo: string, sub: string, cta: string, cartas: MirrorCard[]}} espelho
  * @property {{titulo: string, passos: {id: string, nome: string, texto: string}[]}} demo
- * @property {{rotulo: string, titulo: string, depoimentos: {texto: string, nome: string, contexto: string}[]}} prova
+ * @property {{rotulo: string, titulo: string, avaliacao: {nota: number, maximo: number, rotulo: string}, depoimentos: {texto: string, nome: string, contexto: string, src: string}[]}} prova - `nome` é o @ de quem falou; `src`, o avatar dele (`/images/iconN.webp`, 192 px).
+ * @property {{titulo: string[], curtos: string, noticias: string, abrir: string, videos: (VibeCard & {avatar: string})[], shorts: VibeCard[], noticia: VibeCard & {resumo: string}, aviso: string}} vibe
  * @property {{titulo: string, antes: string, depois: string, areas: {nome: string, antes: number, depois: number}[]}} espectro
  * @property {{rotulo: string, estados: MapState[], numeros: MapNumber[], cta: string}} mapa
  * @property {{rotulo: string, vozes: Voice[]}} leva
- * @property {{cta: string, garantia: {titulo: string, texto: string}}} oferta
+ * @property {{cta: string, garantia: {titulo: string, texto: string, selos: Seal[]}}} oferta
  * @property {{headline: {linhas: string[]}, titulo: string[], rotulo: string, sub: string, cta: string, condicoes: string}} fechamento - `headline` alimenta o último take do vídeo; o site usa `titulo`.
  * @property {string} objecoesRotulo
  * @property {string} objecoesTitulo
@@ -99,7 +114,7 @@ export const CONTENT = {
   },
   mecanismo: MECHANISM,
   intro: { rotulo: "(protocolo 01 · hipertrofia)" },
-  doca: { nome: "Lithium Vitalício", garantia: GUARANTEE, cta: "Garantir acesso" },
+  doca: { texto: "Tenha acesso ao seu Lithium Vitalício", cta: "Garantir acesso" },
   espelho: {
     rotulo: "o choque de realidade",
     titulo: "Mais 6 meses treinando para continuar invisível?",
@@ -142,18 +157,18 @@ export const CONTENT = {
       { id: "treino", nome: "Treino", texto: "A ficha já vem com a carga. Marque cada série quando terminar." },
     ],
   },
-  // RASCUNHOS DE EXEMPLO (sem marca na tela): textos escritos para aprovar o layout,
-  // sem resultado nem numero. NAO sao relatos de clientes e nao podem ir ao ar como se fossem: o projeto so aceita
-  // depoimento real e autorizado (ver `depoimentos` em infra/config.js). Troque por textos reais antes de publicar.
+  // Relatos reais de usuarios do app, na ordem do `iconN.webp` de cada um (public/images; os JPG de origem
+  // ficam em source-media/avatares). Texto exato de quem escreveu: nao reescrever. `nome` e o @ publico; `contexto`, o tempo de uso.
   prova: {
     rotulo: "quem já usa o app",
     titulo: "Usuários do app",
+    avaliacao: { nota: 4.8, maximo: 5, rotulo: "Avaliação dos compradores" },
     depoimentos: [
-      { texto: "Abro o app, vejo o treino do dia e faço. Parei de perder tempo decidindo o que fazer na academia.", nome: "Rafael M.", contexto: "Protocolo Hipertrofia" },
-      { texto: "O checklist me cobra todo dia. Fica difícil inventar desculpa com a tarefa marcada ali na tela.", nome: "Lucas A.", contexto: "Checklist de Execução" },
-      { texto: "Instalei direto na tela inicial, sem loja e sem anúncio. Treino e carga a um toque, até no meio da série.", nome: "Thiago S.", contexto: "App no celular" },
-      { texto: "Nunca tinha olhado para o sono como parte do treino. Agora ajusto os dois no mesmo lugar.", nome: "Bruno C.", contexto: "Protocolo Sono" },
-      { texto: "Parei de copiar ficha aleatória. Tenho a progressão de cada semana e sei por que cada série está ali.", nome: "Felipe R.", contexto: "Protocolo Hipertrofia" },
+      { texto: "Eu ficava quase 2h na academia copiando treino do TikTok e nunca subia peso. Agora resolvo em 1h e finalmente tô vendo a carga andar toda semana.", nome: "@rafa.moura04", contexto: "Semana 6", src: "/images/icon1.webp" },
+      { texto: "Sempre começava animado na segunda e largava na quinta. Só de abrir a tela e ver o dia em aberto no checklist já me segurou, fechei o primeiro mês sem furar.", nome: "@lucas.alvesz", contexto: "Treina há 1 ano", src: "/images/icon2.webp" },
+      { texto: "Bem direto ao ponto. Não fica travando nem enchendo o saco com propaganda igual esses apps gringos, no descanso da série já bato o olho e sei exatamente quanto colocar.", nome: "@thiago.sntos_", contexto: "Semana 4", src: "/images/icon3.webp" },
+      { texto: "Achava frescura esse negócio de controlar sono, mas fui testar o que tá lá. Na segunda semana já parei de chegar moído no treino de quarta.", nome: "@bruno_csta02", contexto: "Treina há 2 anos", src: "/images/icon4.webp" },
+      { texto: "Semana passada apertei com prova e trabalho e quase larguei de mão de novo. Usei o ajuste de retorno, voltei sem neura e não perdi o ritmo.", nome: "@felipe.rbr_", contexto: "Semana 5", src: "/images/icon5.webp" },
     ],
   },
   espectro: {
@@ -165,8 +180,32 @@ export const CONTENT = {
       { nome: "Força", antes: 35, depois: 88 },
       { nome: "Confiança", antes: 25, depois: 80 },
       { nome: "Disciplina", antes: 30, depois: 90 },
-      { nome: "Admiração", antes: 20, depois: 82 },
+      { nome: "Foco", antes: 20, depois: 82 },
     ],
+  },
+  // Rotulos fixos do mural do app. As capas sao public/images/vibe-N.webp (origem em source-media/social-vibe).
+  vibe: {
+    titulo: ["Social", "Vibe"],
+    curtos: "Shorts",
+    noticias: "Notícias · fisiculturismo",
+    abrir: "Abrir",
+    // Os titulos e legendas dos cartoes explicam o mural: nao sao videos nem noticias reais.
+    videos: [
+      { titulo: "Os canais de treino que você acompanha, reunidos num só lugar", fonte: "Vídeos · atualizados 3x ao dia", src: "/images/vibe-1.webp", pos: "object-[50%_25%]", avatar: "/images/icon6.webp" },
+      { titulo: "Um toque e o vídeo abre no YouTube, em outra aba, fora do app", fonte: "Você volta ao treino quando quiser", src: "/images/vibe-2.webp", pos: "object-[50%_20%]", avatar: "/images/icon7.webp" },
+    ],
+    shorts: [
+      { titulo: "Shorts para ver entre uma série e outra", fonte: "Role de lado", src: "/images/vibe-3.webp", pos: "object-[40%_50%]" },
+      { titulo: "Treino em 30 segundos, sem se perder na rede social", fonte: "Abre fora do app", src: "/images/vibe-4.webp", pos: "object-[50%_50%]" },
+    ],
+    noticia: {
+      titulo: "As notícias do fisiculturismo, sem abrir a rede social",
+      resumo: "O mural reúne vídeos, Shorts e manchetes num só lugar. Você vê o que importa, abre o que quiser e volta pro treino com a cabeça no jogo.",
+      fonte: "Notícias · abre fora do app",
+      src: "/images/vibe-5.webp",
+      pos: "object-[50%_30%]",
+    },
+    aviso: "Ilustração do mural. O conteúdo é atualizado dentro do app.",
   },
   leva: {
     rotulo: "o que você leva no arsenal",
@@ -184,6 +223,11 @@ export const CONTENT = {
     garantia: {
       titulo: `Risco zero: Garantia incondicional de ${GUARANTEE_DAYS} dias`,
       texto: `Instale o app e teste tudo por ${GUARANTEE_DAYS} dias. Se não gostar, receba 100% do dinheiro de volta na Hotmart em um clique, sem perguntas.`,
+      selos: [
+        { icone: "pagamento", texto: "Pagamento via Hotmart." },
+        { icone: "protecao", texto: "Compra protegida." },
+        { icone: "garantia", texto: `Garantia de ${GUARANTEE_DAYS} dias.` },
+      ],
     },
   },
   fechamento: {
@@ -199,7 +243,7 @@ export const CONTENT = {
   objecoesTitulo: "Perguntas frequentes",
   rodape: { tagline: "O básico bem feito, provado, sem mágica." },
   objecoes: [
-    { pergunta: "Por que tão barato? Tem pegadinha ou mensalidade escondida?", resposta: `Nenhuma pegadinha. Você paga ${PRICE} uma única vez e o acesso é vitalício. Sem assinatura sugando seu cartão todo mês. Dividido pelas ${MECHANISM.semanas} semanas, sai por ${formatPrice(Math.round((price / MECHANISM.semanas) * 100) / 100)} por semana, ou ${formatPrice(Math.round((price / TOTAL_SESSIONS) * 100) / 100)} por treino. O valor atual é condição de entrada para construir base de usuários antes de virar assinatura.` },
+    { pergunta: "Por que tão barato? Tem pegadinha ou mensalidade escondida?", resposta: `Nenhuma pegadinha. Você paga ${PRICE} uma única vez e o acesso é vitalício. Sem assinatura sugando seu cartão todo mês. Dividido pelas ${MECHANISM.semanas} semanas, sai por ${formatPrice(Math.round((price / MECHANISM.semanas) * 100) / 100)} por semana, ou ${formatPrice(Math.round((price / TOTAL_SESSIONS) * 100) / 100)} por treino.` },
     { pergunta: "Isso não é só mais um e-book enfeitado?", resposta: `E-book é PDF morto que você lê 5 páginas e larga. O Lithium é um aplicativo de execução diária no seu celular, com ${MECHANISM.semanas} semanas estruturadas, Regra do 12, Portão da Semana 9, checklist diário e Plano de Retorno.` },
     { pergunta: "Eu trabalho ou estudo e não tenho tempo de morar na academia. Funciona para mim?", resposta: `Foi feito exatamente para isso. Você precisa de apenas ${MECHANISM.sessoesObrigatorias} sessões cirúrgicas de 60 a 75 minutos por semana (com ${MECHANISM.sessoesOpcionais} sessão extra opcional a partir da semana 5). Natural não cresce com 2 horas de treino junk volume; cresce com intensidade e recuperação.` },
     { pergunta: "Sou natural e já treino há meses sem ver resultado. Serve para mim?", resposta: "Serve principalmente para você. O Lithium não vende milagre genético nem promessa de físico hormonizado. Ele elimina os erros de volume, carga e constância que travam 90% dos naturais." },

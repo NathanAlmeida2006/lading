@@ -46,6 +46,7 @@
 
 /**
  * @typedef ClarityPort A porta do Clarity (replay e mapa de calor).
+ * @property {(isForSending?: boolean) => boolean} isEligible - Se o Clarity pode carregar (`false`) ou enviar (`true`, padrão).
  * @property {() => void} loadClarity - Carrega o Clarity, uma vez, ou revoga o aceite quando ele foi retirado.
  * @property {(key: string, value: string) => void} setTag - Grava uma tag na sessão; sem aceite não sai.
  * @property {(name: string) => void} sendEvent - Envia um evento personalizado; sem aceite não sai.

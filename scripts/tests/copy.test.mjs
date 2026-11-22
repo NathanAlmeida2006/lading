@@ -1,6 +1,7 @@
 // Copy comercial (src/content/content.js): preco e garantia saem da config, e a pagina nao volta a ter preco riscado nem cronometro.
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { CONTENT } from "../../src/content/content.js";
 import { CONFIG } from "../../src/infra/config.js";
 
@@ -15,7 +16,7 @@ test("os textos de venda trazem o preco e a garantia da config", () => {
   }
   assert.equal(CONTENT.oferta.cta, `Quero o Lithium agora por ${PRECO}`);
   assert.equal(CONTENT.oferta.garantia.titulo, `Risco zero: Garantia incondicional de ${DIAS}`);
-  assert.deepEqual(CONTENT.doca, { nome: "Lithium Vitalício", garantia: `${DIAS} de garantia`, cta: "Garantir acesso" });
+  assert.deepEqual(CONTENT.doca, { texto: "Tenha acesso ao seu Lithium Vitalício", cta: "Garantir acesso" });
 });
 
 test("cada secao tem o CTA proprio", () => {
@@ -30,7 +31,36 @@ test("a copy nao carrega preco riscado, 'de/por' nem cronometro", () => {
   assert.doesNotMatch(tudo, /R\$ ?200|riscad|cron[ôo]metro|\bde R\$ [\d.,]+ por R\$/i);
 });
 
+test("cada depoimento tem @, texto e um avatar que existe em public/", () => {
+  assert.equal(CONTENT.prova.depoimentos.length, 5);
+  for (const { texto, nome, src } of CONTENT.prova.depoimentos) {
+    assert.ok(nome.startsWith("@") && texto.length > 40, nome);
+    assert.ok(existsSync(new URL(`../../public${src}`, import.meta.url)), src);
+  }
+});
+
 test("o FAQ tem as sete perguntas, cada uma com resposta", () => {
   assert.equal(CONTENT.objecoes.length, 7);
   for (const { pergunta, resposta } of CONTENT.objecoes) assert.ok(pergunta.endsWith("?") && resposta.length > 40, pergunta);
+});
+
+test("a avaliacao dos compradores esta entre 0 e o maximo", () => {
+  const { nota, maximo } = CONTENT.prova.avaliacao;
+  assert.ok(nota > 0 && nota <= maximo && maximo === 5);
+});
+
+test("o Social Vibe tem o titulo em duas linhas e os rotulos do mural", () => {
+  const { titulo, curtos, noticias } = CONTENT.vibe;
+  assert.equal(titulo.length, 2);
+  assert.ok(curtos && noticias);
+  const { videos, shorts, noticia } = CONTENT.vibe;
+  assert.ok(videos.length === 2 && shorts.length === 2 && noticia.resumo.length > 40);
+  for (const { src } of [...videos, ...shorts, noticia]) assert.ok(existsSync(new URL(`../../public${src}`, import.meta.url)), src);
+  for (const { avatar } of videos) assert.ok(existsSync(new URL(`../../public${avatar}`, import.meta.url)), avatar);
+});
+
+test("os selos da garantia sao tres e o ultimo cita os dias da config", () => {
+  const { selos } = CONTENT.oferta.garantia;
+  assert.deepEqual(selos.map(({ icone }) => icone), ["pagamento", "protecao", "garantia"]);
+  assert.equal(selos[2].texto, `Garantia de ${CONFIG.oferta.garantiaDias} dias.`);
 });

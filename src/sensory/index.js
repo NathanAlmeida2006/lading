@@ -128,12 +128,6 @@ export const revealLineMask = (target, options = {}) => callChoreography("reveal
  */
 export const raiseLines = (...args) => callChoreography("raiseLines", args);
 /**
- * Acende os alvos em sequência conforme a rolagem.
- * @param {Parameters<typeof import("./choreographies.js").lightUpInSequence>} args - Alvos, contexto e opções de `lightUpInSequence`.
- * @returns {() => void} Função que remove o acendimento e os ouvintes.
- */
-export const lightUpInSequence = (...args) => callChoreography("lightUpInSequence", args);
-/**
  * Pulso curto de confirmação no botão. Não faz nada sob movimento reduzido ou pausa.
  * @param {Element} target - Elemento a pulsar.
  * @returns {(() => void) | undefined} Função que desfaz o pulso, ou undefined sem movimento.
@@ -163,9 +157,6 @@ export function ensureVisibility() {
       for (const line of element.querySelectorAll("[data-line], .linha__texto")) {
         if (getComputedStyle(line).transform !== "none") line.style.transform = "none";
       }
-    }
-    for (const word of document.querySelectorAll(".palavra:not([data-acesa])")) {
-      if (word.getBoundingClientRect().bottom < 0) word.setAttribute("data-acesa", "");
     }
   };
   const handleScroll = () => {

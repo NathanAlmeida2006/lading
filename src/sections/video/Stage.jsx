@@ -2,7 +2,7 @@ import { GRAIN } from "../../app/ui.js";
 import { DotField } from "../../components/visuals/DotField.jsx";
 import { AppTrack } from "./AppTrack.jsx";
 import { SessionCover } from "./SessionCover.jsx";
-import { LithiumLogo, LOGO_MASK } from "./LithiumLogo.jsx";
+import { LithiumLogo, LOGO_URL } from "./LithiumLogo.jsx";
 import { prepareModel } from "./Model3D.jsx";
 import { TakeArsenal, TakeCalendar, TakeLoad, TakeDoIt, TakeL3D, TakeManifesto, TakeNumbers, TakeRecord } from "./Takes.jsx";
 import { BEAT_MS, COVERS, STAGES, MUSIC_END, OBJECTS_3D, REPLAY_AFTER_MS } from "./timing.js";
@@ -14,9 +14,8 @@ const logo = new Image();
  * @returns {void}
  */
 export function prepareModels() {
-  // A logo e a mascara da tela do Registro (AppScreen): se ela nao estiver decodificada no primeiro quadro, a tela fica
-  // transparente e o play (vermelho, atras de tudo) aparece por um quadro no corte. `logo` a segura na memoria.
-  logo.src = LOGO_MASK.url;
+  // A logo e a mascara dos quadros de LithiumLogo: decodificada antes do corte, ela ja esta pronta no primeiro quadro. `logo` a segura na memoria.
+  logo.src = LOGO_URL;
   logo.decode().catch(() => {});
   [...COVERS.map(({ model }) => model), ...OBJECTS_3D].forEach((model) => prepareModel(model).catch(() => {}));
 }

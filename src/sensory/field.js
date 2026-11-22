@@ -203,7 +203,7 @@ class Field {
     // (319 x 1,25 = 398,75, buffer de 399): o canvas inteiro de antes desenhava, e o ponto que cai nessa
     // ultima linha parcial aparecia. A poda dos pontos olha um pixel de css alem.
     const yMax = y1 + 1;
-    const { width, height, spacing, columns, lines } = this;
+    const { width, spacing, columns, lines } = this;
     const { dot: dotColor, thread: threadColor, accent: accentColor } = this.colors;
     ctx.clearRect(0, y0, width, TILE_HEIGHT);
 

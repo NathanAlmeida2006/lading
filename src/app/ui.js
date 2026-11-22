@@ -47,15 +47,6 @@ export const RAW_NUMBERS =
 export const padTwoDigits = (n) => String(n).padStart(2, "0");
 
 /**
- * Palavra que acende com a rolagem (manifesto e titulo do que se leva): apagada e opacidade, e a da
- * fronteira (`data-atual`) no acento.
- */
-export const WORD =
-  "palavra inline-block transition-[opacity,color] duration-(--motion-fast) ease-(--ease-corte-2) " +
-  "js:opacity-[0.22] data-acesa:opacity-100 data-atual:text-acento " +
-  "motion-reduce:js:opacity-100 motion-reduce:data-atual:text-inherit";
-
-/**
  * Titulo com mascara de linha (`revealLineMask`): o `splitText` do anime.js 4 marca cada linha
  * com `[data-line]` e o recorte (`overflow: clip`) comeria o `g` e a cedilha sem esta folga.
  */

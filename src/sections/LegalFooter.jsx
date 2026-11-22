@@ -15,11 +15,10 @@ import { getDocumentUrl } from "../infra/validation.js";
  * em contorno. Nao ha telefone, redes nem newsletter: a pagina nao tem canal de voz,
  * perfil social nem coleta de e-mail para repassar. A faixa final em acento leva o wordmark.
  */
-// Só as secoes presentes na pagina: um link para uma ancora que nao existe (a "prova", enquanto ela nao volta) nao fica no rodape.
+// Só as secoes presentes na pagina: um link para uma ancora que nao existe nao fica no rodape.
 const SECTION_LINKS = [
   ["inicio", "Início"],
   ["espelho", "A troca de régua"],
-  ["prova", "A prova"],
   ["oferta", "A oferta"],
   ["objecoes", "Perguntas frequentes"],
 ].filter(([id]) => SECTIONS_BY_ID[id]?.presente).map(([id, name]) => [`#${id}`, name]);

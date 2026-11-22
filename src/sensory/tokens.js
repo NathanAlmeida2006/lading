@@ -35,18 +35,6 @@ export function getDuration(name) {
   return cache[name];
 }
 
-// Uma curva do CSS (o `--ease-expo` das revelacoes), para o WAAPI usar a mesma do resto da pagina.
-const EASING_FALLBACKS = { "--ease-expo": "cubic-bezier(0.16, 1, 0.3, 1)" };
-
-/**
- * Curva de easing lida do CSS; cai na curva de reserva se o CSS não der um valor.
- * @param {string} name - Propriedade CSS, como `--ease-expo`.
- * @returns {string} Valor da curva, pronto para o WAAPI ou o anime.js.
- */
-export function getEasing(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || EASING_FALLBACKS[name];
-}
-
 // Uma consulta so para a pagina inteira: `.matches` e vivo, e ha quem leia a cada quadro de rolagem.
 let motionQuery = null;
 const getMotionQuery = () => (motionQuery ??= window.matchMedia("(prefers-reduced-motion: reduce)"));

@@ -17,7 +17,4 @@ export function openReadingMode() {
     element.style.translate = "none";
     element.style.scale = "none";
   }
-  for (const element of document.querySelectorAll(".palavra, .regua__passo")) {
-    element.setAttribute("data-acesa", "");
-  }
 }

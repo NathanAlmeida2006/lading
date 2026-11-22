@@ -61,12 +61,6 @@ html:has(body.com-doca) {
   }
 }
 
-/* Sem o chunk, as palavras não podem ficar no estado apagado do utilitário js:. */
-.js:not(.movimento-pronto) .palavra,
-.movimento-falhou .palavra {
-  opacity: 1;
-}
-
 /* ---- 4b. Pausa pedida pelo visitante (WCAG 2.2.2) -------------------------
    `sensory/pause.js` escreve `data-pausado` no <html>; as animacoes de CSS (as pontas
    soltas) congelam aqui, e as de JavaScript (seta, campos) escutam o mesmo

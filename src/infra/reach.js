@@ -23,7 +23,8 @@ import { CONFIG } from "./config.js";
  */
 export function createReach({ subscribeToConsent, pixel, clarity }) {
   const { isEligible, loadPixel, sendEvent } = pixel;
-  const sentSections = new Set(); // impressoes de secao ja enviadas nesta carga de pagina
+  const sentSections = new Set(); // impressoes de secao ja enviadas ao Pixel nesta carga de pagina
+  let isPriceViewSent = false; // o `viu_preco` do Clarity: uma vez por carga, com ou sem o Pixel
 
   /**
    * Liga a mensuracao da pagina e devolve o desligamento. `reachById` e o mapa de sections.js
@@ -46,19 +47,24 @@ export function createReach({ subscribeToConsent, pixel, clarity }) {
       observer = undefined;
       loadPixel();
       clarity.loadClarity();
-      if (!isEligible()) return;
+      // Pixel e Clarity sao independentes: o observador existe se ao menos um deles pode enviar (o Pixel bloqueado nao cala o Clarity).
+      if (!isEligible() && !clarity.isEligible()) return;
       observer = new IntersectionObserver(
         (entries) => {
           for (const { isIntersecting, target } of entries) {
             const id = target.id;
-            if (!isIntersecting || sentSections.has(id) || !reachById[id]) continue;
+            if (!isIntersecting || !reachById[id]) continue;
+            if (id === "oferta" && !isPriceViewSent && clarity.isEligible()) {
+              clarity.sendEvent("viu_preco");
+              isPriceViewSent = true;
+            }
+            if (sentSections.has(id)) continue;
             const { etapa: stage, canonico: isCanonical } = reachById[id];
             const base = { secao: id, etapa: stage };
             const isSent = id === "oferta"
               ? sendEvent("ViewContent", { ...base, campanha: CONFIG.campanha })
               : sendEvent("SecaoAlcancada", { ...base, canonico: isCanonical, campanha: CONFIG.campanha });
             if (!isSent) continue;
-            if (id === "oferta") clarity.sendEvent("viu_preco");
             sentSections.add(id);
             observer?.unobserve(target);
           }

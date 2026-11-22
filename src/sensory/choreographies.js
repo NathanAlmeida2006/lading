@@ -1,5 +1,5 @@
 import { animate, createDrawable, splitText, stagger, steps, utils } from "animejs";
-import { subscribeToMotionPreference, getDuration, isMotionReduced } from "./tokens.js";
+import { getDuration, isMotionReduced } from "./tokens.js";
 import { openReadingMode } from "./reading.js";
 
 // Dispara na borda da tela, e nao 80px dentro: com rolagem rapida o elemento ja estaria no meio
@@ -236,62 +236,6 @@ function drawStroke(targets, { delay = 0, duration } = {}) {
     });
   });
   return () => { cleanup?.(); utils.set(list, { opacity: 1 }); };
-}
-
-/* -------------------------------------------------------------------------
-   Movimento ligado a rolagem
-   ------------------------------------------------------------------------- */
-
-/**
- * Estado da trilha medido pela seção, nunca pelo filho sticky.
- * @param {Iterable<Element> | NodeListOf<Element>} targets - Itens que acendem em ordem.
- * @param {Element} context - Seção que mede a rolagem.
- * @param {object} [options={}] - Opções.
- * @param {string} [options.attribute="data-acesa"] - Atributo que marca o item aceso.
- * @param {string | null} [options.currentAttribute=null] - Atributo do item aceso por último.
- * @param {boolean} [options.isFixed=false] - Se a seção tem um trilho sticky.
- * @param {number} [options.rhythm=1.02] - Fator de ritmo da sequência.
- * @returns {() => void} Função que remove os atributos e os ouvintes.
- */
-export function lightUpInSequence(targets, context, { attribute = "data-acesa", currentAttribute = null, isFixed = false, rhythm = 1.02 } = {}) {
-  const list = Array.from(targets ?? []);
-  if (!list.length || !context) return () => {};
-  let frame = 0;
-  let last = -1;
-  const update = () => {
-    frame = 0;
-    const isReduced = isMotionReduced();
-    const box = context.getBoundingClientRect();
-    const route = Math.max(1, innerHeight + box.height);
-    const progress = Math.max(0, Math.min(1, (innerHeight - box.top) / route));
-    // `isFixed`: o contexto tem um trilho sticky; acende so durante o trilho, do topo ate o fim dele.
-    const rail = box.height - innerHeight;
-    const byRail = isFixed && rail > 1 ? Math.max(0, Math.min(1, -box.top / rail)) : null;
-    const lit = isReduced ? list.length
-      : byRail !== null ? Math.min(list.length, Math.floor(byRail * list.length * rhythm))
-      : Math.min(list.length, Math.floor(progress * list.length * 1.35));
-    if (lit === last) return;
-    last = lit;
-    for (const [index, element] of list.entries()) {
-      element.toggleAttribute(attribute, index < lit);
-      if (currentAttribute) element.toggleAttribute(currentAttribute, !isReduced && index === lit - 1);
-    }
-  };
-  const requestUpdate = () => { if (!frame) frame = requestAnimationFrame(update); };
-  update();
-  window.addEventListener("scroll", requestUpdate, { passive: true });
-  window.addEventListener("resize", requestUpdate);
-  const unsubscribePreference = subscribeToMotionPreference(requestUpdate);
-  return () => {
-    cancelAnimationFrame(frame);
-    window.removeEventListener("scroll", requestUpdate);
-    window.removeEventListener("resize", requestUpdate);
-    unsubscribePreference();
-    for (const element of list) {
-      element.removeAttribute(currentAttribute ?? "data-atual");
-      element.setAttribute(attribute, "");
-    }
-  };
 }
 
 /* -------------------------------------------------------------------------

@@ -16,6 +16,7 @@ import { AppShowcase } from "../sections/AppShowcase.jsx";
 import { Proof } from "../sections/Proof.jsx";
 import { Spectrum } from "../sections/Spectrum.jsx";
 import { Mirror } from "../sections/Mirror.jsx";
+import { SocialVibe } from "../sections/SocialVibe.jsx";
 import { Batch } from "../sections/Batch.jsx";
 import { Weeks } from "../sections/Weeks.jsx";
 import { Video } from "../sections/video/Video.jsx";
@@ -68,8 +69,9 @@ export function App() {
         <AppShowcase />
         <Mirror />
         <Spectrum />
+        {SECTIONS_BY_ID["social-vibe"].presente && <SocialVibe />}
         <Batch />
-        <Proof />
+        {SECTIONS_BY_ID["prova-social"].presente && <Proof />}
         {SECTIONS_BY_ID.mapa.presente && <Weeks />}
         <Objections />
         {/* A unica oferta e preco da pagina: depois da dor, do mecanismo, do valor e das objecoes. A doca nao a esconde. */}

@@ -5,6 +5,10 @@ import { useStoppable } from "../components/ui/useStoppable.js";
 import { BLOCK, ENVELOPE, padTwoDigits } from "../app/ui.js";
 
 const SLIDES = CONTENT.prova.depoimentos;
+const { nota, maximo, rotulo } = CONTENT.prova.avaliacao;
+// Estrelas em meias: 4,8 mostra 4,5 (arredonda para baixo).
+const FILLED = Math.floor(nota * 2) / 2;
+const NOTA = nota.toLocaleString("pt-BR");
 
 /**
  * Trecho que sobe de dentro de um recorte (a mesma mascara das headlines do site). Entra subindo, escalonado por
@@ -80,14 +84,18 @@ export function Proof() {
 
                 <figcaption className="flex items-center gap-4 lg:flex-col lg:items-start lg:w-64 lg:shrink-0 lg:pb-2">
                   <span className="size-14 overflow-clip" aria-hidden="true">
-                    <span
-                      className={`grid place-items-center size-full bg-acento text-bone font-secundaria font-extrabold text-[28px] leading-none motion-reduce:transition-none ${
+                    <img
+                      src={slide.src}
+                      alt=""
+                      width="56"
+                      height="56"
+                      loading="lazy"
+                      decoding="async"
+                      className={`block size-full object-cover bg-surface-1 motion-reduce:transition-none ${
                         phase === "in" ? "translate-y-0 transition-transform duration-500 ease-(--ease-default) delay-300"
                           : phase === "out" ? "-translate-y-[140%] transition-transform duration-300 ease-in" : "js:translate-y-[140%]"
                       }`}
-                    >
-                      {slide.nome[0]}
-                    </span>
+                    />
                   </span>
                   <span className="flex flex-col gap-1">
                     <span className="block text-bone font-secundaria text-label-grande uppercase"><Rise phase={phase} delay={450}>{slide.nome}</Rise></span>
@@ -122,6 +130,21 @@ export function Proof() {
           </div>
           <span className="font-terciaria text-mono-grande tabular-nums text-silver" aria-hidden="true">
             [{padTwoDigits(index + 1)}/{padTwoDigits(SLIDES.length)}]
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4 mt-12 lg:mt-16 border-t border-line-strong pt-8" role="img" aria-label={`${rotulo}: ${NOTA} de ${maximo} estrelas`}>
+          <span className="font-secundaria font-extrabold text-bone leading-none text-[length:clamp(44px,8vw,72px)]" aria-hidden="true">{NOTA}</span>
+          <span className="flex flex-col gap-2" aria-hidden="true">
+            <span className="flex gap-1 text-[length:clamp(22px,4vw,30px)] leading-none">
+              {Array.from({ length: maximo }, (_, i) => (
+                <span key={i} className="relative block text-silver">
+                  ★
+                  <span className="absolute inset-y-0 left-0 overflow-clip text-acento" style={{ width: `${Math.min(Math.max(FILLED - i, 0), 1) * 100}%` }}>★</span>
+                </span>
+              ))}
+            </span>
+            <span className="font-terciaria text-mono-grande uppercase text-silver">{rotulo}</span>
           </span>
         </div>
       </div>

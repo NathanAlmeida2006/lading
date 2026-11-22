@@ -1,20 +1,9 @@
 /**
  * A logo do Lithium (a Art Dystopia de public/lithium-wordmark.svg) a tela cheia, em dois quadros: o 0, fundo preto e logo
  * branca; o 1, fundo vermelho (o acento) e logo preta. A logo e uma mascara: a cor sai do texto do quadro, e nao do SVG.
- * Cada quadro "bate": a logo chega um pouco maior e assenta (`animate-batida`). Os quadros se encaixam na mascara de
- * `AppScreen` (`LOGO_MASK`): mesma forma, mesmo tamanho, no mesmo lugar.
+ * Cada quadro "bate": a logo chega um pouco maior e assenta (`animate-batida`).
  */
-import { BEAT_MS } from "./timing.js";
-
-const LOGO_URL = "/lithium-wordmark.svg";
-const RATIO = 1296 / 3784; // altura / largura do SVG
-
-/**
- * A logo como forma, para a mascara de AppScreen: `focus` e o ponto da logo (fracao da largura e da altura) onde cabe o maior
- * circulo (o do "M", medido na imagem) e `radius` e o raio dele, em fracao da largura. `getWidth(W)` e a largura final.
- */
-const getLogoWidth = (W) => Math.min(W * 0.86, 1100);
-export const LOGO_MASK = { url: LOGO_URL, ratio: RATIO, focus: { x: 0.96, y: 0.435 }, radius: 34 / 1100, getWidth: getLogoWidth, ms: 2 * BEAT_MS };
+export const LOGO_URL = "/lithium-wordmark.svg";
 
 const MASK_STYLE = { maskImage: `url(${LOGO_URL})`, WebkitMaskImage: `url(${LOGO_URL})`, maskSize: "contain", WebkitMaskSize: "contain", maskRepeat: "no-repeat", WebkitMaskRepeat: "no-repeat", maskPosition: "center", WebkitMaskPosition: "center" };
 

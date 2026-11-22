@@ -125,12 +125,19 @@ function ValueStackCard({ stackData }) {
   );
 }
 
+// O desenho de cada selo, pela chave `icone` de `CONTENT.oferta.garantia.selos`.
+const SEAL_ICONS = {
+  pagamento: <><rect width="20" height="14" x="2" y="5" rx="2" /><path d="M2 10h20" /></>,
+  protecao: <><rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>,
+  garantia: <><path d="M8 2v4M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18M9 16l2 2 4-4" /></>,
+};
+
 /**
  * Reversao de risco, logo abaixo do botao: a garantia em destaque, com o texto vindo de `CONTENT.oferta.garantia`.
  * @returns {JSX.Element} O bloco da garantia.
  */
 function Guarantee() {
-  const { titulo, texto } = CONTENT.oferta.garantia;
+  const { titulo, texto, selos } = CONTENT.oferta.garantia;
   return (
     <div className="pilha__garantia flex w-full flex-col gap-3 p-5 lg:p-6 bg-surface-1 border border-acento">
       <div className="flex items-center gap-4">
@@ -142,6 +149,14 @@ function Guarantee() {
         <h3 className="min-w-0 text-bone font-secundaria text-h3 [--text-h3:min(20px,calc((100vw-122px)/14.6))] whitespace-nowrap uppercase">{titulo}</h3>
       </div>
       <p className="text-silver font-terciaria text-body text-justify hyphens-auto">{texto}</p>
+      <ul className="flex flex-col gap-3 mt-1 pt-4 border-t border-line" role="list">
+        {selos.map(({ icone, texto: seal }) => (
+          <li key={icone} className="flex items-center gap-3 text-bone font-terciaria text-body">
+            <svg className="shrink-0 size-6 text-acento" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{SEAL_ICONS[icone]}</svg>
+            {seal}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

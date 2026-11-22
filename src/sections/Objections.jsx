@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { DotField } from "../components/visuals/DotField.jsx";
 import { Faq } from "../components/ui/Faq.jsx";
 import { CONTENT } from "../content/content.js";
-import { revealLineMask, reveal, revealInCascade, useMotion } from "../sensory/index.js";
+import { revealLineMask, revealInCascade, useMotion } from "../sensory/index.js";
 import { isMotionReduced } from "../sensory/tokens.js";
 import { BLOCK, ENVELOPE, GRID_12, MASK } from "../app/ui.js";
 
