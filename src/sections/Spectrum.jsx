@@ -71,7 +71,8 @@ export function Spectrum() {
     <section id="espectro" className={`${BLOCK} isolate py-16 md:py-24`}>
       <DotField variant="estelar" />
       <div className={`${ENVELOPE} relative z-1 flex flex-col items-center text-center`}>
-        <h2 className="mb-8 text-bone font-secundaria text-h1 uppercase [--text-h1:40px] md:[--text-h1:51.2px]">{CONTENT.espectro.titulo}</h2>
+        <h2 className="mb-4 text-bone font-secundaria text-h1 uppercase [--text-h1:40px] md:[--text-h1:51.2px]">{CONTENT.espectro.titulo}</h2>
+        <p className="mb-8 max-w-prose text-silver font-terciaria text-body-lg">{CONTENT.espectro.sub}</p>
 
         <svg viewBox="-168 -95 676 480" className="w-[calc(100%+2rem)] -mx-4 md:mx-0 md:w-full md:max-w-200" role="img" aria-label={`${CONTENT.espectro.titulo}: ${BEFORE} e ${AFTER}`}>
           {RINGS.map((scale) => (
@@ -123,6 +124,7 @@ export function Spectrum() {
             );
           })}
         </ul>
+        <p className="mt-4 max-w-110 text-silver font-terciaria text-caption-grande">{CONTENT.espectro.nota}</p>
 
       </div>
     </section>

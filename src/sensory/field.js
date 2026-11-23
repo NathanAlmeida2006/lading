@@ -31,12 +31,8 @@ const GRID_STEP = 160; // distancia entre os fios da grade
 // O ponto da malha sobe ou desce ate 18 px (`onda * 9`, com |onda| <= 2) e tem 1,5 px de lado.
 const WAVE_MARGIN = 24;
 // Toque (`options.isTouch`): o desenho do campo e o que mais pesa no celular, entao ele anda a no maximo 30
-// quadros por segundo e congela enquanto o dedo rola. ponytail: teto fixo de 30 fps; calibrar so aqui (o FluidBackground usa a mesma).
+// quadros por segundo (nao congela na rolagem). ponytail: teto fixo de 30 fps; calibrar so aqui (o FluidBackground usa a mesma).
 export const TOUCH_FRAME_STEP_MS = 1000 / 30 - 4; // ms; a folga mantem um a cada dois quadros a 60 Hz
-const TOUCH_IDLE_MS = 150; // ms sem `scroll` para o campo voltar a andar
-// Um ouvinte so para todos os campos (ha um por secao): o instante do ultimo `scroll`, no relogio do rAF.
-let lastScrollTime = -Infinity;
-let isListeningScroll = false;
 
 /**
  * A `estelar` (vem do Social Vibe do app): campo estelar, pontos com
@@ -66,17 +62,11 @@ class Field {
     this.colors = colors;
     this.isReduced = isReduced;
     this.isTouch = isTouch;
-    // Ouvinte global INTENCIONAL: o primeiro campo em tela de toque liga um unico `scroll` passivo que serve a todos os campos (`lastScrollTime`). E barato e um so para a pagina toda, por isso nunca e solto.
-    if (isTouch && !isListeningScroll) {
-      isListeningScroll = true;
-      window.addEventListener("scroll", () => (lastScrollTime = performance.now()), { passive: true });
-    }
     // Toque: o tempo do quadro que o campo nao desenhou (congelado), descontado para a onda retomar sem salto de fase.
-    // O relogio do campo NAO anda com o laco parado (fora da tela, pausa, rolagem no toque): `discount` soma o tempo parado, e o
+    // O relogio do campo NAO anda com o laco parado (fora da tela, pausa): `discount` soma o tempo parado, e o
     // desenho usa `time - discount`. Sem isso, ao voltar a secao a onda saltava para onde o relogio de parede a levaria. Nasce parado: o primeiro quadro e o instante 0.
     this.discount = 0;
     this.stoppedAt = performance.now();
-    this.previousTime = NaN; // o ultimo quadro do rAF visto pelo laco (pintado ou nao)
     this.paintedTime = -Infinity; // o ultimo quadro de fato pintado, para o teto de 30 fps
 
     this.width = 0;
@@ -306,10 +296,7 @@ class Field {
     if (!this.isAlive) return;
     if (!this.isTouch) this.paint(time - this.discount);
     else {
-      const delta = time - (this.previousTime || time);
-      this.previousTime = time;
-      if (time - lastScrollTime < TOUCH_IDLE_MS) this.discount += delta;
-      else if (time - this.paintedTime >= TOUCH_FRAME_STEP_MS) {
+      if (time - this.paintedTime >= TOUCH_FRAME_STEP_MS) {
         this.paintedTime = time;
         this.paint(time - this.discount);
       }
@@ -327,7 +314,6 @@ class Field {
     if (shouldRun && !this.isAlive) {
       this.isAlive = true;
       this.discount += performance.now() - this.stoppedAt;
-      this.previousTime = NaN;
       this.frame = requestAnimationFrame(this.loop);
     } else if (!shouldRun && this.isAlive) {
       this.isAlive = false;

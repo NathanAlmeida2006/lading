@@ -6,9 +6,9 @@ import { getDocumentUrl } from "../../infra/validation.js";
 /**
  * Consentimento antes do evento de terceiro (RNF-L23).
  *
- * O pixel da Meta, o PostHog e o Clarity (que grava a sessao) nao carregam sozinhos: esperam o aceite
- * (a guarda esta em instrumentation.js, nao aqui). O texto diz o que cada um faz e leva a politica de
- * privacidade. "Apenas essenciais" e uma opcao de peso igual a "Aceitar" (os dois em contorno, mesma classe) na tela,
+ * O pixel da Meta, o PostHog e o Clarity (que grava a sessao) nao carregam sozinhos: esperam o aceite (o orquestrador
+ * esta em instrumentation.js, nao aqui). O texto e curto e leva a politica de privacidade, que diz o que cada um faz: o
+ * texto e o consentimento tudo ou nada foram mantidos pelo gerente em 22/11/2026. "Apenas essenciais" e uma opcao de peso igual a "Aceitar" (os dois em contorno, mesma classe) na tela,
  * e nao um link cinza no canto - o padrao escuro custaria mais em confianca do que rende em evento.
  *
  * Renderiza `null` no primeiro passe para nao divergir do HTML pre-renderizado

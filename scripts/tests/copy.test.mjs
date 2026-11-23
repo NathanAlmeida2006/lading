@@ -32,20 +32,20 @@ test("a copy nao carrega preco riscado, 'de/por' nem cronometro", () => {
 });
 
 test("cada depoimento tem @, texto e um avatar que existe em public/", () => {
-  assert.equal(CONTENT.prova.depoimentos.length, 5);
-  for (const { texto, nome, src } of CONTENT.prova.depoimentos) {
-    assert.ok(nome.startsWith("@") && texto.length > 40, nome);
-    assert.ok(existsSync(new URL(`../../public${src}`, import.meta.url)), src);
+  assert.equal(CONFIG.depoimentos.length, 5);
+  for (const { texto, identificacao, foto } of CONFIG.depoimentos) {
+    assert.ok(identificacao.startsWith("@") && texto.length > 40, identificacao);
+    assert.ok(existsSync(new URL(`../../public${foto}`, import.meta.url)), foto);
   }
 });
 
 test("o FAQ tem as sete perguntas, cada uma com resposta", () => {
-  assert.equal(CONTENT.objecoes.length, 7);
+  assert.equal(CONTENT.objecoes.length, 6);
   for (const { pergunta, resposta } of CONTENT.objecoes) assert.ok(pergunta.endsWith("?") && resposta.length > 40, pergunta);
 });
 
 test("a avaliacao dos compradores esta entre 0 e o maximo", () => {
-  const { nota, maximo } = CONTENT.prova.avaliacao;
+  const { nota, maximo } = CONFIG.avaliacao;
   assert.ok(nota > 0 && nota <= maximo && maximo === 5);
 });
 

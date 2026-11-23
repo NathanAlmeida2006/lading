@@ -2,8 +2,6 @@ import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { App } from "../app/App.jsx";
 
-if (import.meta.env.DEV) void import("../infra/posthog.js");
-
 /**
  * O build injeta o HTML da pagina em `index.html` antes de publicar, entao em
  * producao aqui e hidratacao, nao renderizacao do zero (RNF-L16 e RNF-L01).

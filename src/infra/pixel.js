@@ -1,4 +1,5 @@
 import { CONFIG } from "./config.js";
+import { expireCookies } from "./storage.js";
 
 /* -------------------------------------------------------------------------
    Pixel
@@ -23,6 +24,8 @@ const PIXEL_METHOD_BY_EVENT = {
   InitiateCheckout: "track",
   SecaoAlcancada: "trackCustom",
 };
+
+const PIXEL_COOKIE_NAMES = ["_fbp", "_fbc"];
 
 const getPixelId = () => String(CONFIG.pixel.id ?? "").trim();
 
@@ -64,35 +67,18 @@ export function createPixel(readConsent) {
   }
 
   /**
-   * Expira `_fbp` e `_fbc`. A Meta os grava no dominio registravel (`.exemplo.com`) e o navegador
-   * so apaga com o mesmo `domain`; por isso vai um expira por sufixo do host, alem do host puro.
-   * Sem lista de sufixos publicos: `domain=com.br` e recusado pelo navegador e nao faz mal.
+   * Sem aceite. Revoga o pixel que este modulo carregou (`fbq("consent", "revoke")`, uma vez ate o proximo aceite) e expira
+   * `_fbp` e `_fbc`. Na recusa explicita (`false`) expira sempre, mesmo sem pixel nesta carga: o cookie pode ser de uma
+   * visita anterior que aceitou. Sem resposta (`null`) e sem pixel carregado nao ha o que fazer.
+   * @param {boolean|null} consent - A resposta atual (qualquer uma menos `true`).
    * @returns {void}
    */
-  function expirePixelCookies() {
-    try {
-      const labels = window.location.hostname.split(".");
-      const domains = [undefined, ...labels.slice(0, -1).map((_, i) => labels.slice(i).join("."))];
-      for (const name of ["_fbp", "_fbc"]) {
-        for (const domain of domains) {
-          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/${domain ? `; domain=${domain}` : ""}`;
-        }
-      }
-    } catch {
-      /* cookie bloqueado: nao ha o que apagar */
+  function revokePixel(consent) {
+    if (isPixelInjected && !isRevoked) {
+      isRevoked = true;
+      try { getFbq()?.("consent", "revoke"); } catch { /* o tracker nao derruba a pagina */ }
     }
-  }
-
-  /**
-   * Revoga o aceite de um pixel que este modulo carregou: `fbq("consent", "revoke")` e cookies expirados.
-   * Sem pixel carregado (nunca aceitou) nao ha o que revogar. Idempotente ate o proximo aceite.
-   * @returns {void}
-   */
-  function revokePixel() {
-    if (!isPixelInjected || isRevoked) return;
-    isRevoked = true;
-    try { getFbq()?.("consent", "revoke"); } catch { /* o tracker nao derruba a pagina */ }
-    expirePixelCookies();
+    if (consent === false || isRevoked) expireCookies(PIXEL_COOKIE_NAMES);
   }
 
   /**
@@ -101,8 +87,9 @@ export function createPixel(readConsent) {
    * @returns {void}
    */
   function loadPixel() {
-    if (readConsent() !== true) {
-      revokePixel();
+    const consent = readConsent();
+    if (consent !== true) {
+      revokePixel(consent);
       return;
     }
     if (!isEligible(false)) return;
@@ -155,14 +142,13 @@ export function createPixel(readConsent) {
   }
 
   /**
-   * Intencao de compra no clique de um CTA: cada clique legitimo e um evento, sem deduplicar.
-   * Sincrono e sem retorno: o clique nao espera nada daqui. Com checkout nao confirmado (o link
-   * ainda e a ancora do preview) nao ha intencao a registrar.
+   * Intenção de compra no clique de um CTA: cada clique legítimo é um evento, sem deduplicar. Síncrono e sem retorno: o clique
+   * não espera nada daqui. A guarda do checkout confirmado mora em instrumentation.js (`trackCheckoutStart`), uma vez para os
+   * três rastreadores.
    * @param {import("./contracts.js").CtaPosition} ctaPosition - Posição do CTA clicado (vai no payload como `posicaoCTA`).
    * @returns {void}
    */
   function trackCheckoutStart(ctaPosition) {
-    if (CONFIG.checkout.urlConfirmada !== true) return;
     sendEvent("InitiateCheckout", { posicaoCTA: ctaPosition, campanha: CONFIG.campanha });
   }
 

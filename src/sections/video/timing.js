@@ -58,3 +58,8 @@ export const REPLAY_AFTER_MS = 2000; // o botao de replay surge 2 s depois de a 
 
 /** Os objetos 3D do app, na ordem em que o take do L 3D os passa, e o `prepareModel` deles (Stage.jsx baixa tudo no clique). */
 export const OBJECTS_3D = ["letter-l", "bolt", "gear", "sword", "medal", "clock", "profile", "cross", "lithium"];
+
+/** Os capitulos da barra de progresso (Timeline.jsx): [nome, estagio em que comecam]. Cada um vai ate o comeco do proximo. */
+export const CHAPTERS = [["Abertura", STAGES.l3d], ["O app", STAGES.cover], ["A marca", STAGES.logo], ["Manifesto", STAGES.manifesto], ["Os números", STAGES.numbers], ["Arsenal", STAGES.arsenal], ["Faça", STAGES.doIt]];
+/** Da hora do clique ate a musica se apagar, em ms: a duracao da barra de progresso. */
+export const VIDEO_MS = getBeatTime(DO_IT_BEAT) + MUSIC_END.duration;

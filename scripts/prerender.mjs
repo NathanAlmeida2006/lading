@@ -10,7 +10,7 @@ import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { isRealEmail, isRealText as texto, getDocumentUrl } from "../src/infra/validation.js";
+import { isRealEmail, isRealText as texto, getDocumentUrl, getTestimonialIssues, getRatingIssues } from "../src/infra/validation.js";
 
 const raiz = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const molde = join(raiz, "dist", "index.html");
@@ -94,11 +94,14 @@ if (ancoragem) {
 if (CONFIG.pilhaDeValor.ativo === true) {
   afirmacao("pilhaDeValor.confirmado", CONFIG.pilhaDeValor.confirmado === true, "pilha de valor sem confirmação do gerente");
 }
+// Prova social: a mesma regra da tela (validation.js). O que ela esconderia, o build recusa.
 for (const [indice, depoimento] of CONFIG.depoimentos.entries()) {
-  for (const campo of ["id", "texto", "identificacao", "contexto", "origem", "autorizacaoRef"])
-    afirmacao(`depoimentos[${indice}].${campo}`, texto(depoimento[campo]));
-  afirmacao(`depoimentos[${indice}].aprovado`, depoimento.aprovado === true, "relato ou identificação sem aprovação");
+  for (const campo of getTestimonialIssues(depoimento)) {
+    falta(`depoimentos[${indice}].${campo}`, campo === "aprovado" ? "relato, identificação ou foto sem aprovação" : "lastro ausente ou inválido");
+  }
 }
+const MOTIVO_NOTA = { nota: "nota fora de 0 ao máximo", fonte: "nota sem fonte", aprovado: "nota sem aprovação" };
+for (const campo of getRatingIssues(CONFIG.avaliacao)) falta(`avaliacao.${campo}`, MOTIVO_NOTA[campo]);
 afirmacao("oferta.disponivel", typeof CONFIG.oferta.disponivel === "boolean", "disponibilidade explícita da oferta-base obrigatória");
 
 // A trava vale por padrão, em qualquer build (local, CI, Cloudflare): pendência recusa o build. Só a flag explícita

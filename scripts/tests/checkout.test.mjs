@@ -71,12 +71,19 @@ test("valor que nao e string (numero 5) e descartado", () => {
   assert.equal(busca(buildCheckoutUrl({ utm_source: 5 })).has("utm_source"), false);
 });
 
-for (const caractere of ["%", "+", ".", "~", ":", "-", "_", "/", "@"]) {
+for (const caractere of ["%", "+", ".", "~", ":", "-", "_", "/"]) {
   test(`caractere ${caractere} e aceito dentro do valor`, () => {
     const valor = `a${caractere}b`;
     assert.equal(busca(buildCheckoutUrl({ utm_source: valor })).get("utm_source"), valor);
   });
 }
+
+// E-mail nao e valor de campanha: com `@` (ou o `%40` de um duplo encode) o valor nao chega ao checkout.
+test("caractere @ e o %40 escondido derrubam o valor", () => {
+  for (const valor of ["a@b", "fulano@gmail.com", "fulano%40gmail.com"]) {
+    assert.equal(busca(buildCheckoutUrl({ utm_source: valor })).has("utm_source"), false, valor);
+  }
+});
 
 test("chave que a base ja traz nao e sobrescrita nem duplicada", () => {
   const saida = comCheckout({ url: "https://pay.hotmart.com/Y108?utm_source=base" }, () => buildCheckoutUrl({ utm_source: "novo" }));

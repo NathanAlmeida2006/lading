@@ -22,7 +22,7 @@ import { CONFIG } from "./config.js";
  * @returns {ReachPort} A porta do alcance.
  */
 export function createReach({ subscribeToConsent, pixel, clarity }) {
-  const { isEligible, loadPixel, sendEvent } = pixel;
+  const { isEligible, sendEvent } = pixel;
   const sentSections = new Set(); // impressoes de secao ja enviadas ao Pixel nesta carga de pagina
   let isPriceViewSent = false; // o `viu_preco` do Clarity: uma vez por carga, com ou sem o Pixel
 
@@ -45,8 +45,7 @@ export function createReach({ subscribeToConsent, pixel, clarity }) {
     function synchronize() {
       observer?.disconnect();
       observer = undefined;
-      loadPixel();
-      clarity.loadClarity();
+      // Os scripts ja foram sincronizados pelo orquestrador (instrumentation.js), que assina o consentimento antes do alcance.
       // Pixel e Clarity sao independentes: o observador existe se ao menos um deles pode enviar (o Pixel bloqueado nao cala o Clarity).
       if (!isEligible() && !clarity.isEligible()) return;
       observer = new IntersectionObserver(

@@ -1,4 +1,5 @@
 import { CONFIG } from "./config.js";
+import { expireCookies } from "./storage.js";
 
 /* -------------------------------------------------------------------------
    Microsoft Clarity
@@ -8,6 +9,7 @@ import { CONFIG } from "./config.js";
 
 // O id vira parte da URL do script: so letras e numeros entram.
 const CLARITY_ID_PATTERN = /^[a-z0-9]+$/i;
+const CLARITY_COOKIE_NAMES = ["_clck", "_clsk"];
 
 const getClarityId = () => String(CONFIG.clarity.id ?? "").trim();
 
@@ -50,16 +52,19 @@ export function createClarity(readConsent, getTags = () => ({})) {
   }
 
   /**
-   * Idempotente: um script por carga de página. Sem aceite, revoga um Clarity já carregado
-   * (`consent` falso apaga os cookies dele); com novo aceite, só devolve a permissão.
+   * Idempotente: um script por carga de página. Sem aceite, revoga um Clarity já carregado (`consent` falso). Na recusa
+   * explícita (`false`) expira `_clck` e `_clsk`, mesmo sem script nesta carga; com novo aceite, só devolve a permissão.
    * @returns {void}
    */
   function loadClarity() {
-    if (readConsent() !== true) {
+    const consent = readConsent();
+    if (consent !== true) {
       if (isInjected && !isRevoked) {
         isRevoked = true;
         try { getClarity()?.("consent", false); } catch { /* o tracker nao derruba a pagina */ }
       }
+      // Recusa explicita apaga `_clck` e `_clsk` mesmo sem script nesta carga (cookie de uma visita anterior que aceitou).
+      if (consent === false || isRevoked) expireCookies(CLARITY_COOKIE_NAMES);
       return;
     }
     if (!isEligible(false)) {

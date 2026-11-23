@@ -36,6 +36,23 @@ test("com aceite injeta um script so, grava a tag e envia o evento pela fila", (
   } finally { restaurar(); }
 });
 
+test("recusa fria (false, sem script nesta carga) expira _clck e _clsk no host e no dominio registravel", () => {
+  const { restaurar } = ambiente();
+  const cookies = [];
+  try {
+    window.location = { hostname: "www.lithium.app.br" };
+    Object.defineProperty(document, "cookie", { set: (v) => cookies.push(v), configurable: true });
+    createClarity(() => false).loadClarity();
+    assert.equal(window.clarity, undefined);
+    for (const nome of ["_clck", "_clsk"]) {
+      for (const dominio of [undefined, "www.lithium.app.br", "lithium.app.br"]) {
+        const fim = dominio ? `path=/; domain=${dominio}` : "path=/";
+        assert.ok(cookies.some((c) => c.startsWith(`${nome}=; expires=Thu, 01 Jan 1970`) && c.endsWith(fim)), `${nome} em ${dominio ?? "host puro"}`);
+      }
+    }
+  } finally { restaurar(); }
+});
+
 test("clarity de outra origem nao e assumido; revogar chama consent falso e para de enviar", () => {
   let aceite = true;
   const { scripts, restaurar } = ambiente();

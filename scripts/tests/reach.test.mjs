@@ -37,6 +37,24 @@ test("com os dois ligados, sai um ViewContent e um viu_preco", () => {
   assert.deepEqual(r.clarityEvents, ["viu_preco"]);
 });
 
+test("o alcance nao carrega nem revoga rastreador: so observa as secoes", () => {
+  const antes = { IntersectionObserver: globalThis.IntersectionObserver, document: globalThis.document };
+  const chamadas = [];
+  globalThis.IntersectionObserver = class { observe() {} unobserve() {} disconnect() {} };
+  globalThis.document = { getElementById: (id) => ({ id }) };
+  try {
+    const stop = createReach({
+      subscribeToConsent: () => () => {},
+      pixel: { isEligible: () => true, loadPixel: () => chamadas.push("pixel"), sendEvent: () => true },
+      clarity: { isEligible: () => true, loadClarity: () => chamadas.push("clarity"), sendEvent: () => true },
+    }).startMeasurement({ oferta: { etapa: 7 } });
+    stop();
+    assert.deepEqual(chamadas, []);
+  } finally {
+    Object.assign(globalThis, antes);
+  }
+});
+
 test("sem nenhum dos dois, nao existe observador", () => {
   assert.equal(measure({ isPixelOn: false, isClarityOn: false }).hasObserver, false);
 });

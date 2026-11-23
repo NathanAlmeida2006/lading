@@ -2,13 +2,11 @@ import { Fragment, useRef, useState } from "react";
 import { CONTENT } from "../content/content.js";
 import { DotField } from "../components/visuals/DotField.jsx";
 import { useStoppable } from "../components/ui/useStoppable.js";
+import { Nota } from "../components/ui/Nota.jsx";
 import { BLOCK, ENVELOPE, padTwoDigits } from "../app/ui.js";
 
 const SLIDES = CONTENT.prova.depoimentos;
-const { nota, maximo, rotulo } = CONTENT.prova.avaliacao;
-// Estrelas em meias: 4,8 mostra 4,5 (arredonda para baixo).
-const FILLED = Math.floor(nota * 2) / 2;
-const NOTA = nota.toLocaleString("pt-BR");
+const RATING = CONTENT.prova.avaliacao; // `null` sem nota publicável (validation.js): o bloco da nota some
 
 /**
  * Trecho que sobe de dentro de um recorte (a mesma mascara das headlines do site). Entra subindo, escalonado por
@@ -133,20 +131,7 @@ export function Proof() {
           </span>
         </div>
 
-        <div className="flex items-center gap-4 mt-12 lg:mt-16 border-t border-line-strong pt-8" role="img" aria-label={`${rotulo}: ${NOTA} de ${maximo} estrelas`}>
-          <span className="font-secundaria font-extrabold text-bone leading-none text-[length:clamp(44px,8vw,72px)]" aria-hidden="true">{NOTA}</span>
-          <span className="flex flex-col gap-2" aria-hidden="true">
-            <span className="flex gap-1 text-[length:clamp(22px,4vw,30px)] leading-none">
-              {Array.from({ length: maximo }, (_, i) => (
-                <span key={i} className="relative block text-silver">
-                  ★
-                  <span className="absolute inset-y-0 left-0 overflow-clip text-acento" style={{ width: `${Math.min(Math.max(FILLED - i, 0), 1) * 100}%` }}>★</span>
-                </span>
-              ))}
-            </span>
-            <span className="font-terciaria text-mono-grande uppercase text-silver">{rotulo}</span>
-          </span>
-        </div>
+        {RATING && <Nota nota={RATING.nota} maximo={RATING.maximo} rotulo={RATING.rotulo} className="mt-12 lg:mt-16" />}
       </div>
     </section>
   );

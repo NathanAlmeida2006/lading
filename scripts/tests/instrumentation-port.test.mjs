@@ -1,5 +1,5 @@
-// Porta da LGPD (src/infra/instrumentation.js): exatamente os 11 nomes, cada um funcao; imports frescos nao dividem consentimento;
-// os modulos novos de src/infra/ nao voltam a importar a porta nem se importam entre si.
+// Porta da LGPD (src/infra/instrumentation.js): exatamente os 10 nomes, cada um funcao; imports frescos nao dividem consentimento;
+// os modulos de src/infra/ nao voltam a importar a porta nem os tres rastreadores se importam entre si.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -10,7 +10,7 @@ const raiz = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const infra = (arquivo) => join(raiz, "src", "infra", arquivo);
 
 const PORTA = [
-  "captureCampaignParams", "useCampaignParams", "buildCheckoutUrl", "readConsent", "subscribeToConsent",
+  "useCampaignParams", "buildCheckoutUrl", "readConsent", "subscribeToConsent",
   "useConsent", "answerConsent", "trackCheckoutStart", "trackFaqOpen", "trackVideoStart", "startMeasurement",
 ].sort();
 
@@ -24,7 +24,7 @@ function importsRelativos(arquivo) {
   return achados;
 }
 
-test("instrumentation.js exporta exatamente os 11 nomes da porta", async () => {
+test("instrumentation.js exporta exatamente os 10 nomes da porta", async () => {
   const modulo = await import("../../src/infra/instrumentation.js");
   assert.deepEqual(Object.keys(modulo).sort(), PORTA);
 });
@@ -44,10 +44,10 @@ test("imports frescos da porta nao compartilham o consentimento", async () => {
 });
 
 test("modulos novos de src/infra/ nao importam a porta de volta, e pixel, alcance e consentimento nao se importam", () => {
-  for (const arquivo of ["storage.js", "params.js", "consent.js", "pixel.js", "clarity.js", "reach.js"]) {
+  for (const arquivo of ["storage.js", "params.js", "consent.js", "pixel.js", "clarity.js", "posthog.js", "reach.js"]) {
     assert.ok(!importsRelativos(arquivo).some((i) => i.startsWith("instrumentation")), `${arquivo} importa instrumentation.js`);
   }
-  const irmaos = ["consent.js", "pixel.js", "clarity.js", "reach.js"];
+  const irmaos = ["consent.js", "pixel.js", "clarity.js", "posthog.js", "reach.js"];
   for (const arquivo of irmaos) {
     const outros = irmaos.filter((a) => a !== arquivo);
     for (const alvo of importsRelativos(arquivo)) {

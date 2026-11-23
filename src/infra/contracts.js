@@ -41,7 +41,7 @@
  * @property {(isForSending?: boolean) => boolean} isEligible - Se o pixel pode carregar (`false`) ou enviar (`true`, padrão).
  * @property {() => void} loadPixel - Carrega o pixel, uma vez, ou revoga o aceite quando ele foi retirado.
  * @property {(name: PixelEventName, data?: PixelPayload) => boolean} sendEvent - Envia um evento permitido; `true` quando saiu.
- * @property {(ctaPosition: CtaPosition) => void} trackCheckoutStart - Registra a intenção de compra no clique de um CTA.
+ * @property {(ctaPosition: CtaPosition) => void} trackCheckoutStart - Registra a intenção de compra no clique de um CTA; a guarda do checkout confirmado é de instrumentation.js.
  */
 
 /**
@@ -50,6 +50,13 @@
  * @property {() => void} loadClarity - Carrega o Clarity, uma vez, ou revoga o aceite quando ele foi retirado.
  * @property {(key: string, value: string) => void} setTag - Grava uma tag na sessão; sem aceite não sai.
  * @property {(name: string) => void} sendEvent - Envia um evento personalizado; sem aceite não sai.
+ */
+
+/**
+ * @typedef PostHogPort A porta do PostHog (eventos de produto e logs).
+ * @property {() => void} loadPostHog - Carrega o SDK, uma vez, e liga a captura com aceite; sem aceite, desliga e apaga o que ele gravou.
+ * @property {(name: Parameters<import("posthog-js").PostHog["capture"]>[0], properties?: Parameters<import("posthog-js").PostHog["capture"]>[1]) => void} capture - Envia um evento; sem aceite não sai.
+ * @property {(options: Parameters<import("posthog-js").PostHog["captureLog"]>[0]) => void} captureLog - Envia um log; sem aceite não sai.
  */
 
 /**

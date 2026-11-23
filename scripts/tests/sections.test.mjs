@@ -15,16 +15,31 @@ test("etapaCanonica nao decresce ao longo de secoes (fora a oferta e a prova)", 
 
 test("a ordem dos ids e exatamente a atual", () => {
   assert.deepEqual(SECTIONS.map((s) => s.id), [
-    "inicio", "espelho", "social-vibe", "o-que-e", "prova-social", "mapa", "amostra", "objecoes", "oferta", "fechamento", "rodape-legal",
+    "inicio", "video", "app", "espelho", "espectro", "social-vibe", "o-que-e", "prova-social", "mapa", "amostra", "objecoes", "oferta", "fechamento", "rodape-legal",
   ]);
 });
 
-test("INDEX_SECTION_IDS traz so as secoes presentes e indexadas (social-vibe, prova-social, amostra e rodape-legal ficam de fora)", () => {
+test("INDEX_SECTION_IDS traz so as secoes presentes e indexadas (social-vibe, prova-social, amostra, rodape-legal, video, app e espectro ficam de fora)", () => {
   assert.deepEqual(INDEX_SECTION_IDS, ["inicio", "espelho", "o-que-e", "mapa", "objecoes", "oferta", "fechamento"]);
 });
 
 test("REACH_BY_ID tem so secoes presentes da lista de alcance", () => {
-  assert.deepEqual(Object.keys(REACH_BY_ID), ["social-vibe", "prova-social", "mapa", "objecoes", "oferta", "fechamento"]);
+  assert.deepEqual(Object.keys(REACH_BY_ID), ["video", "app", "espectro", "social-vibe", "prova-social", "mapa", "objecoes", "oferta", "fechamento"]);
+});
+
+test("video, app e espectro entram no alcance como suplementares (canonico false), nas etapas 1, 1 e 2", () => {
+  assert.deepEqual(REACH_BY_ID.video, { etapa: 1, canonico: false });
+  assert.deepEqual(REACH_BY_ID.app, { etapa: 1, canonico: false });
+  assert.deepEqual(REACH_BY_ID.espectro, { etapa: 2, canonico: false });
+});
+
+// Registro e arvore JSX nos dois sentidos: o alcance acha a secao pelo id, e uma secao sem registro (ou registro sem secao) e bug.
+test("o registro e a arvore tem as mesmas secoes, nos dois sentidos", () => {
+  const dir = new URL("../../src/", import.meta.url);
+  const jsx = readdirSync(dir, { recursive: true }).filter((f) => f.endsWith(".jsx")).map((f) => readFileSync(new URL(f, dir), "utf8")).join("\n");
+  const naArvore = new Set([...jsx.matchAll(/<(?:section|footer)\b[^>]*?\bid="([^"]+)"/g)].map((m) => m[1]));
+  for (const id of naArvore) assert.ok(SECTIONS_BY_ID[id], `${id} esta na arvore e falta no registro`);
+  for (const { id, presente } of SECTIONS) if (presente) assert.ok(naArvore.has(id), `${id} esta no registro e falta na arvore`);
 });
 
 test("mapa vai para { etapa: 4, canonico: true }", () => {

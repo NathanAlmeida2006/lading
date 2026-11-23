@@ -17,7 +17,9 @@ const TRACKING_PARAM_KEYS = /** @type {const} */ ([
 // Letras (com acento), numeros, espaco e os separadores comuns de campanha. O `URLSearchParams` decodifica `+` e `%20`
 // para espaco e `%C3%A7` para `ç`; na saida, `searchParams.append` codifica de novo, entao nada aqui vira URL crua.
 // Sem `<`, `>`, aspas, `&`, `=`, `#` nem controle (quebra de linha, tab): o que nao e valor de campanha fica de fora.
-const ALLOWED_VALUE_PATTERN = /^[\p{L}\p{N} ._~:+%/@-]+$/u;
+// Sem `@`, nem o `%40` de um duplo encode: e-mail nao e valor de campanha, e iria de tag ao Clarity e de `sck` a Hotmart.
+const ALLOWED_VALUE_PATTERN = /^[\p{L}\p{N} ._~:+%/-]+$/u;
+const ENCODED_AT_PATTERN = /%40/i;
 // Teto por valor. O `fbclid` real passa de 100 caracteres e a Meta nao documenta o maximo: 500 deixa folga
 // e a URL do checkout segue muito abaixo dos limites de URL (cerca de 2000).
 /** @type {Partial<Record<TrackingParamKey, number>>} */
@@ -31,7 +33,7 @@ const DEFAULT_MAX_VALUE_LENGTH = 128;
  * @returns {value is string} `true` quando o valor pode seguir para o checkout.
  */
 const isAllowedValue = (key, value) =>
-  typeof value === "string" && value.trim() !== "" && value.length <= (MAX_VALUE_LENGTH[key] ?? DEFAULT_MAX_VALUE_LENGTH) && ALLOWED_VALUE_PATTERN.test(value);
+  typeof value === "string" && value.trim() !== "" && value.length <= (MAX_VALUE_LENGTH[key] ?? DEFAULT_MAX_VALUE_LENGTH) && ALLOWED_VALUE_PATTERN.test(value) && !ENCODED_AT_PATTERN.test(value);
 
 /**
  * Filtra chave a chave: cada valor invalido cai sozinho e os validos sobrevivem. Vale para a URL e para o que veio
@@ -56,23 +58,46 @@ function keepAllowedParams(candidate) {
    ------------------------------------------------------------------------- */
 
 /**
- * Le a URL uma vez e guarda o que veio (RF-L30). A gravacao e necessaria
- * porque a rolagem por ancora reescreve o hash, um `history.replaceState`
- * de terceiro pode levar a query junto, e quem abre a politica ou os termos
- * volta para `/` sem query. Tudo passa por `keepAllowedParams` antes de sair e antes de gravar:
- * a saida (inclusive o `utm_content` que vai de tag ao Clarity) e sempre a ja filtrada.
- * A visita com campanha na URL se MESCLA ao guardado (a URL ganha chave a chave); sem campanha na
- * URL, o guardado continua como esta.
+ * As chaves de rastreio da URL desta carga: só as permitidas, com valor permitido.
+ * @returns {CampaignParams} O que a URL traz e pode seguir.
+ */
+const readUrlParams = () => {
+  const search = new URLSearchParams(window.location.search);
+  return keepAllowedParams(Object.fromEntries(TRACKING_PARAM_KEYS.map((key) => [key, search.get(key)])));
+};
+
+/**
+ * Le a URL e guarda o que veio (RF-L30). A gravacao e necessaria porque quem abre a politica ou os termos volta para `/`
+ * sem query. Tudo passa por `keepAllowedParams` antes de sair e antes de gravar. A visita com campanha na URL se MESCLA ao
+ * guardado (a URL ganha chave a chave); sem campanha na URL, o guardado continua como esta. Roda uma vez por carga, na
+ * criacao de `createCampaignParams`: nunca dentro de render.
  * @returns {CampaignParams} Os parametros de rastreio validos: URL por cima do guardado na sessão.
  */
 export function captureCampaignParams() {
-  const search = new URLSearchParams(window.location.search);
-  const fromUrl = keepAllowedParams(Object.fromEntries(TRACKING_PARAM_KEYS.map((key) => [key, search.get(key)])));
+  const fromUrl = readUrlParams();
   const saved = keepAllowedParams(readSessionValue(PARAMS_STORAGE_KEY));
   if (!Object.keys(fromUrl).length) return saved;
   const merged = { ...saved, ...fromUrl };
   writeSessionValue(PARAMS_STORAGE_KEY, merged);
   return merged;
+}
+
+/**
+ * Reescreve a URL da barra só com as chaves de rastreio permitidas e válidas: o resto (e-mail, token, chave desconhecida,
+ * valor recusado) some antes de qualquer rastreador ler `location.href`. O hash fica; nada recarrega nem entra no
+ * histórico. Sem nada a tirar, a URL não é tocada.
+ * @returns {void}
+ */
+export function cleanUrl() {
+  try {
+    const url = new URL(window.location.href);
+    const search = new URLSearchParams(readUrlParams()).toString();
+    if (url.search.slice(1) === search) return;
+    url.search = search;
+    window.history.replaceState(window.history.state, "", url.href);
+  } catch {
+    /* sem history ou URL estranha: a URL segue como esta */
+  }
 }
 
 /** @type {CampaignParams} */
@@ -130,25 +155,29 @@ export function buildCheckoutUrl(params = {}) {
 }
 
 /**
- * Fábrica dos parametros de campanha para o `CtaButton`:lidos aqui e nao recebidos por prop: nada atravessa a arvore, e so os
- * botoes re-renderizam quando a visita traz campanha. No servidor e na hidratacao, `{}`.
- * @returns {{useCampaignParams: () => CampaignParams}} O hook que lê os parametros da visita.
+ * Fábrica dos parametros de campanha: captura uma vez, na criacao (no navegador), e limpa a URL logo depois, antes de
+ * qualquer rastreador carregar. `readCampaignParams` e o snapshot do `useSyncExternalStore`: so le, nunca grava. No
+ * servidor e na hidratacao, `{}`.
+ * @returns {{useCampaignParams: () => CampaignParams, readCampaignParams: () => CampaignParams}} O hook e a leitura dos parametros da visita.
  */
 export function createCampaignParams() {
-  /** @type {CampaignParams|undefined} */
-  let params; // capturados uma vez por carga, no primeiro pedido do navegador
+  /** @type {CampaignParams} */
+  let params = EMPTY_PARAMS; // o mesmo `{}` quando nao ha campanha, para ninguem re-renderizar a toa
+  if (typeof window !== "undefined") {
+    try {
+      const captured = captureCampaignParams();
+      if (Object.keys(captured).length) params = captured;
+    } catch {
+      /* janela sem location (teste ou ambiente estranho): sem parametros */
+    }
+    cleanUrl();
+  }
 
   /**
-   * Os parametros da visita; o mesmo `{}` quando nao ha campanha, para ninguem re-renderizar a toa.
+   * Os parametros da visita, sempre o mesmo objeto.
    * @returns {CampaignParams} Os parametros da visita.
    */
-  function readCampaignParams() {
-    if (params === undefined) {
-      const captured = captureCampaignParams();
-      params = Object.keys(captured).length ? captured : EMPTY_PARAMS;
-    }
-    return params;
-  }
+  const readCampaignParams = () => params;
 
   /**
    * Hook: os parametros da visita, sem re-renderizar quando não mudam.
@@ -158,5 +187,5 @@ export function createCampaignParams() {
     return useSyncExternalStore(subscribeNoop, readCampaignParams, getEmptyParamsOnServer);
   }
 
-  return { useCampaignParams };
+  return { useCampaignParams, readCampaignParams };
 }

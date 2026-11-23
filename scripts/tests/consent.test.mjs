@@ -151,6 +151,30 @@ async function comPixel(corpo) {
   }
 }
 
+test("checkout nao confirmado: nenhum dos tres registra o clique; confirmado: cada um registra uma vez", async () => {
+  await comRastreadores(async () => {
+    carga({ sessao: new Map([["fluor:consentimento", "true"]]), local: new Map() });
+    const m = await fresco();
+    m.startMeasurement({});
+    const conta = () => ({
+      pixel: globalThis.window.fbq.queue.filter((a) => a[1] === "InitiateCheckout").length,
+      clarity: (globalThis.window.clarity.q ?? []).filter((a) => a[0] === "event" && a[1] === "clicou_checkout").length,
+      posthog: globalThis.window.posthog.filter((a) => a[0] === "capture" && a[1] === "checkout_started").length,
+    });
+    const confirmada = CONFIG.checkout.urlConfirmada;
+    try {
+      CONFIG.checkout.urlConfirmada = false;
+      m.trackCheckoutStart("dobra");
+      assert.deepEqual(conta(), { pixel: 0, clarity: 0, posthog: 0 });
+      CONFIG.checkout.urlConfirmada = true;
+      m.trackCheckoutStart("dobra");
+      assert.deepEqual(conta(), { pixel: 1, clarity: 1, posthog: 1 });
+    } finally {
+      CONFIG.checkout.urlConfirmada = confirmada;
+    }
+  });
+});
+
 test("aceitar e depois recusar: revoke, _fbp e _fbc expirados (host e dominio registravel) e eventos param", async () => {
   await comPixel(({ m, cookies, chamadas }) => {
     m.answerConsent(true);
@@ -169,12 +193,171 @@ test("aceitar e depois recusar: revoke, _fbp e _fbc expirados (host e dominio re
   });
 });
 
-test("recusar sem nunca ter aceitado nao carrega script, nao chama fbq e nao mexe em cookie", async () => {
+test("recusar sem nunca ter aceitado nao carrega script nem chama fbq, mas expira _fbp e _fbc de uma visita anterior", async () => {
   await comPixel(({ m, cookies, scripts }) => {
     m.answerConsent(false);
     assert.equal(scripts.length, 0);
     assert.equal(globalThis.window.fbq, undefined);
+    for (const nome of ["_fbp", "_fbc"]) {
+      assert.ok(cookies.some((c) => c.startsWith(`${nome}=; expires=Thu, 01 Jan 1970`)), nome);
+    }
+  });
+});
+
+test("sem resposta (null) e sem pixel nesta carga: nenhum cookie e tocado", async () => {
+  await comPixel(({ scripts, cookies }) => {
+    assert.equal(scripts.length, 0);
     assert.equal(cookies.length, 0);
+  });
+});
+
+const fakeStorage = (map) => ({
+  get length() { return map.size; },
+  key: (i) => [...map.keys()][i] ?? null,
+  getItem: (k) => map.get(k) ?? null,
+  setItem: (k, v) => map.set(k, String(v)),
+  removeItem: (k) => map.delete(k),
+});
+
+// Ids e chave de teste dos três rastreadores; restaura a janela, o document e o CONFIG ao fim.
+async function comRastreadores(corpo) {
+  const antes = {
+    window: globalThis.window,
+    document: globalThis.document,
+    IntersectionObserver: globalThis.IntersectionObserver,
+    pixel: CONFIG.pixel.id,
+    clarity: CONFIG.clarity.id,
+    posthog: { ...CONFIG.posthog },
+  };
+  CONFIG.pixel.id = "123";
+  CONFIG.clarity.id = "abc123";
+  CONFIG.posthog.key = "phc_teste";
+  CONFIG.posthog.host = "https://us.i.posthog.com";
+  try {
+    return await corpo();
+  } finally {
+    for (const [nome, valor] of [["window", antes.window], ["document", antes.document], ["IntersectionObserver", antes.IntersectionObserver]]) {
+      if (valor === undefined) delete globalThis[nome];
+      else globalThis[nome] = valor;
+    }
+    CONFIG.pixel.id = antes.pixel;
+    CONFIG.clarity.id = antes.clarity;
+    Object.assign(CONFIG.posthog, antes.posthog);
+  }
+}
+
+// Uma carga de página: sessionStorage e localStorage sobrevivem entre cargas (são os que chegam por parâmetro); janela, scripts e cookies do navegador não.
+function carga({ sessao, local, cookie = "", href = "https://www.lithium.app.br/" }) {
+  const url = new URL(href);
+  const scripts = [];
+  const cookies = [];
+  const log = [];
+  globalThis.window = {
+    location: { href, search: url.search, hostname: url.hostname },
+    history: { state: null, replaceState: (_s, _t, nova) => log.push(["replaceState", String(nova)]) },
+    sessionStorage: fakeStorage(sessao),
+    localStorage: fakeStorage(local),
+  };
+  globalThis.document = {
+    createElement: () => ({}),
+    head: { appendChild: (el) => { scripts.push(el); log.push(["script", el.src]); } },
+    get cookie() { return cookie; },
+    set cookie(valor) { cookies.push(valor); },
+  };
+  globalThis.IntersectionObserver = class { observe() {} unobserve() {} disconnect() {} };
+  return { scripts, cookies, log };
+}
+
+test("PostHog: aceitar, gerenciar cookies, F5 e aceitar de novo volta a capturar", async () => {
+  await comRastreadores(async () => {
+    const sessao = new Map();
+    const local = new Map();
+    carga({ sessao, local });
+    let m = await fresco();
+    m.startMeasurement({});
+    m.answerConsent(true);
+    m.answerConsent(null);
+    assert.deepEqual(globalThis.window.posthog.filter((a) => a[0].startsWith("opt_")).map((a) => a[0]), ["opt_in_capturing", "opt_out_capturing"]);
+
+    carga({ sessao, local }); // F5: a janela e o SDK somem, o sessionStorage e o localStorage ficam
+    m = await fresco();
+    m.startMeasurement({});
+    assert.equal(globalThis.window.posthog, undefined);
+    m.answerConsent(true);
+    assert.equal(globalThis.window.posthog._i[0][1].opt_out_capturing_by_default, true);
+    assert.deepEqual(globalThis.window.posthog.filter((a) => a[0].startsWith("opt_")).map((a) => a[0]), ["opt_in_capturing"]);
+  });
+});
+
+test("recusa fria: com false na sessao e cookies de uma visita anterior, a largada apaga os dos tres rastreadores sem carregar script", async () => {
+  await comRastreadores(async () => {
+    const sessao = new Map([["fluor:consentimento", "false"]]);
+    const local = new Map([["ph_phc_teste_posthog", "1"], ["__ph_opt_in_out_phc_teste", "1"]]);
+    const { scripts, cookies } = carga({ sessao, local, cookie: "_fbp=1; _clck=2; ph_phc_teste_posthog=3" });
+    const m = await fresco();
+    m.startMeasurement({});
+    assert.equal(scripts.length, 0);
+    for (const nome of ["_fbp", "_fbc", "_clck", "_clsk", "ph_phc_teste_posthog"]) {
+      assert.ok(cookies.some((c) => c.startsWith(`${nome}=; expires=Thu, 01 Jan 1970`) && c.endsWith("; domain=lithium.app.br")), nome);
+    }
+    assert.equal(local.size, 0);
+  });
+});
+
+test("video_started sai uma vez por carga, mesmo com Parar e um play novo", async () => {
+  await comRastreadores(async () => {
+    carga({ sessao: new Map([["fluor:consentimento", "true"]]), local: new Map() });
+    const m = await fresco();
+    m.startMeasurement({});
+    m.trackVideoStart();
+    m.trackVideoStart();
+    const fila = globalThis.window.posthog;
+    assert.equal(fila.filter((a) => a[0] === "capture" && a[1] === "video_started").length, 1);
+    assert.equal(fila.filter((a) => a[0] === "captureLog" && a[1]?.body === "landing video started").length, 1);
+  });
+});
+
+test("a URL e limpa antes de qualquer rastreador", async () => {
+  await comRastreadores(async () => {
+    const { log } = carga({
+      sessao: new Map([["fluor:consentimento", "true"]]),
+      local: new Map(),
+      href: "https://www.lithium.app.br/?email=a%40b.com&utm_source=facebook",
+    });
+    const m = await fresco();
+    m.startMeasurement({});
+    assert.deepEqual(log[0], ["replaceState", "https://www.lithium.app.br/?utm_source=facebook"]);
+    assert.ok(log.length > 1 && log.slice(1).every(([tipo]) => tipo === "script"));
+  });
+});
+
+// A ordem das assinaturas: o orquestrador carrega os scripts antes de o alcance decidir se cria o observador.
+test("com aceite na largada, ou no aceite depois dela, o alcance ja acha os scripts e observa na mesma resposta", async () => {
+  await comRastreadores(async () => {
+    for (const inicio of ["true", null]) {
+      carga({ sessao: new Map(inicio ? [["fluor:consentimento", inicio]] : []), local: new Map() });
+      const observados = [];
+      globalThis.IntersectionObserver = class { observe(alvo) { observados.push(alvo.id); } unobserve() {} disconnect() {} };
+      globalThis.document.getElementById = (id) => ({ id });
+      const m = await fresco();
+      m.startMeasurement({ oferta: { etapa: 7 } });
+      if (!inicio) {
+        assert.deepEqual(observados, [], "sem aceite nao existe observador");
+        m.answerConsent(true);
+      }
+      assert.deepEqual(observados, ["oferta"], `largada com ${inicio}`);
+    }
+  });
+});
+
+test("desligar a medicao cancela o orquestrador: um aceite depois disso nao carrega rastreador", async () => {
+  await comRastreadores(async () => {
+    const { scripts } = carga({ sessao: new Map(), local: new Map() });
+    const m = await fresco();
+    const parar = m.startMeasurement({});
+    parar();
+    m.answerConsent(true);
+    assert.equal(scripts.length, 0);
   });
 });
 

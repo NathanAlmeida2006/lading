@@ -19,6 +19,7 @@ async function montar({ falhaNaFonte = false } = {}) {
     }
     decodeAudioData() { return Promise.resolve({}); }
     resume() { return new Promise((resolve) => { efeitos.resume = () => { this.state = "running"; resolve(); }; }); }
+    suspend() { efeitos.suspensoes = (efeitos.suspensoes ?? 0) + 1; this.state = "suspended"; return Promise.resolve(); }
   };
   let baixou;
   const baixado = new Promise((resolve) => { baixou = resolve; });
@@ -78,4 +79,23 @@ test("nada e agendado antes de o contexto retomar; depois do resume, musica e ef
   assert.equal(fontes.length, 2);
   const [, inicio] = [fontes[0].iniciada, fontes[1].iniciada];
   assert.ok(inicio[0] > 10 && inicio[0] <= 15, `o efeito entra daqui a ~5 s do clique, e veio em ${inicio[0]}`);
+});
+
+test("parar o som faz o contexto dormir depois do fade, se nenhuma sessao nova comecou", async () => {
+  const { sound, efeitos } = await montar();
+  const sessao = sound.createSound();
+  efeitos.resume();
+  sessao.stop(0);
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.equal(efeitos.suspensoes, 1);
+});
+
+test("uma sessao nova antes do fim do fade nao e posta para dormir", async () => {
+  const { sound, efeitos } = await montar();
+  const sessao = sound.createSound();
+  efeitos.resume();
+  sessao.stop(0);
+  sound.createSound();
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.equal(efeitos.suspensoes ?? 0, 0);
 });

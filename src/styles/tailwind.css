@@ -41,12 +41,12 @@
     from { transform: translateY(0); }
     to { transform: translateY(var(--rola)); }
   }
-  /* O brilho vermelho atras do celular: respira e deriva devagar, so em transform e opacity. */
-  --animate-app-brilho: app-brilho 9s ease-in-out infinite;
-  @keyframes app-brilho {
-    0%, 100% { transform: translate(0, 0) scale(0.92); opacity: 0.7; }
-    33% { transform: translate(10%, -7%) scale(1.12); opacity: 1; }
-    66% { transform: translate(-9%, 8%) scale(1); opacity: 0.85; }
+  /* Os trilhos do fundo da secao do app (Trilhos.jsx): o rastro tem a altura do trilho e vai de +100% a -100% de si mesmo (a ponta sai
+     de baixo da secao e some em cima). Duracao e atraso vem de cada trilho. */
+  --animate-trilho: trilho linear infinite;
+  @keyframes trilho {
+    from { transform: translateY(100%); }
+    to { transform: translateY(-100%); }
   }
   --animate-app-toque: app-toque 7.5s linear both;
   @keyframes app-toque {

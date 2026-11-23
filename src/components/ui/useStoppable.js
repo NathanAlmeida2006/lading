@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
  * tela, para com o mouse (nao o toque) ou o foco de teclado em cima e aceita pausa manual (`togglePause`). `isSeen` vira
  * verdadeiro na primeira vez que a secao aparece (a entrada do primeiro item so toca ai).
  * @param {{current: HTMLElement | null}} root - Ref da secao observada.
- * @returns {{isStopped: boolean, isSeen: boolean, isPaused: boolean, togglePause: () => void, holdProps: object}} O estado e os ouvintes para espalhar na area que segura o carrossel.
+ * @returns {{isStopped: boolean, isInView: boolean, isSeen: boolean, isPaused: boolean, togglePause: () => void, holdProps: object}} O estado e os ouvintes para espalhar na area que segura o carrossel.
  */
 export function useStoppable(root) {
   const [isPaused, setIsPaused] = useState(false);
@@ -30,6 +30,7 @@ export function useStoppable(root) {
 
   return {
     isStopped: isPaused || isHeld || !isInView,
+    isInView,
     isSeen,
     isPaused,
     togglePause: () => setIsPaused((paused) => !paused),

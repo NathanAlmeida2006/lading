@@ -45,14 +45,24 @@ import { isRealEmail } from "./validation.js";
  */
 
 /**
- * @typedef Testimonial Depoimento aprovado: só texto público e referência opaca à autorização.
- * @property {string} id
- * @property {string} texto
- * @property {string} identificacao
- * @property {string} contexto
- * @property {string} origem
- * @property {string} autorizacaoRef
- * @property {boolean} aprovado
+ * @typedef Testimonial Depoimento: texto público, quem falou e a referência opaca à autorização (nenhum documento de
+ * autorização nem contato privado entra no bundle). Só vai à tela, e só passa no build, sem pendência (validation.js).
+ * @property {string} id - Identificador estável.
+ * @property {string} texto - Texto exato de quem escreveu (não reescrever).
+ * @property {string} identificacao - O @ público de quem falou.
+ * @property {string} contexto - Tempo de uso ("Semana 6").
+ * @property {string} foto - Avatar de quem falou (`/images/iconN.webp`; os JPG de origem ficam em source-media/avatares).
+ * @property {string|null} origem - De onde o relato veio (canal e data); `null` até ser registrada.
+ * @property {string|null} autorizacaoRef - Referência opaca à autorização de uso do texto, do @ e da foto; `null` até existir.
+ * @property {boolean} aprovado - Aprovação do gerente para publicar.
+ */
+
+/**
+ * @typedef Rating Nota de avaliação dos compradores.
+ * @property {number} nota - A nota.
+ * @property {number} maximo - A nota máxima.
+ * @property {string|null} fonte - De onde a nota vem (plataforma, data, número de avaliações); `null` até ser registrada.
+ * @property {boolean} aprovado - Aprovação do gerente para publicar.
  */
 
 /**
@@ -66,9 +76,26 @@ import { isRealEmail } from "./validation.js";
  * @property {{url: string, urlConfirmada: boolean, parametroRastreio: string|null, parametroConfirmado: boolean}} checkout - Destino único de todos os CTAs.
  * @property {{id: string|null}} pixel - Pixel da Meta; `null` até o id existir.
  * @property {{id: string|null}} clarity - Microsoft Clarity; `null` até o id existir.
+ * @property {{key: string|null, host: string|null}} posthog - PostHog: chave pública do projeto e host de ingestão; `null` fora do build de produção ou sem a variável.
  * @property {{politicaPrivacidade: string, termosDeUso: string}} legal - Documentos legais.
- * @property {Testimonial[]} depoimentos - Depoimentos aprovados.
+ * @property {Testimonial[]} depoimentos - Depoimentos da prova social.
+ * @property {Rating|null} avaliacao - Nota dos compradores; `null` sem nota.
  */
+
+/**
+ * Variável de rastreador do ambiente do Vite. Só vale no build de produção, ou no `npm run dev` com `VITE_ENABLE_PIXEL_DEV=1`
+ * de propósito: o dev não suja as contas. É a mesma trava para Pixel, Clarity e PostHog. Fora disso, ou vazia, `null`.
+ * @param {Record<string, unknown>|undefined} env - O `import.meta.env` (ausente em Node puro).
+ * @param {string} name - Nome da variável.
+ * @returns {string|null} O valor sem espaços nas pontas, ou `null`.
+ */
+export function readTrackerEnv(env, name) {
+  const value = env?.[name];
+  return (env?.PROD || env?.VITE_ENABLE_PIXEL_DEV) && typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+// Um acesso só ao ambiente do Vite: o build troca `import.meta.env` pelo objeto inteiro, e cada acesso seria uma cópia no bundle.
+const ENV = import.meta.env;
 
 /**
  * Dados comerciais da instância. null indica informação ainda não confirmada.
@@ -149,11 +176,12 @@ export const CONFIG = {
     parametroConfirmado: true,
   },
 
-  // Só IDs públicos (nunca token da API de Conversões). Fora do build de produção ficam `null`, para o
-  // `npm run dev` não sujar as contas; `VITE_ENABLE_PIXEL_DEV=1` liga de propósito.
-  // `?.` porque os testes importam este arquivo em Node puro, onde `import.meta.env` não existe.
-  pixel: { id: (import.meta.env?.PROD || import.meta.env?.VITE_ENABLE_PIXEL_DEV) && import.meta.env?.VITE_META_PIXEL_ID || null },
-  clarity: { id: (import.meta.env?.PROD || import.meta.env?.VITE_ENABLE_PIXEL_DEV) && import.meta.env?.VITE_CLARITY_ID || null },
+  // Só IDs públicos (nunca token da API de Conversões nem chave pessoal do PostHog). Fora do build de produção ficam `null`
+  // (`readTrackerEnv`), para o `npm run dev` não sujar as contas; `VITE_ENABLE_PIXEL_DEV=1` liga de propósito.
+  pixel: { id: readTrackerEnv(ENV, "VITE_META_PIXEL_ID") },
+  clarity: { id: readTrackerEnv(ENV, "VITE_CLARITY_ID") },
+  // PostHog: chave pública do projeto e host de ingestão.
+  posthog: { key: readTrackerEnv(ENV, "VITE_POSTHOG_KEY"), host: readTrackerEnv(ENV, "VITE_POSTHOG_HOST") },
 
   legal: {
     // Arquivos estáticos em public/ (ou URL HTTPS real). O build valida que existem.
@@ -161,9 +189,17 @@ export const CONFIG = {
     termosDeUso: "/terms.html",
   },
 
-  // Apenas texto público aprovado e referência opaca à autorização; nenhum
-  // documento de autorização nem contato privado entra no bundle.
-  depoimentos: [], // { id, texto, identificacao, contexto, origem, autorizacaoRef, aprovado }
+  // Prova social: depoimento e nota so vao a tela, e so passam no build, com lastro e aprovacao registrados (validation.js).
+  // Em 23/11/2026 o gerente mandou devolver os cinco relatos e a nota e autorizou a publicacao. O lastro registrado e so o que
+  // existe: origem informada pelo gerente e a aprovacao dele; o consentimento dos autores (texto, @ e foto) NAO esta documentado.
+  depoimentos: [
+    { id: "rafa-moura04", texto: "Eu ficava quase 2h na academia copiando treino do TikTok e nunca subia peso. Agora resolvo em 1h e finalmente tô vendo a carga andar toda semana.", identificacao: "@rafa.moura04", contexto: "Semana 6", foto: "/images/icon1.webp", origem: "relato de usuário do app, texto exato de quem escreveu (informado pelo gerente)", autorizacaoRef: "aprovação do gerente em 23/11/2026; consentimento do autor não documentado", aprovado: true },
+    { id: "lucas-alvesz", texto: "Sempre começava animado na segunda e largava na quinta. Só de abrir a tela e ver o dia em aberto no checklist já me segurou, fechei o primeiro mês sem furar.", identificacao: "@lucas.alvesz", contexto: "Treina há 1 ano", foto: "/images/icon2.webp", origem: "relato de usuário do app, texto exato de quem escreveu (informado pelo gerente)", autorizacaoRef: "aprovação do gerente em 23/11/2026; consentimento do autor não documentado", aprovado: true },
+    { id: "thiago-sntos", texto: "Bem direto ao ponto. Não fica travando nem enchendo o saco com propaganda igual esses apps gringos, no descanso da série já bato o olho e sei exatamente quanto colocar.", identificacao: "@thiago.sntos_", contexto: "Semana 4", foto: "/images/icon3.webp", origem: "relato de usuário do app, texto exato de quem escreveu (informado pelo gerente)", autorizacaoRef: "aprovação do gerente em 23/11/2026; consentimento do autor não documentado", aprovado: true },
+    { id: "bruno-csta02", texto: "Achava frescura esse negócio de controlar sono, mas fui testar o que tá lá. Na segunda semana já parei de chegar moído no treino de quarta.", identificacao: "@bruno_csta02", contexto: "Treina há 2 anos", foto: "/images/icon4.webp", origem: "relato de usuário do app, texto exato de quem escreveu (informado pelo gerente)", autorizacaoRef: "aprovação do gerente em 23/11/2026; consentimento do autor não documentado", aprovado: true },
+    { id: "felipe-rbr", texto: "Semana passada apertei com prova e trabalho e quase larguei de mão de novo. Usei o ajuste de retorno, voltei sem neura e não perdi o ritmo.", identificacao: "@felipe.rbr_", contexto: "Semana 5", foto: "/images/icon5.webp", origem: "relato de usuário do app, texto exato de quem escreveu (informado pelo gerente)", autorizacaoRef: "aprovação do gerente em 23/11/2026; consentimento do autor não documentado", aprovado: true },
+  ],
+  avaliacao: { nota: 4.5, maximo: 5, fonte: "informada pelo gerente em 23/11/2026; plataforma e total de avaliações não registrados", aprovado: true },
 };
 
 // E-mail público único: o fechamento e o rodapé leem daqui. Nulo quando o e-mail não é válido.

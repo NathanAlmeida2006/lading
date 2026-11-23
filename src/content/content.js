@@ -1,5 +1,6 @@
 /** Contrato editorial público. Origem não inclui autorizações nem contatos privados. */
 import { CONFIG } from "../infra/config.js";
+import { getPublishableTestimonials, getRatingIssues } from "../infra/validation.js";
 import { formatReais } from "./valueStack.js";
 
 /**
@@ -66,9 +67,10 @@ import { formatReais } from "./valueStack.js";
  * @property {{texto: string, cta: string}} doca
  * @property {{rotulo: string, titulo: string, sub: string, cta: string, cartas: MirrorCard[]}} espelho
  * @property {{titulo: string, passos: {id: string, nome: string, texto: string}[]}} demo
- * @property {{rotulo: string, titulo: string, avaliacao: {nota: number, maximo: number, rotulo: string}, depoimentos: {texto: string, nome: string, contexto: string, src: string}[]}} prova - `nome` é o @ de quem falou; `src`, o avatar dele (`/images/iconN.webp`, 192 px).
+ * @property {{rotulo: string, titulo: string, avaliacao: {nota: number, maximo: number, rotulo: string}|null, depoimentos: {texto: string, nome: string, contexto: string, src: string}[]}} prova - `nome` é o @ de quem falou e `src`, o avatar dele; só o que CONFIG traz publicável (validation.js), e `avaliacao` é `null` sem nota publicável.
  * @property {{titulo: string[], curtos: string, noticias: string, abrir: string, videos: (VibeCard & {avatar: string})[], shorts: VibeCard[], noticia: VibeCard & {resumo: string}, aviso: string}} vibe
- * @property {{titulo: string, antes: string, depois: string, areas: {nome: string, antes: number, depois: number}[]}} espectro
+ * @property {{titulo: string, sub: string, parado: string}} video
+ * @property {{titulo: string, sub: string, nota: string, antes: string, depois: string, areas: {nome: string, antes: number, depois: number}[]}} espectro
  * @property {{rotulo: string, estados: MapState[], numeros: MapNumber[], cta: string}} mapa
  * @property {{rotulo: string, vozes: Voice[]}} leva
  * @property {{cta: string, garantia: {titulo: string, texto: string, selos: Seal[]}}} oferta
@@ -121,8 +123,6 @@ export const CONTENT = {
     sub: "A diferença entre quem só frequenta academia e quem muda de físico está no sistema.",
     cta: `Quero meu protocolo de ${MECHANISM.semanas} semanas`,
     cartas: [
-      // imagem: ebook genérico × protocolo Lithium
-      { titulo: "Do treino aleatório ao protocolo de guerra", depois: `Sem improviso ou fichas genéricas: ${TOTAL_SESSIONS} treinos prontos em ${MECHANISM.semanas} semanas com a progressão exata para naturais.`, lastro: "Fim do achismo" },
       // imagem: tela do app Lithium
       { titulo: "Da teoria inútil ao passo a passo no bolso", src: "/images/image1.webp", depois: "Chega de PDF perdido no celular: abra o app e execute 3 fases claras (Aprender, Construir e Consolidar), com propósito em cada série.", lastro: "Execução guiada" },
       // imagem: Semana Verde e Semana Amarela
@@ -157,22 +157,24 @@ export const CONTENT = {
       { id: "treino", nome: "Treino", texto: "A ficha já vem com a carga. Marque cada série quando terminar." },
     ],
   },
-  // Relatos reais de usuarios do app, na ordem do `iconN.webp` de cada um (public/images; os JPG de origem
-  // ficam em source-media/avatares). Texto exato de quem escreveu: nao reescrever. `nome` e o @ publico; `contexto`, o tempo de uso.
+  // Prova social: o rótulo e o título são copy daqui; os relatos e a nota vêm de CONFIG, só os publicáveis (validation.js).
   prova: {
     rotulo: "quem já usa o app",
     titulo: "Usuários do app",
-    avaliacao: { nota: 4.8, maximo: 5, rotulo: "Avaliação dos compradores" },
-    depoimentos: [
-      { texto: "Eu ficava quase 2h na academia copiando treino do TikTok e nunca subia peso. Agora resolvo em 1h e finalmente tô vendo a carga andar toda semana.", nome: "@rafa.moura04", contexto: "Semana 6", src: "/images/icon1.webp" },
-      { texto: "Sempre começava animado na segunda e largava na quinta. Só de abrir a tela e ver o dia em aberto no checklist já me segurou, fechei o primeiro mês sem furar.", nome: "@lucas.alvesz", contexto: "Treina há 1 ano", src: "/images/icon2.webp" },
-      { texto: "Bem direto ao ponto. Não fica travando nem enchendo o saco com propaganda igual esses apps gringos, no descanso da série já bato o olho e sei exatamente quanto colocar.", nome: "@thiago.sntos_", contexto: "Semana 4", src: "/images/icon3.webp" },
-      { texto: "Achava frescura esse negócio de controlar sono, mas fui testar o que tá lá. Na segunda semana já parei de chegar moído no treino de quarta.", nome: "@bruno_csta02", contexto: "Treina há 2 anos", src: "/images/icon4.webp" },
-      { texto: "Semana passada apertei com prova e trabalho e quase larguei de mão de novo. Usei o ajuste de retorno, voltei sem neura e não perdi o ritmo.", nome: "@felipe.rbr_", contexto: "Semana 5", src: "/images/icon5.webp" },
-    ],
+    avaliacao: CONFIG.avaliacao && !getRatingIssues(CONFIG.avaliacao).length
+      ? { nota: CONFIG.avaliacao.nota, maximo: CONFIG.avaliacao.maximo, rotulo: "Avaliação dos compradores" }
+      : null,
+    depoimentos: getPublishableTestimonials(CONFIG.depoimentos).map(({ texto, identificacao, contexto, foto }) => ({ texto, nome: identificacao, contexto, src: foto })),
+  },
+  video: {
+    titulo: "Lithium em ação",
+    sub: "Tudo o que você recebe, em 30 segundos. Ligue o som e sinta o ritmo.",
+    parado: "Toque no play para começar",
   },
   espectro: {
     titulo: "Espectro",
+    sub: `Cinco áreas que sobem juntas quando o treino deixa de ser improviso.`,
+    nota: "Seu Depois se constrói treino a treino, semana a semana. Valores ilustrativos.",
     antes: "Antes",
     depois: "Depois",
     areas: [
@@ -244,7 +246,6 @@ export const CONTENT = {
   rodape: { tagline: "O básico bem feito, provado, sem mágica." },
   objecoes: [
     { pergunta: "Por que tão barato? Tem pegadinha ou mensalidade escondida?", resposta: `Nenhuma pegadinha. Você paga ${PRICE} uma única vez e o acesso é vitalício. Sem assinatura sugando seu cartão todo mês. Dividido pelas ${MECHANISM.semanas} semanas, sai por ${formatPrice(Math.round((price / MECHANISM.semanas) * 100) / 100)} por semana, ou ${formatPrice(Math.round((price / TOTAL_SESSIONS) * 100) / 100)} por treino.` },
-    { pergunta: "Isso não é só mais um e-book enfeitado?", resposta: `E-book é PDF morto que você lê 5 páginas e larga. O Lithium é um aplicativo de execução diária no seu celular, com ${MECHANISM.semanas} semanas estruturadas, Regra do 12, Portão da Semana 9, checklist diário e Plano de Retorno.` },
     { pergunta: "Eu trabalho ou estudo e não tenho tempo de morar na academia. Funciona para mim?", resposta: `Foi feito exatamente para isso. Você precisa de apenas ${MECHANISM.sessoesObrigatorias} sessões cirúrgicas de 60 a 75 minutos por semana (com ${MECHANISM.sessoesOpcionais} sessão extra opcional a partir da semana 5). Natural não cresce com 2 horas de treino junk volume; cresce com intensidade e recuperação.` },
     { pergunta: "Sou natural e já treino há meses sem ver resultado. Serve para mim?", resposta: "Serve principalmente para você. O Lithium não vende milagre genético nem promessa de físico hormonizado. Ele elimina os erros de volume, carga e constância que travam 90% dos naturais." },
     { pergunta: "E se eu falhar uma semana por causa de prova, trabalho ou imprevisto?", resposta: "Todo app comum quebra sua sequência e faz você desistir. O Lithium mede progresso por semana fechada e ativa o Plano de Retorno (Semana Verde e Semana Amarela) para você retomar o ritmo sem jogar fora o que construiu." },

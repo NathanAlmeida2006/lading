@@ -58,3 +58,29 @@ test("trocar so o devicePixelRatio refaz o buffer do campo e repinta no mesmo in
   assert.equal(chamadas.splice(0).join("|"), pinturaInicial);
   stop();
 });
+
+// Divide a consulta nas virgulas do nivel de cima (fora de parenteses): cada parte e um seletor da lista.
+const partesDaConsulta = (consulta) => {
+  const partes = [];
+  let profundidade = 0, inicio = 0;
+  for (let i = 0; i < consulta.length; i++) {
+    if (consulta[i] === "(") profundidade++;
+    else if (consulta[i] === ")") profundidade--;
+    else if (consulta[i] === "," && profundidade === 0) { partes.push(consulta.slice(inicio, i).trim()); inicio = i + 1; }
+  }
+  partes.push(consulta.slice(inicio).trim());
+  return partes;
+};
+
+test("as redes de seguranca nao entram nas telas do app do video (.app-rolo)", () => {
+  const consultas = [];
+  globalThis.document = {
+    documentElement: { classList: { remove() {}, add() {} } },
+    querySelectorAll(seletor) { consultas.push(seletor); return []; },
+  };
+  openReadingMode();
+  assert.ok(REVEALED_SELECTOR.endsWith(":not(.app-rolo *)"), REVEALED_SELECTOR);
+  const partes = partesDaConsulta(consultas[0]);
+  assert.equal(partes.length, 2, consultas[0]);
+  for (const parte of partes) assert.ok(parte.endsWith(":not(.app-rolo *)"), parte);
+});

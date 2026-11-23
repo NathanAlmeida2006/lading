@@ -1,7 +1,7 @@
 /**
  * O som do video: a musica (timing.js) e um unico efeito sonoro, o que abre o ultimo take. Um unico AudioContext vive na pagina:
  * `prepareSound()` o cria (suspenso) e baixa e decodifica a musica antes do clique, e `createSound()`, no clique, o retoma e
- * devolve `music`, `effect`, `fadeOutIn` e `stop`, agendados no relogio do audio, nao em setTimeout. Sem audio disponivel, tudo e mudo. A primeira falha vai ao console, uma vez.
+ * devolve `music`, `effect`, `fadeOutIn` e `stop`, agendados no relogio do audio, nao em setTimeout. Sem audio disponivel, tudo e mudo. A primeira falha vai ao console, uma vez. Parado, o contexto dorme (`suspend`) ate o proximo play.
  */
 import { FINAL_EFFECT_URL, MUSIC_URL } from "./timing.js";
 
@@ -10,6 +10,7 @@ const EFFECT_VOLUME = 0.12; // o do efeito do ultimo take: o arquivo vem no maxi
 
 let ctx = null, track = null, buffer = null, loading = null, effectBuffer = null, loadingEffect = null;
 let failed = false; // so a primeira falha de audio vai ao console; o video segue mudo
+let session = 0; // a sessao de som atual: o stop de uma sessao antiga nao poe para dormir o contexto de uma nova
 const report = (error) => { if (!failed) { failed = true; console.error("som: falha de audio, o video segue sem som", error); } };
 
 const ensure = () => {
@@ -41,6 +42,7 @@ export function prepareSound() {
  */
 export function createSound() {
   if (!ensure()) return { music() {}, effect() {}, fadeOutIn() {}, stop() {} };
+  const id = ++session;
   // `ctx.currentTime` so anda depois do resume: nada se agenda antes dele, e o que ja passou desde o clique (`t0`) sai do atraso, para o som nao ficar atras do video.
   const t0 = performance.now();
   const ready = ctx.resume().catch(() => {});
@@ -108,16 +110,24 @@ export function createSound() {
         applyFadeOut();
       }));
     }),
-    /** Para a musica ja (replay, saida da pagina): um fade-out curto de `duration` ms. */
+    /**
+     * Para a musica ja (replay, parar, saida da tela ou da pagina): um fade-out curto de `duration` ms. Depois do fade, sem
+     * sessao nova, o contexto de audio dorme (`suspend`): nada de audio rodando com o video parado.
+     */
     stop: guard((duration = 250) => {
       stopped = true;
       effectSource?.stop();
-      if (!output) return;
-      const now = ctx.currentTime;
-      output.gain.cancelScheduledValues(0);
-      output.gain.setValueAtTime(output.gain.value, now);
-      output.gain.linearRampToValueAtTime(0.0001, now + duration / 1000);
-      source.stop(now + duration / 1000 + 0.05);
+      if (output) {
+        const now = ctx.currentTime;
+        output.gain.cancelScheduledValues(0);
+        output.gain.setValueAtTime(output.gain.value, now);
+        output.gain.linearRampToValueAtTime(0.0001, now + duration / 1000);
+        source.stop(now + duration / 1000 + 0.05);
+      }
+      setTimeout(() => {
+        if (id !== session) return;
+        try { void ctx.suspend().catch(() => {}); } catch { /* sem suspend: o contexto segue acordado, mudo */ }
+      }, duration + 100);
     }),
   };
 }

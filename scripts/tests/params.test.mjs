@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CONFIG } from "../../src/infra/config.js";
-import { buildCheckoutUrl, captureCampaignParams } from "../../src/infra/params.js";
+import { buildCheckoutUrl, captureCampaignParams, cleanUrl, createCampaignParams } from "../../src/infra/params.js";
 
 const CHAVE = "fluor:params";
 
@@ -106,4 +106,68 @@ test("fbclid de tamanho realista (200 caracteres) segue para a URL do checkout; 
   const url = new URL(comCheckout(() => buildCheckoutUrl(devolvido)));
   assert.equal(url.searchParams.get("fbclid"), fbclid);
   assert.equal(url.searchParams.has("utm_campaign"), false);
+});
+
+test("@ e e-mail ficam fora: utm_content=fulano@gmail.com e o %40 escondido (duplo encode) nao passam", () => {
+  const { devolvido } = capturar("?utm_content=fulano%40gmail.com&utm_term=fulano%2540gmail.com&utm_source=facebook");
+  assert.deepEqual(devolvido, { utm_source: "facebook" });
+  const url = new URL(comCheckout(() => buildCheckoutUrl({ utm_content: "fulano@gmail.com", sck: "a%40b.com", utm_source: "facebook" })));
+  assert.equal(url.searchParams.has("utm_content"), false);
+  assert.equal(url.searchParams.has("sck"), false);
+});
+
+// Reescrita da barra: a URL nova vai para `replaceState`; sem nada a tirar, a lista fica vazia.
+function limpar(href) {
+  const antes = globalThis.window;
+  const trocas = [];
+  globalThis.window = {
+    location: { href, search: new URL(href).search },
+    history: { state: null, replaceState: (_s, _t, nova) => trocas.push(String(nova)) },
+  };
+  try {
+    cleanUrl();
+  } finally {
+    if (antes === undefined) delete globalThis.window;
+    else globalThis.window = antes;
+  }
+  return trocas;
+}
+
+test("cleanUrl tira e-mail, token e chave estranha da barra, e mantem utm_source e o hash", () => {
+  assert.deepEqual(limpar("https://lithium.app.br/?email=fulano%40gmail.com&token=abc&utm_source=facebook&utm_content=fulano%40gmail.com#oferta"), ["https://lithium.app.br/?utm_source=facebook#oferta"]);
+});
+
+test("cleanUrl nao toca em URL ja limpa", () => {
+  assert.deepEqual(limpar("https://lithium.app.br/?utm_source=facebook#oferta"), []);
+  assert.deepEqual(limpar("https://lithium.app.br/"), []);
+});
+
+test("cleanUrl tira a query inteira quando nenhuma chave de rastreio sobra", () => {
+  assert.deepEqual(limpar("https://lithium.app.br/?email=a%40b.com"), ["https://lithium.app.br/"]);
+});
+
+test("a fabrica captura uma vez, na criacao; ler o snapshot nao grava nada e devolve o mesmo objeto", () => {
+  const antes = globalThis.window;
+  const armazem = new Map();
+  let gravacoes = 0;
+  globalThis.window = {
+    location: { href: "https://lithium.app.br/?utm_source=facebook", search: "?utm_source=facebook" },
+    history: { state: null, replaceState: () => {} },
+    sessionStorage: { getItem: (k) => armazem.get(k) ?? null, setItem: (k, v) => { gravacoes++; armazem.set(k, v); } },
+  };
+  try {
+    const { readCampaignParams } = createCampaignParams();
+    assert.equal(gravacoes, 1);
+    const visita = readCampaignParams();
+    for (let i = 0; i < 5; i++) assert.equal(readCampaignParams(), visita);
+    assert.equal(gravacoes, 1);
+    assert.deepEqual(visita, { utm_source: "facebook" });
+  } finally {
+    if (antes === undefined) delete globalThis.window;
+    else globalThis.window = antes;
+  }
+});
+
+test("sem window (servidor) a fabrica devolve {} e nao lanca", () => {
+  assert.deepEqual(createCampaignParams().readCampaignParams(), {});
 });

@@ -120,6 +120,8 @@ html:has(body.com-doca) {
    Um anel que sai do botao e some, devagar. Ornamento: parado (e invisivel) sob movimento reduzido. */
 @theme {
   --animate-anel: anel 2.8s ease-out infinite;
+  /* A barra de progresso do video: a duracao (VIDEO_MS) vai inline. */
+  --animate-progresso: progresso 1s linear both;
   /* O corte do video: um circulo que nasce no centro e cobre a secao (75% = a meia diagonal, com folga). */
   /* Os takes finais do video (sections/video/Takes.jsx). */
   --animate-placa: placa 320ms var(--ease-expo) both; /* uma anilha cai na barra */
@@ -167,6 +169,7 @@ html:has(body.com-doca) {
   @keyframes glitch-b { from { transform: translateX(3.5%); } }
   @keyframes batida { from { transform: scale(1.06); } }
   @keyframes corte { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(75% at 50% 50%); } }
+  @keyframes progresso { from { transform: scaleX(0); } to { transform: scaleX(1); } }
   @keyframes anel { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.35); opacity: 0; } }
 }
 

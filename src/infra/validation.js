@@ -1,5 +1,5 @@
 /**
- * Validadores de dado real, usados pela tela (oferta, fechamento, rodape) e pelo build (a trava de
+ * Validadores de dado real, usados pela tela (oferta, fechamento, rodape), pela prova social e pelo build (a trava de
  * publicacao, em scripts/prerender.mjs). Uma regra so: o build nunca aprova o que a tela esconderia.
  */
 // Marcador de pendencia: "A DEFINIR", "A CONFIRMAR" ou um texto entre colchetes (`[CPF OU CNPJ]`), que e como a config
@@ -39,4 +39,46 @@ export function getDocumentUrl(value) {
   } catch {
     return null;
   }
+}
+
+// O que um depoimento precisa ter para ir a tela: o que ela mostra (texto, @, contexto e foto) e o lastro (origem e
+// referencia opaca da autorizacao de uso do texto, do @ e da foto). O documento de autorizacao nunca entra no bundle.
+const TESTIMONIAL_FIELDS = ["id", "texto", "identificacao", "contexto", "foto", "origem", "autorizacaoRef"];
+
+/**
+ * Pendências de um depoimento: os campos que impedem publicá-lo (vazio = publicável), com `aprovado` por último. A tela só
+ * mostra o depoimento sem pendência e o build recusa a configuração com qualquer uma: a mesma regra dos dois lados.
+ * @param {unknown} testimonial - Um item de `CONFIG.depoimentos`.
+ * @returns {string[]} Os campos pendentes.
+ */
+export function getTestimonialIssues(testimonial) {
+  const record = /** @type {Record<string, unknown>} */ (testimonial ?? {});
+  const issues = TESTIMONIAL_FIELDS.filter((field) => !isRealText(record[field]));
+  if (record.aprovado !== true) issues.push("aprovado");
+  return issues;
+}
+
+/**
+ * Os depoimentos publicáveis, na ordem da configuração.
+ * @template T
+ * @param {T[]} testimonials - `CONFIG.depoimentos`.
+ * @returns {T[]} Só os sem pendência.
+ */
+export const getPublishableTestimonials = (testimonials) => testimonials.filter((testimonial) => getTestimonialIssues(testimonial).length === 0);
+
+/**
+ * Pendências da nota de avaliação: a nota (número acima de 0 e até o máximo), a fonte e a aprovação. Vazio = publicável.
+ * Sem nota na configuração (`null`), não há o que publicar nem pendência.
+ * @param {unknown} rating - `CONFIG.avaliacao`.
+ * @returns {string[]} Os campos pendentes.
+ */
+export function getRatingIssues(rating) {
+  if (rating === null || rating === undefined) return [];
+  const record = /** @type {Record<string, unknown>} */ (rating);
+  const { nota, maximo } = record;
+  const issues = [];
+  if (!(typeof nota === "number" && typeof maximo === "number" && nota > 0 && nota <= maximo)) issues.push("nota");
+  if (!isRealText(record.fonte)) issues.push("fonte");
+  if (record.aprovado !== true) issues.push("aprovado");
+  return issues;
 }
