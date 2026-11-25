@@ -4,7 +4,7 @@ import { Frame } from "../components/ui/Frame.jsx";
 import { Thread } from "../components/ui/Thread.jsx";
 import { BLOCK, ENVELOPE, OUTLINED, padTwoDigits } from "../app/ui.js";
 
-const { titulo, curtos, noticias, abrir, aviso, videos, shorts, noticia } = CONTENT.vibe;
+const { titulo, curtos, noticias, abrir, videos, shorts, noticia } = CONTENT.vibe;
 
 const H3 = "m-0 text-bone font-secundaria font-bold text-[22px] leading-[1.1] md:text-[24px] uppercase";
 
@@ -91,8 +91,6 @@ export function SocialVibe() {
           <h3 className={H3}>{noticias}</h3>
           <ol className="flex flex-col gap-4 list-none p-0 m-0"><News index={1} {...noticia} /></ol>
         </section>
-
-        <p className="m-0 font-terciaria text-caption text-silver">{aviso}</p>
       </div>
     </section>
   );

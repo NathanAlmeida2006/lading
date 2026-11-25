@@ -1,9 +1,9 @@
 import { useRef } from "react";
 import { DotField } from "../components/visuals/DotField.jsx";
 import { CardImage } from "../components/ui/CardImage.jsx";
-import { revealInCascade, useMotion } from "../sensory/index.js";
+import { revealInCascade, revealLineMask, reveal, useMotion } from "../sensory/index.js";
 import { CONTENT } from "../content/content.js";
-import { BLOCK, padTwoDigits, ENVELOPE, GRAIN } from "../app/ui.js";
+import { BLOCK, padTwoDigits, ENVELOPE, GRAIN, MASK } from "../app/ui.js";
 
 /**
  * O que voce leva: os cards direto, em ziguezague de tres posicoes no monitor e
@@ -38,6 +38,8 @@ export function Batch() {
   useMotion(() => {
     const node = root.current;
     if (!node) return;
+    revealLineMask(node.querySelector(".titulo"), { delay: 60 });
+    reveal(node.querySelector(".leva__sub"), { delay: 200 });
     revealInCascade(node.querySelectorAll(".voz"), { interval: 80 });
   }, []);
 
@@ -46,7 +48,12 @@ export function Batch() {
       <DotField variant="estelar" />
 
       <div className={`${ENVELOPE} relative z-1`}>
-        <h2 className="sr-only">{CONTENT.leva.rotulo}</h2>
+        <header className="mb-10 lg:mb-16 max-w-[65ch]">
+          <h2 className={`titulo text-bone font-secundaria text-h1 uppercase [--text-h1:40px] md:[--text-h1:51.2px] ${MASK}`} data-revelar>
+            {CONTENT.leva.titulo}
+          </h2>
+          <p className="leva__sub mt-4 text-silver font-terciaria text-body lg:text-body-lg" data-revelar>{CONTENT.leva.sub}</p>
+        </header>
         <ol className="relative z-1 flex flex-col gap-10 lg:gap-0" role="list">
           {CONTENT.leva.vozes.map((voice, index) => {
             const position = ZIGZAG[index % 3];

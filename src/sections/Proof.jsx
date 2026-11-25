@@ -1,134 +1,133 @@
-import { Fragment, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CONTENT } from "../content/content.js";
 import { DotField } from "../components/visuals/DotField.jsx";
-import { useStoppable } from "../components/ui/useStoppable.js";
+import { Label } from "../components/ui/Label.jsx";
 import { Nota } from "../components/ui/Nota.jsx";
 import { BLOCK, ENVELOPE, padTwoDigits } from "../app/ui.js";
 
-const SLIDES = CONTENT.prova.depoimentos;
+const PRINTS = CONTENT.prova.depoimentos;
 const RATING = CONTENT.prova.avaliacao; // `null` sem nota publicável (validation.js): o bloco da nota some
 
+// A pista sangra ate a borda do envelope (margem negativa + o mesmo recuo de volta): o primeiro print alinha com o titulo, e o ultimo
+// que cabe espia pela direita, o que diz "role". `scroll-px` faz o encaixe respeitar esse recuo.
+const TRACK_BLEED = "-mx-4 px-4 scroll-px-4 md:-mx-8 md:px-8 md:scroll-px-8 lg:-mx-12 lg:px-12 lg:scroll-px-12 wide:-mx-16 wide:px-16 wide:scroll-px-16";
+
 /**
- * Trecho que sobe de dentro de um recorte (a mesma mascara das headlines do site). Entra subindo, escalonado por
- * `delay`; sai subindo mais rapido; fora de cena fica abaixo do recorte, sem transicao, pronto para a proxima entrada.
+ * Uma seta do carrossel: caixa quadrada de 48 px (alvo de toque) com o fio de 1px do site; apagada quando nao ha mais para onde ir.
  * @param {object} props
- * @param {"in"|"out"|"wait"} props.phase - Entrando (ativo), saindo (o anterior) ou esperando.
- * @param {number} [props.delay=0] - Atraso da entrada, em ms.
- * @param {import("react").ReactNode} props.children - Conteudo.
- * @returns {JSX.Element} O trecho mascarado.
+ * @param {-1|1} props.direction - -1 volta, 1 avanca.
+ * @param {string} props.label - Nome acessivel do botao.
+ * @param {boolean} props.disabled - Sem mais prints naquele sentido.
+ * @param {() => void} props.onClick - Rola um print.
+ * @returns {JSX.Element}
  */
-function Rise({ phase, delay = 0, children }) {
+function Arrow({ direction, label, disabled, onClick }) {
   return (
-    <span className="inline-block overflow-y-clip align-bottom pt-[0.12em] pb-[0.12em] -my-[0.12em]">
-      <span
-        className={`inline-block motion-reduce:transition-none ${
-          phase === "in" ? "translate-y-0 transition-transform duration-700 ease-(--ease-default)"
-            : phase === "out" ? "-translate-y-[140%] transition-transform duration-300 ease-in"
-              : "js:translate-y-[140%]"
-        }`}
-        style={{ transitionDelay: phase === "in" ? `${delay}ms` : undefined }}
-      >
-        {children}
-      </span>
-    </span>
+    <button
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className="grid size-12 cursor-pointer place-items-center border border-line-strong text-bone transition-colors duration-150 hover:border-bone disabled:cursor-default disabled:opacity-30 disabled:hover:border-line-strong motion-reduce:transition-none"
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter" className={direction < 0 ? "-scale-x-100" : undefined} aria-hidden="true">
+        <path d="M5 12h14M13 6l6 6-6 6" />
+      </svg>
+    </button>
   );
 }
 
 /**
- * Prova social: um depoimento por vez, em loop. A troca e a subida de palavras dentro de um recorte, como nas headlines do
- * site: o depoimento atual sai para cima e o proximo sobe palavra a palavra. O tempo de cada um e a propria regua de baixo: ela enche
- * em 5 s e, ao fim, passa ao proximo. A regua para com o mouse ou o foco em cima;
- * sob movimento reduzido ela nao anda e a troca e so por clique.
+ * A vaga de um print que ainda nao chegou: quadro vazio, cortado pelo X de prancheta, com o numero e o rotulo no centro.
+ * @param {object} props
+ * @param {number} props.index - Posicao da vaga, de 0.
+ * @returns {JSX.Element}
+ */
+function Placeholder({ index }) {
+  return (
+    <>
+      <svg viewBox="0 0 9 18" preserveAspectRatio="none" fill="none" stroke="currentColor" className="absolute inset-0 size-full text-line-strong" aria-hidden="true">
+        <path d="M0 0 9 18M9 0 0 18" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <span className="absolute inset-0 grid place-content-center">
+        <span className="grid justify-items-center gap-2 bg-surface-1 px-5 py-4">
+          <span className="font-secundaria font-extrabold leading-none text-bone text-[40px]">{padTwoDigits(index + 1)}</span>
+          <span className="font-terciaria text-mono-grande uppercase text-silver">Print do cliente</span>
+        </span>
+      </span>
+    </>
+  );
+}
+
+/**
+ * Prova social: o carrossel de prints de clientes que testaram o app. A pista e uma lista com rolagem nativa e encaixe (arrastar no
+ * toque, rodinha ou setas do teclado com a pista em foco); as duas setas rolam um print, e a linha de baixo mostra onde a janela esta.
+ * Nao anda sozinho: um print e para ser lido. `print: null` no CONFIG desenha a vaga (Placeholder); com arquivo, o print inteiro
+ * (`object-contain`: recortar a conversa de um cliente passaria a ideia de edicao) sobre o fundo do quadro.
  * @param {object} props - Sem props.
  * @returns {JSX.Element} A secao de prova social.
  */
 export function Proof() {
-  const [{ index, prev }, setPosition] = useState({ index: 0, prev: -1 });
-  const goTo = (next) => setPosition((current) => (next === current.index ? current : { index: next, prev: current.index }));
-  const root = useRef(null);
-  const { isStopped, isSeen, holdProps } = useStoppable(root);
+  const track = useRef(null);
+  // Onde a janela esta, em fracao da largura rolavel: `start` e o quanto ja passou e `size`, o quanto ela cobre. Comeca "tudo
+  // cabe" (setas apagadas, sem marcador) ate a primeira medida: sem JavaScript a pista ainda rola, so as setas ficam de fora.
+  const [view, setView] = useState({ start: 0, size: 1 });
+
+  useEffect(() => {
+    const node = track.current;
+    if (!node) return undefined;
+    const measure = () => setView({ start: node.scrollLeft / node.scrollWidth, size: node.clientWidth / node.scrollWidth });
+    node.addEventListener("scroll", measure, { passive: true });
+    const observer = new ResizeObserver(measure); // dispara ao observar: e a primeira medida
+    observer.observe(node);
+    return () => { node.removeEventListener("scroll", measure); observer.disconnect(); };
+  }, []);
+
+  // Um print por clique: a distancia de um cartao ao proximo (largura mais vao). O `scroll-smooth` so vale sem movimento reduzido.
+  const page = (direction) => {
+    const [first, second] = track.current.children;
+    track.current.scrollBy({ left: direction * (second.offsetLeft - first.offsetLeft) });
+  };
+  const isAtStart = view.start < 0.005;
+  const isAtEnd = view.start + view.size > 0.995;
 
   return (
-    <section id="prova-social" ref={root} className={`${BLOCK} isolate py-20 md:py-32`} aria-roledescription="carrossel" aria-label={CONTENT.prova.titulo}>
+    <section id="prova-social" className={`${BLOCK} isolate border-t-0! pb-20 md:pb-32`} aria-roledescription="carrossel" aria-label={CONTENT.prova.titulo}>
       <DotField variant="estelar" />
-      <div className={`${ENVELOPE} relative z-1`} {...holdProps}>
-        <h2 className="sr-only">{CONTENT.prova.titulo}</h2>
+      <div className={`${ENVELOPE} relative z-1`}>
+        <header className="mb-10 grid gap-4 border-t border-line-strong pt-6 lg:mb-14">
+          <Label margin="mb-0">{CONTENT.prova.rotulo}</Label>
+          <h2 className="m-0 text-bone font-secundaria text-h1 uppercase [--text-h1:40px] md:[--text-h1:51.2px]">{CONTENT.prova.titulo}</h2>
+        </header>
 
-        <div className="grid" aria-live={isStopped ? "polite" : "off"}>
-          {SLIDES.map((slide, i) => {
-            const isActive = i === index;
-            const isLeaving = i === prev;
-            const phase = isActive && isSeen ? "in" : isLeaving ? "out" : "wait";
-            return (
-              <figure
-                key={slide.nome}
-                className={`col-start-1 row-start-1 flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16 ${isActive || isLeaving ? "" : "invisible"} ${isActive ? "" : "pointer-events-none"}`}
-                aria-hidden={!isActive}
-                aria-roledescription="slide"
-                aria-label={`${i + 1} de ${SLIDES.length}`}
-              >
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <span className="block font-secundaria font-extrabold text-acento text-[120px] leading-[0.7] h-14 lg:text-[200px] lg:h-24" aria-hidden="true">&ldquo;</span>
-                  </div>
-                  <blockquote className="max-w-[24ch] text-bone font-secundaria font-bold leading-[1.04] text-[length:clamp(30px,8.4vw,72px)] lg:max-w-[28ch] lg:text-[length:clamp(44px,5vw,76px)]">
-                    {slide.texto.split(" ").map((word, w) => (
-                      <Fragment key={`${word}-${w}`}>
-                        <Rise phase={phase} delay={120 + w * 45}>{word}</Rise>{" "}
-                      </Fragment>
-                    ))}
-                  </blockquote>
-                </div>
+        <ol
+          ref={track}
+          tabIndex={0}
+          aria-label="Prints de clientes"
+          className={`flex items-start gap-4 list-none m-0 overflow-x-auto overscroll-x-contain snap-x snap-mandatory motion-safe:scroll-smooth [scrollbar-width:none] md:gap-6 ${TRACK_BLEED}`}
+        >
+          {PRINTS.map(({ src, alt }, i) => (
+            <li key={src ?? i} className="w-[min(64vw,280px)] flex-none snap-start lg:w-80 wide:w-85" aria-roledescription="slide" aria-label={`${i + 1} de ${PRINTS.length}`}>
+              <div className="relative aspect-[9/18] overflow-clip border border-line-strong bg-surface-1">
+                {src
+                  ? <img src={src} alt={alt} width="540" height="1080" loading="lazy" decoding="async" className="size-full object-contain" />
+                  : <Placeholder index={i} />}
+              </div>
+            </li>
+          ))}
+        </ol>
 
-                <figcaption className="flex items-center gap-4 lg:flex-col lg:items-start lg:w-64 lg:shrink-0 lg:pb-2">
-                  <span className="size-14 overflow-clip" aria-hidden="true">
-                    <img
-                      src={slide.src}
-                      alt=""
-                      width="56"
-                      height="56"
-                      loading="lazy"
-                      decoding="async"
-                      className={`block size-full object-cover bg-surface-1 motion-reduce:transition-none ${
-                        phase === "in" ? "translate-y-0 transition-transform duration-500 ease-(--ease-default) delay-300"
-                          : phase === "out" ? "-translate-y-[140%] transition-transform duration-300 ease-in" : "js:translate-y-[140%]"
-                      }`}
-                    />
-                  </span>
-                  <span className="flex flex-col gap-1">
-                    <span className="block text-bone font-secundaria text-label-grande uppercase"><Rise phase={phase} delay={450}>{slide.nome}</Rise></span>
-                    <span className="block text-silver font-terciaria text-caption-grande"><Rise phase={phase} delay={520}>{slide.contexto}</Rise></span>
-                  </span>
-                </figcaption>
-              </figure>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center gap-4 mt-12 lg:mt-16">
-          <div className="grid flex-1 gap-2" style={{ gridTemplateColumns: `repeat(${SLIDES.length}, 1fr)` }}>
-            {SLIDES.map((slide, i) => (
-              <button
-                key={slide.nome}
-                type="button"
-                aria-label={`Depoimento ${i + 1} de ${SLIDES.length}`}
-                aria-current={i === index}
-                onClick={() => goTo(i)}
-                className="group relative h-8 cursor-pointer"
-              >
-                <span className="absolute inset-x-0 bottom-3 h-[3px] overflow-clip bg-line-strong group-hover:bg-silver">
-                  <span
-                    className={`absolute inset-0 origin-left bg-acento ${i === index ? "scale-x-100 animate-regua motion-reduce:animate-none" : "scale-x-0"}`}
-                    style={{ animationPlayState: isStopped ? "paused" : "running" }}
-                    onAnimationEnd={() => setPosition((current) => ({ index: (current.index + 1) % SLIDES.length, prev: current.index }))}
-                  />
-                </span>
-              </button>
-            ))}
+        <div className="mt-8 flex items-center gap-6 lg:mt-10">
+          <div className="relative h-[3px] flex-1 overflow-clip bg-line-strong" aria-hidden="true">
+            <span
+              className={`absolute inset-0 origin-left bg-acento ${view.size < 1 ? "" : "invisible"}`}
+              style={{ transform: `translateX(${view.start * 100}%) scaleX(${view.size})` }}
+            />
           </div>
-          <span className="font-terciaria text-mono-grande tabular-nums text-silver" aria-hidden="true">
-            [{padTwoDigits(index + 1)}/{padTwoDigits(SLIDES.length)}]
-          </span>
+          <div className="flex gap-2">
+            <Arrow direction={-1} label="Print anterior" disabled={isAtStart} onClick={() => page(-1)} />
+            <Arrow direction={1} label="Próximo print" disabled={isAtEnd} onClick={() => page(1)} />
+          </div>
         </div>
 
         {RATING && <Nota nota={RATING.nota} maximo={RATING.maximo} rotulo={RATING.rotulo} className="mt-12 lg:mt-16" />}

@@ -286,6 +286,44 @@ export function TakeDoIt({ onRepeat, replayAt }) {
   );
 }
 
+/**
+ * Os cartazes do gancho, um por corte seco: [fundo e tinta, linhas]. Cada linha enche a largura (o corpo sai do tamanho da maior);
+ * `*...*` pinta o trecho no acento; `w` e a largura de um caractere, em em (0,5 se omitido; as letras estreitas, como o I, pedem menos).
+ * O texto e a pergunta do espelho da pagina (CONTENT.espelho.titulo), em tres golpes. O ultimo, em vermelho, e o fundo do play: quando ele sai, o triangulo vira o L.
+ */
+const HOOK = [
+  { look: "bg-void text-bone", lines: ["Mais *6*", "meses"] },
+  { look: "bg-bone text-void", lines: ["Treinando"] },
+  { look: "bg-acento text-void", lines: ["Invisível?"], w: 0.4 },
+];
+// ms depois do clique em que cada cartaz entra (o primeiro, no clique) e, o ultimo, em que o gancho sai (1500 ms: quando o play comeca a virar o L).
+const HOOK_TIMES = [600, 1050, 1500];
+const accent = (line) => line.split("*").map((part, i) => (i % 2 ? <span className="text-acento" key={i}>{part}</span> : part));
+
+/**
+ * O gancho (do clique ate 1,5 s, a janela em que a tela ficava parada antes do play virar o L): a pergunta da pagina em tres cartazes de corte seco.
+ * Passado o ultimo, nao desenha nada e deixa ver, por baixo, o vermelho e o play. Sob movimento reduzido nada bate: os cortes seguem os mesmos.
+ * @param {object} props
+ * @param {number} props.startAt - Hora em que o estágio devia entrar.
+ * @returns {JSX.Element|null} O cartaz atual do gancho, ou nada depois do ultimo.
+ */
+export function TakeHook({ startAt }) {
+  const card = HOOK[useFrames(startAt, HOOK_TIMES)];
+  if (!card) return null;
+  const { look, lines, w = 0.5 } = card;
+  const longest = Math.max(1, ...lines.map((line) => line.replaceAll("*", "").length));
+  return (
+    <div className={`${PAGE} ${look}`} aria-hidden="true">
+      <div
+        className={`${INNER} text-[length:min(calc((min(100vw,1048px)-48px)/(var(--n)*var(--w))),calc((100svh-160px)/(var(--l)*1.1)),300px)] leading-[1.04] tracking-[0.01em]`}
+        style={{ "--n": longest, "--w": w, "--l": lines.length || 1 }}
+      >
+        {lines.map((line, k) => <p {...beat(k * 70)} key={line}>{accent(line)}</p>)}
+      </div>
+    </div>
+  );
+}
+
 /** O giro de todos: de frente (como o L chato do play) por 0,25 s e depois acelerando, o mesmo giro de um objeto para o outro. */
 const spin = (t) => [0, t < 0.25 ? 0 : Math.pow(t - 0.25, 1.7) * 3.2, 0];
 

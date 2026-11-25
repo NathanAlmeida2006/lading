@@ -268,35 +268,51 @@ function carga({ sessao, local, cookie = "", href = "https://www.lithium.app.br/
   return { scripts, cookies, log };
 }
 
-test("PostHog: aceitar, gerenciar cookies, F5 e aceitar de novo volta a capturar", async () => {
+test("PostHog: carrega no F5 sem esperar o aviso, em memory; aceitar faz set_config, e reabrir a escolha volta a memory", async () => {
   await comRastreadores(async () => {
     const sessao = new Map();
     const local = new Map();
     carga({ sessao, local });
     let m = await fresco();
     m.startMeasurement({});
+    assert.equal(globalThis.window.posthog._i[0][1].persistence, "memory");
     m.answerConsent(true);
     m.answerConsent(null);
-    assert.deepEqual(globalThis.window.posthog.filter((a) => a[0].startsWith("opt_")).map((a) => a[0]), ["opt_in_capturing", "opt_out_capturing"]);
+    assert.deepEqual(globalThis.window.posthog.filter((a) => a[0] === "set_config").map((a) => a[1].persistence), ["localStorage+cookie", "memory"]);
 
     carga({ sessao, local }); // F5: a janela e o SDK somem, o sessionStorage e o localStorage ficam
     m = await fresco();
     m.startMeasurement({});
-    assert.equal(globalThis.window.posthog, undefined);
+    assert.equal(globalThis.window.posthog._i.length, 1, "um init so por carga");
+    assert.equal(globalThis.window.posthog._i[0][1].persistence, "memory");
     m.answerConsent(true);
-    assert.equal(globalThis.window.posthog._i[0][1].opt_out_capturing_by_default, true);
-    assert.deepEqual(globalThis.window.posthog.filter((a) => a[0].startsWith("opt_")).map((a) => a[0]), ["opt_in_capturing"]);
+    assert.deepEqual(globalThis.window.posthog.filter((a) => a[0] === "set_config").map((a) => a[1].persistence), ["localStorage+cookie"]);
   });
 });
 
-test("recusa fria: com false na sessao e cookies de uma visita anterior, a largada apaga os dos tres rastreadores sem carregar script", async () => {
+test("Clarity e PostHog carregam na largada mesmo sem resposta; o Pixel da Meta so depois do aceite", async () => {
+  await comRastreadores(async () => {
+    const { scripts } = carga({ sessao: new Map(), local: new Map() });
+    const m = await fresco();
+    m.startMeasurement({});
+    assert.deepEqual(scripts.map((el) => new URL(el.src).hostname).sort(), ["us.i.posthog.com", "www.clarity.ms"]);
+    assert.deepEqual([...globalThis.window.clarity.q].map((a) => [...a]), [["consentv2", { ad_Storage: "denied", analytics_Storage: "denied" }]]);
+    m.answerConsent(true);
+    assert.deepEqual(scripts.map((el) => new URL(el.src).hostname).sort(), ["connect.facebook.net", "us.i.posthog.com", "www.clarity.ms"]);
+    assert.deepEqual([...globalThis.window.clarity.q].map((a) => a[0] === "consentv2" && a[1].analytics_Storage), ["denied", "granted"]);
+  });
+});
+
+test("recusa fria: com false na sessao e cookies de uma visita anterior, a largada apaga os dos tres rastreadores e so o Pixel fica sem script", async () => {
   await comRastreadores(async () => {
     const sessao = new Map([["fluor:consentimento", "false"]]);
     const local = new Map([["ph_phc_teste_posthog", "1"], ["__ph_opt_in_out_phc_teste", "1"]]);
     const { scripts, cookies } = carga({ sessao, local, cookie: "_fbp=1; _clck=2; ph_phc_teste_posthog=3" });
     const m = await fresco();
     m.startMeasurement({});
-    assert.equal(scripts.length, 0);
+    assert.deepEqual(scripts.map((el) => new URL(el.src).hostname).sort(), ["us.i.posthog.com", "www.clarity.ms"]);
+    assert.equal(globalThis.window.fbq, undefined);
+    assert.equal(globalThis.window.posthog._i[0][1].persistence, "memory");
     for (const nome of ["_fbp", "_fbc", "_clck", "_clsk", "ph_phc_teste_posthog"]) {
       assert.ok(cookies.some((c) => c.startsWith(`${nome}=; expires=Thu, 01 Jan 1970`) && c.endsWith("; domain=lithium.app.br")), nome);
     }
@@ -334,6 +350,7 @@ test("a URL e limpa antes de qualquer rastreador", async () => {
 // A ordem das assinaturas: o orquestrador carrega os scripts antes de o alcance decidir se cria o observador.
 test("com aceite na largada, ou no aceite depois dela, o alcance ja acha os scripts e observa na mesma resposta", async () => {
   await comRastreadores(async () => {
+    CONFIG.clarity.id = null; // so o Pixel depende do aceite: com o Clarity ligado o observador ja existiria antes dele
     for (const inicio of ["true", null]) {
       carga({ sessao: new Map(inicio ? [["fluor:consentimento", inicio]] : []), local: new Map() });
       const observados = [];
@@ -357,7 +374,8 @@ test("desligar a medicao cancela o orquestrador: um aceite depois disso nao carr
     const parar = m.startMeasurement({});
     parar();
     m.answerConsent(true);
-    assert.equal(scripts.length, 0);
+    assert.equal(scripts.length, 2, "so Clarity e PostHog, carregados na largada");
+    assert.ok(scripts.every((el) => !el.src.includes("facebook")), "o Pixel nao carrega depois do desligamento");
   });
 });
 

@@ -16,7 +16,7 @@ import { isRealEmail } from "./validation.js";
  * @property {ValueStackItem[]} itens - O que a compra inclui (só nomes: nenhum preço avulso é mostrado).
  * @property {string} tituloItens - Título acima da lista, no lugar de uma marca por item (ex.: "Itens inclusos").
  * @property {{rotulo: string}} conector - Ligação entre a lista e a oferta.
- * @property {{rotulo: string, preco: number, comparacao: string, subtexto: string}} oferta - O preço à vista, a comparação sob ele e o detalhe do pagamento.
+ * @property {{rotulo: string, preco: number, parcelas: number, valorParcela: number, selo: string, comparacao: string, subtexto: string}} oferta - O destaque parcelado (número e valor das parcelas), o preço à vista, o selo do pagamento único, a comparação e o detalhe do pagamento.
  */
 
 /**
@@ -45,16 +45,15 @@ import { isRealEmail } from "./validation.js";
  */
 
 /**
- * @typedef Testimonial Depoimento: texto público, quem falou e a referência opaca à autorização (nenhum documento de
+ * @typedef Testimonial Depoimento: um print de cliente no carrossel e a referência opaca à autorização (nenhum documento de
  * autorização nem contato privado entra no bundle). Só vai à tela, e só passa no build, sem pendência (validation.js).
+ * `print: null` é a vaga reservada (placeholder): desenha um quadro vazio e não exige mais nada além do `id`.
  * @property {string} id - Identificador estável.
- * @property {string} texto - Texto exato de quem escreveu (não reescrever).
- * @property {string} identificacao - O @ público de quem falou.
- * @property {string} contexto - Tempo de uso ("Semana 6").
- * @property {string} foto - Avatar de quem falou (`/images/iconN.webp`; os JPG de origem ficam em source-media/avatares).
- * @property {string|null} origem - De onde o relato veio (canal e data); `null` até ser registrada.
- * @property {string|null} autorizacaoRef - Referência opaca à autorização de uso do texto, do @ e da foto; `null` até existir.
- * @property {boolean} aprovado - Aprovação do gerente para publicar.
+ * @property {string|null} print - O arquivo do print (`/images/prints/print-1.webp`); `null` enquanto é só a vaga.
+ * @property {string} [alt] - O que o print mostra e diz (transcrição, para leitor de tela); obrigatório com `print`.
+ * @property {string|null} [origem] - De onde o print veio (canal e data); obrigatório com `print`.
+ * @property {string|null} [autorizacaoRef] - Referência opaca à autorização de uso do print (@, foto e conversa); obrigatória com `print`.
+ * @property {boolean} [aprovado] - Aprovação do gerente para publicar; `true` obrigatório com `print`.
  */
 
 /**
@@ -97,6 +96,9 @@ export function readTrackerEnv(env, name) {
 // Um acesso só ao ambiente do Vite: o build troca `import.meta.env` pelo objeto inteiro, e cada acesso seria uma cópia no bundle.
 const ENV = import.meta.env;
 
+// O prazo da garantia aparece no texto do preço e em `oferta.garantiaDias`: um número só.
+const GARANTIA_DIAS = 7;
+
 /**
  * Dados comerciais da instância. null indica informação ainda não confirmada.
  * @type {Config}
@@ -122,11 +124,15 @@ export const CONFIG = {
     tituloItens: "Itens inclusos",
     conector: { rotulo: "Vitalício" },
     oferta: {
-      rotulo: "Acesso vitalício por pagamento único de:",
+      rotulo: "Acesso vitalício por:",
+      // O cartão na Hotmart tem juros: 3 x 28,55 não é 79,99 / 3. O valor da parcela vem do checkout, não de conta.
+      parcelas: 3,
+      valorParcela: 28.55,
       preco: 79.99,
-      // "Menos de R$ 2,25" vale para 79,99 / 36 treinos = 2,22; scripts/tests/faq.test.mjs trava a conta se o preço mudar.
-      comparacao: "Menos de R$ 2,25 por treino. Mais barato que um pote de creatina que acaba em 30 dias.",
-      subtexto: "Pix ou cartão via Hotmart · Acesso imediato · Zero mensalidades",
+      // "Menos de R$ 2,23" vale para 79,99 / 36 treinos = 2,22; scripts/tests/faq.test.mjs trava a conta (preço, 36 treinos e 12 semanas).
+      comparacao: "Menos de R$ 2,23 por treino, considerando 36 treinos ao longo das 12 semanas.",
+      selo: "Pagamento único", // em destaque, logo abaixo do preço: quebra a objeção de assinatura
+      subtexto: `Sem assinaturas ou cobranças recorrentes · ${GARANTIA_DIAS} dias de garantia`,
     },
   },
 
@@ -150,7 +156,7 @@ export const CONFIG = {
     // O valor do Pix tem de ser igual ao preço à vista da pilha (o build confere); a doca o lê daqui.
     pix: { ativo: true, valor: 79.99, confirmado: true },
     parcelamento: null, // opcional, quando confirmado
-    garantiaDias: 7,
+    garantiaDias: GARANTIA_DIAS,
     garantiaCondicoes: "Incondicional",
     garantiaCanal: "Direto pela plataforma Hotmart",
     bonus: [], // { id, nome, descricao, origem, confirmado }
@@ -189,15 +195,18 @@ export const CONFIG = {
     termosDeUso: "/terms.html",
   },
 
-  // Prova social: depoimento e nota so vao a tela, e so passam no build, com lastro e aprovacao registrados (validation.js).
-  // Em 23/11/2026 o gerente mandou devolver os cinco relatos e a nota e autorizou a publicacao. O lastro registrado e so o que
-  // existe: origem informada pelo gerente e a aprovacao dele; o consentimento dos autores (texto, @ e foto) NAO esta documentado.
+  // Prova social: o carrossel de prints de clientes. Print e nota so vao a tela, e so passam no build, com lastro e aprovacao
+  // registrados (validation.js). Por ora sao cinco vagas (`print: null`, quadro vazio). Para publicar um print, ponha o arquivo em
+  // public/images/prints/ e troque a vaga por:
+  //   { id: "print-1", print: "/images/prints/print-1.webp", alt: "o que o print mostra e diz", origem: "canal e data",
+  //     autorizacaoRef: "referencia da autorizacao do cliente", aprovado: true }
+  // Os cinco relatos em texto da versao anterior (aprovados pelo gerente em 23/11/2026) ficam no historico do git.
   depoimentos: [
-    { id: "rafa-moura04", texto: "Eu ficava quase 2h na academia copiando treino do TikTok e nunca subia peso. Agora resolvo em 1h e finalmente tô vendo a carga andar toda semana.", identificacao: "@rafa.moura04", contexto: "Semana 6", foto: "/images/icon1.webp", origem: "relato de usuário do app, texto exato de quem escreveu (informado pelo gerente)", autorizacaoRef: "aprovação do gerente em 23/11/2026; consentimento do autor não documentado", aprovado: true },
-    { id: "lucas-alvesz", texto: "Sempre começava animado na segunda e largava na quinta. Só de abrir a tela e ver o dia em aberto no checklist já me segurou, fechei o primeiro mês sem furar.", identificacao: "@lucas.alvesz", contexto: "Treina há 1 ano", foto: "/images/icon2.webp", origem: "relato de usuário do app, texto exato de quem escreveu (informado pelo gerente)", autorizacaoRef: "aprovação do gerente em 23/11/2026; consentimento do autor não documentado", aprovado: true },
-    { id: "thiago-sntos", texto: "Bem direto ao ponto. Não fica travando nem enchendo o saco com propaganda igual esses apps gringos, no descanso da série já bato o olho e sei exatamente quanto colocar.", identificacao: "@thiago.sntos_", contexto: "Semana 4", foto: "/images/icon3.webp", origem: "relato de usuário do app, texto exato de quem escreveu (informado pelo gerente)", autorizacaoRef: "aprovação do gerente em 23/11/2026; consentimento do autor não documentado", aprovado: true },
-    { id: "bruno-csta02", texto: "Achava frescura esse negócio de controlar sono, mas fui testar o que tá lá. Na segunda semana já parei de chegar moído no treino de quarta.", identificacao: "@bruno_csta02", contexto: "Treina há 2 anos", foto: "/images/icon4.webp", origem: "relato de usuário do app, texto exato de quem escreveu (informado pelo gerente)", autorizacaoRef: "aprovação do gerente em 23/11/2026; consentimento do autor não documentado", aprovado: true },
-    { id: "felipe-rbr", texto: "Semana passada apertei com prova e trabalho e quase larguei de mão de novo. Usei o ajuste de retorno, voltei sem neura e não perdi o ritmo.", identificacao: "@felipe.rbr_", contexto: "Semana 5", foto: "/images/icon5.webp", origem: "relato de usuário do app, texto exato de quem escreveu (informado pelo gerente)", autorizacaoRef: "aprovação do gerente em 23/11/2026; consentimento do autor não documentado", aprovado: true },
+    { id: "print-1", print: null },
+    { id: "print-2", print: null },
+    { id: "print-3", print: null },
+    { id: "print-4", print: null },
+    { id: "print-5", print: null },
   ],
   avaliacao: { nota: 4.5, maximo: 5, fonte: "informada pelo gerente em 23/11/2026; plataforma e total de avaliações não registrados", aprovado: true },
 };

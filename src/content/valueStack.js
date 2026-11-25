@@ -12,7 +12,7 @@ import { CONFIG } from "../infra/config.js";
  * @property {string} tituloItens - Título acima da lista.
  * @property {string} moeda - Símbolo da moeda.
  * @property {{rotulo: string}} conector - Ligação entre a lista e a oferta.
- * @property {{rotulo: string, preco: string, comparacao: string, subtexto: string}} oferta - O preço à vista, formatado, a comparação sob ele e o detalhe do pagamento.
+ * @property {{rotulo: string, parcelas: number, valorParcela: string, totalParcelado: string, selo: string, preco: string, comparacao: string, subtexto: string}} oferta - O número e o valor formatado das parcelas, o preço à vista formatado, a comparação e o detalhe do pagamento.
  */
 
 /**
@@ -61,7 +61,13 @@ export function buildPresentableValueStack(block) {
     tituloItens: block.tituloItens,
     moeda: block.moeda,
     conector: block.conector,
-    oferta: { rotulo: block.oferta.rotulo, preco: formatReais(block.oferta.preco), comparacao: block.oferta.comparacao, subtexto: block.oferta.subtexto },
+    oferta: {
+      ...block.oferta,
+      preco: formatReais(block.oferta.preco),
+      valorParcela: formatReais(block.oferta.valorParcela),
+      // Arredonda os centavos: 3 * 28,55 em ponto flutuante nao fecha em 85,65.
+      totalParcelado: formatReais(Math.round(block.oferta.parcelas * block.oferta.valorParcela * 100) / 100),
+    },
   };
 }
 

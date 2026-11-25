@@ -25,7 +25,7 @@
         <h2 id="resumo">Em resumo</h2>
         <ul>
           <li>Esta página não tem cadastro nem formulário. Dá para ler tudo sem informar dado nenhum.</li>
-          <li>A medição de anúncios só roda se você aceitar o aviso de cookies. Recusar não muda a leitura nem a compra.</li>
+          <li>A página mede a visita de forma anônima e sem cookies. Cookies de análise completa e a medição de anúncios só rodam se você aceitar o aviso de cookies. Recusar não muda a leitura nem a compra.</li>
           <li>O pagamento acontece na Hotmart. O Lithium não vê o número do seu cartão.</li>
           <li>
             No app, treinos, noites, refeições, pesos e medidas ficam no seu aparelho e, se você entrou pelo link de acesso,
@@ -100,7 +100,22 @@
         <dd>Consentimento (art. 7º, I).</dd>
       </dl>
 
-      <h3>2.2 Se você aceitar o aviso de cookies</h3>
+      <h3>2.2 Medição anônima, antes de qualquer resposta</h3>
+      <dl class="dado">
+        <dt>Dado</dt>
+        <dd>
+          O Microsoft Clarity grava como você usa a página (cliques, rolagem, movimento do mouse e uma reprodução da visita),
+          e o PostHog conta visitas, saídas e cliques de funil, como o clique no botão de compra. Antes de você responder, e
+          se você recusar, os dois funcionam sem cookies e sem identificador guardado no aparelho. Recebem também endereço IP
+          aproximado, navegador, aparelho e a identificação do anúncio de onde você veio. Não há formulário nesta página.
+        </dd>
+        <dt>Para quê</dt>
+        <dd>Entender onde a página confunde ou perde leitores e quantas pessoas chegam à oferta, para melhorá-la.</dd>
+        <dt>Base legal</dt>
+        <dd>Legítimo interesse (art. 7º, IX), com dado anônimo e sem cookies. Você pode se opor pelos canais da seção de direitos.</dd>
+      </dl>
+
+      <h3>2.3 Se você aceitar o aviso de cookies</h3>
       <dl class="dado">
         <dt>Dado</dt>
         <dd>
@@ -119,9 +134,8 @@
       <dl class="dado">
         <dt>Dado</dt>
         <dd>
-          O Microsoft Clarity é carregado e grava como você usa a página: cliques, rolagem, movimento do mouse e uma
-          reprodução da sua visita, além de endereço IP aproximado, navegador, aparelho e a identificação do anúncio de
-          onde você veio. Não há formulário nesta página, e nada do que você digita em outro site é gravado.
+          O Microsoft Clarity e o PostHog passam a usar cookies e armazenamento no aparelho, o que permite reconhecer a mesma
+          visita entre uma página e outra e em visitas seguintes. Nada do que você digita em outro site é gravado.
         </dd>
         <dt>Para quê</dt>
         <dd>Entender onde a página confunde ou perde leitores, para melhorá-la.</dd>
@@ -129,11 +143,11 @@
         <dd>Consentimento (art. 7º, I). Você pode revogar quando quiser.</dd>
       </dl>
       <p>
-        Se você recusar, os scripts da Meta e do Clarity não são carregados e nada é enviado a elas. O evento de compra, quando existe, é
+        Se você recusar, o script da Meta não é carregado e nada é enviado a ela, e o Clarity e o PostHog seguem só com a medição anônima da seção 2.2. O evento de compra, quando existe, é
         enviado pela Hotmart, e não por esta página.
       </p>
 
-      <h3>2.3 Quando você compra</h3>
+      <h3>2.4 Quando você compra</h3>
       <dl class="dado">
         <dt>Dado</dt>
         <dd>
@@ -150,7 +164,7 @@
         <dd>Execução de contrato (art. 7º, V), obrigação legal (art. 7º, II) e exercício regular de direitos (art. 7º, VI).</dd>
       </dl>
 
-      <h3>2.4 Quando você usa o app</h3>
+      <h3>2.5 Quando você usa o app</h3>
       <dl class="dado">
         <dt>Dado</dt>
         <dd>
@@ -208,8 +222,8 @@
         <li><strong>Cloudflare:</strong> hospedagem da página e do app, rede de entrega e armazenamento da cópia na conta. Atua como operadora, em nosso nome.</li>
         <li><strong>Serviço de envio de e-mail:</strong> recebe o seu e-mail para enviar o link de acesso. Atua como operador, em nosso nome.</li>
         <li><strong>Meta:</strong> recebe os eventos do pixel, e só se você aceitar o aviso de cookies.</li>
-        <li><strong>Microsoft (Clarity):</strong> recebe a gravação da sua visita, e só se você aceitar o aviso de cookies.</li>
-        <li><strong>PostHog:</strong> recebe dados de uso da página (como cliques, páginas vistas e erros), e só se você aceitar o aviso de cookies.</li>
+        <li><strong>Microsoft (Clarity):</strong> recebe a gravação anônima da sua visita, sem cookies; os cookies dele só se você aceitar o aviso de cookies.</li>
+        <li><strong>PostHog:</strong> recebe dados anônimos de uso da página (como cliques, páginas vistas e erros), sem cookies; os cookies e o armazenamento dele só se você aceitar o aviso de cookies.</li>
         <li><strong>Autoridades:</strong> quando uma lei ou uma ordem judicial exigir.</li>
       </ul>
       <p>Não vendemos nem alugamos dados pessoais.</p>
@@ -225,8 +239,8 @@
         <li><strong>Resposta ao aviso de cookies</strong> (armazenamento da sessão): some quando você fecha a aba. Para mudar a resposta, feche a aba e abra a página de novo: o aviso volta.</li>
         <li><strong>Parâmetros de campanha</strong> (armazenamento da sessão): somem quando você fecha a aba.</li>
         <li><strong>Cookies da Meta</strong>, só se você aceitar: a duração é definida pela Meta.</li>
-        <li><strong>Cookies do Clarity</strong>, só se você aceitar: a duração é definida pela Microsoft.</li>
-        <li><strong>Cookies e armazenamento do PostHog</strong>, só se você aceitar: a duração é definida pela PostHog.</li>
+        <li><strong>Cookies do Clarity</strong>, só se você aceitar (sem resposta ou com recusa, ele não grava cookie): a duração é definida pela Microsoft.</li>
+        <li><strong>Cookies e armazenamento do PostHog</strong>, só se você aceitar (sem resposta ou com recusa, ele guarda tudo só na memória da aba): a duração é definida pela PostHog.</li>
         <li><strong>Cookie de sessão do app</strong>, necessário para entrar: renovado todo dia e inacessível a scripts da página.</li>
         <li><strong>Armazenamento do app no aparelho:</strong> seus registros, suas fotos e uma cópia do app para abrir sem internet. Ficam até você apagar pelo app ou limpar os dados do navegador.</li>
       </ul>

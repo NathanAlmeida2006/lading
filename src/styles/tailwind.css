@@ -27,7 +27,7 @@
 }
 
 @theme {
-  /* A regua do carrossel de prova social: enche em 5 s, o tempo de cada depoimento (Proof.jsx avanca no fim dela). */
+  /* A regua de tempo do passo da secao do app (AppShowcase.jsx): enche em 5 s. */
   --animate-regua: regua 5s linear forwards;
   @keyframes regua {
     from { transform: scaleX(0); }

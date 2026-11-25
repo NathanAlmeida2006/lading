@@ -5,10 +5,19 @@ import { readFileSync } from "node:fs";
 import { CONFIG } from "../../src/infra/config.js";
 import { getTestimonialIssues, getPublishableTestimonials, getRatingIssues } from "../../src/infra/validation.js";
 
-const COMPLETO = { id: "t1", texto: "Texto real de quem usou o app por semanas.", identificacao: "@teste", contexto: "Semana 2", foto: "/images/icon1.webp", origem: "direct do Instagram, 20/11/2026", autorizacaoRef: "AUT-001", aprovado: true };
+const COMPLETO = { id: "t1", print: "/images/prints/t1.webp", alt: "Conversa em que o cliente conta que fechou o primeiro mes sem furar.", origem: "direct do Instagram, 20/11/2026", autorizacaoRef: "AUT-001", aprovado: true };
+const VAGA = { id: "v1", print: null };
 
-test("depoimento completo e aprovado nao tem pendencia", () => {
+test("print completo e aprovado nao tem pendencia", () => {
   assert.deepEqual(getTestimonialIssues(COMPLETO), []);
+});
+
+test("a vaga (print: null) so precisa de id: nao ha pessoa nem conversa nela", () => {
+  assert.deepEqual(getTestimonialIssues(VAGA), []);
+  assert.deepEqual(getTestimonialIssues({ ...VAGA, id: " " }), ["id"]);
+  // So o `null` explicito e vaga: campo ausente ou vazio e print incompleto, e vai para a lista de pendencias.
+  assert.deepEqual(getTestimonialIssues({ id: "v2" }), ["print", "alt", "origem", "autorizacaoRef", "aprovado"]);
+  assert.ok(getTestimonialIssues({ ...COMPLETO, print: "" }).includes("print"));
 });
 
 test("cada campo de lastro ausente vira pendencia, e aprovado vem por ultimo", () => {
@@ -17,8 +26,8 @@ test("cada campo de lastro ausente vira pendencia, e aprovado vem por ultimo", (
   assert.ok(semRegistro.includes("id"));
   assert.equal(semRegistro.at(-1), "aprovado");
   assert.ok(getTestimonialIssues({ ...COMPLETO, autorizacaoRef: "[A DEFINIR]" }).includes("autorizacaoRef"));
-  // A foto e dado pessoal de quem falou: sem ela o depoimento nao vai a tela (a autorizacao cobre texto, @ e foto).
-  assert.deepEqual(getTestimonialIssues({ ...COMPLETO, foto: null }), ["foto"]);
+  // Sem a transcricao o leitor de tela nao tem o que ler: o print nao vai a tela.
+  assert.deepEqual(getTestimonialIssues({ ...COMPLETO, alt: null }), ["alt"]);
   // So `true` aprova: texto que parece aprovacao ("sim", "true") continua pendente.
   for (const aprovado of ["sim", "true", 1]) assert.deepEqual(getTestimonialIssues({ ...COMPLETO, aprovado }), ["aprovado"], String(aprovado));
 });
@@ -31,7 +40,7 @@ test("nota: fora de 0 ao maximo, sem fonte ou sem aprovacao e pendencia; sem not
   assert.deepEqual(getRatingIssues(null), []);
 });
 
-test("a configuracao atual esta aprovada pelo gerente (23/11/2026) e sem pendencia", () => {
+test("a configuracao atual (cinco vagas de print e a nota aprovada) esta sem pendencia", () => {
   assert.equal(CONFIG.depoimentos.length, 5);
   for (const depoimento of CONFIG.depoimentos) assert.deepEqual(getTestimonialIssues(depoimento), [], depoimento.id);
   assert.deepEqual(getRatingIssues(CONFIG.avaliacao), []);
@@ -44,11 +53,11 @@ test("a tela mostra so o publicavel: conteudo e secao seguem a mesma regra", asy
   try {
     const conteudoAtual = await import(new URL("../../src/content/content.js?c=1", import.meta.url).href);
     const secoesAtuais = await import(new URL("../../src/content/sections.js?c=1", import.meta.url).href);
-    assert.equal(conteudoAtual.CONTENT.prova.depoimentos.length, 5);
+    assert.deepEqual(conteudoAtual.CONTENT.prova.depoimentos.map(({ src }) => src), [null, null, null, null, null]);
     assert.equal(conteudoAtual.CONTENT.prova.avaliacao.nota, 4.5);
     assert.equal(secoesAtuais.SECTIONS_BY_ID["prova-social"].presente, true);
 
-    CONFIG.depoimentos = depoimentosAtuais.map((d) => ({ ...d, aprovado: false }));
+    CONFIG.depoimentos = [{ ...COMPLETO, aprovado: false }];
     CONFIG.avaliacao = { ...avaliacaoAtual, aprovado: false };
     const semAprovacao = await import(new URL("../../src/content/content.js?c=0", import.meta.url).href);
     const secaoSem = await import(new URL("../../src/content/sections.js?c=0", import.meta.url).href);
@@ -60,7 +69,7 @@ test("a tela mostra so o publicavel: conteudo e secao seguem a mesma regra", asy
     CONFIG.avaliacao = { nota: 4.5, maximo: 5, fonte: "Hotmart", aprovado: true };
     const conteudoNovo = await import(new URL("../../src/content/content.js?c=2", import.meta.url).href);
     const secoesNovas = await import(new URL("../../src/content/sections.js?c=2", import.meta.url).href);
-    assert.deepEqual(conteudoNovo.CONTENT.prova.depoimentos, [{ texto: COMPLETO.texto, nome: "@teste", contexto: "Semana 2", src: "/images/icon1.webp" }]);
+    assert.deepEqual(conteudoNovo.CONTENT.prova.depoimentos, [{ src: COMPLETO.print, alt: COMPLETO.alt }]);
     assert.deepEqual(conteudoNovo.CONTENT.prova.avaliacao, { nota: 4.5, maximo: 5, rotulo: "Avaliação dos compradores" });
     assert.equal(secoesNovas.SECTIONS_BY_ID["prova-social"].presente, true);
   } finally {

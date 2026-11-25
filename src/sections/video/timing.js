@@ -43,16 +43,19 @@ export const COVERS = [
  * Os estagios do video, na ordem: o L em 3D, a carga, as capas, a Trilha, a ponte (TakeRecord), os quatro quadros
  * da logo e os takes finais.
  */
-export const STAGES = { l3d: 0, load: 1, cover: 2, track: 2 + COVERS.length, bridge: 3 + COVERS.length, logo: 4 + COVERS.length, manifesto: 8 + COVERS.length, numbers: 9 + COVERS.length, calendar: 10 + COVERS.length, arsenal: 11 + COVERS.length, doIt: 12 + COVERS.length };
+export const STAGES = { hook: 0, l3d: 1, load: 2, cover: 3, track: 3 + COVERS.length, bridge: 4 + COVERS.length, logo: 5 + COVERS.length, manifesto: 9 + COVERS.length, numbers: 10 + COVERS.length, calendar: 11 + COVERS.length, arsenal: 12 + COVERS.length, doIt: 13 + COVERS.length };
+/** O clique, em batidas contadas do drop (negativo: vem antes dele). O gancho (Takes.jsx) entra nele; o estagio fica ate o drop, mas so desenha o 1,5 s inicial. */
+export const HOOK_BEAT = -DROP_MS / BEAT_MS;
 
 /**
- * A linha do tempo, em batidas contadas do drop da musica (timing.js): [beat, stage]. O drop abre o L em 3D (6 batidas) e
+ * A linha do tempo, em batidas contadas do drop da musica (timing.js): [beat, stage]. O gancho abre no clique (3 cartazes em 1,5 s, antes do play virar L);
+ * o drop abre o L em 3D (6 batidas) e
  * a carga (4); cada capa (as tres sessoes e as tres abas da EU) dura 1 batida (0,5 s); a Trilha e a ponte ("Registre agora."), 2 cada (1 s); a logo bate quatro vezes, uma por batida (o take do Registro rolando
  * foi cortado: tudo o que vem depois andou 4 batidas, um compasso, para tras e segue na grade da musica); os takes finais duram 8, 6, 6 e 6
  * batidas; o ultimo fica, e a musica se apaga a partir da entrada dele (5,5 s).
  */
 export const DO_IT_BEAT = 50; // o ultimo take ("Apenas faca.") entra na batida 50
-export const TIMELINE = [[0, STAGES.l3d], [6, STAGES.load], ...COVERS.map((_, i) => [10 + i, STAGES.cover + i]), [16, STAGES.track], [18, STAGES.bridge], [20, STAGES.logo], [21, STAGES.logo + 1], [22, STAGES.logo + 2], [23, STAGES.logo + 3], [24, STAGES.manifesto], [32, STAGES.numbers], [38, STAGES.calendar], [44, STAGES.arsenal], [DO_IT_BEAT, STAGES.doIt]];
+export const TIMELINE = [[HOOK_BEAT, STAGES.hook], [0, STAGES.l3d], [6, STAGES.load], ...COVERS.map((_, i) => [10 + i, STAGES.cover + i]), [16, STAGES.track], [18, STAGES.bridge], [20, STAGES.logo], [21, STAGES.logo + 1], [22, STAGES.logo + 2], [23, STAGES.logo + 3], [24, STAGES.manifesto], [32, STAGES.numbers], [38, STAGES.calendar], [44, STAGES.arsenal], [DO_IT_BEAT, STAGES.doIt]];
 export const MUSIC_END = { beat: DO_IT_BEAT, duration: 5500 }; // a musica comeca a se apagar quando o ultimo take entra e some em 5,5 s (1,5 s a menos que antes)
 export const REPLAY_AFTER_MS = 2000; // o botao de replay surge 2 s depois de a musica parar
 
@@ -60,6 +63,6 @@ export const REPLAY_AFTER_MS = 2000; // o botao de replay surge 2 s depois de a 
 export const OBJECTS_3D = ["letter-l", "bolt", "gear", "sword", "medal", "clock", "profile", "cross", "lithium"];
 
 /** Os capitulos da barra de progresso (Timeline.jsx): [nome, estagio em que comecam]. Cada um vai ate o comeco do proximo. */
-export const CHAPTERS = [["Abertura", STAGES.l3d], ["O app", STAGES.cover], ["A marca", STAGES.logo], ["Manifesto", STAGES.manifesto], ["Os números", STAGES.numbers], ["Arsenal", STAGES.arsenal], ["Faça", STAGES.doIt]];
+export const CHAPTERS = [["Abertura", STAGES.hook], ["O app", STAGES.cover], ["A marca", STAGES.logo], ["Manifesto", STAGES.manifesto], ["Os números", STAGES.numbers], ["Arsenal", STAGES.arsenal], ["Faça", STAGES.doIt]];
 /** Da hora do clique ate a musica se apagar, em ms: a duracao da barra de progresso. */
 export const VIDEO_MS = getBeatTime(DO_IT_BEAT) + MUSIC_END.duration;

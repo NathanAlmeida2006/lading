@@ -23,7 +23,7 @@ export function Objections() {
   }, []);
 
   return (
-    <section id="objecoes" className={`${BLOCK} py-8 md:py-24`} ref={root}>
+    <section id="objecoes" className={`${BLOCK} pt-8 pb-16 md:py-24`} ref={root}>
       <DotField variant="estelar" />
       <div className={`${ENVELOPE} relative z-1 ${GRID_12}`}>
         <div className="min-w-0 lg:col-[1/span_5] lg:sticky lg:top-24 lg:self-start">

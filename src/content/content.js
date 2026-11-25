@@ -67,12 +67,12 @@ import { formatReais } from "./valueStack.js";
  * @property {{texto: string, cta: string}} doca
  * @property {{rotulo: string, titulo: string, sub: string, cta: string, cartas: MirrorCard[]}} espelho
  * @property {{titulo: string, passos: {id: string, nome: string, texto: string}[]}} demo
- * @property {{rotulo: string, titulo: string, avaliacao: {nota: number, maximo: number, rotulo: string}|null, depoimentos: {texto: string, nome: string, contexto: string, src: string}[]}} prova - `nome` é o @ de quem falou e `src`, o avatar dele; só o que CONFIG traz publicável (validation.js), e `avaliacao` é `null` sem nota publicável.
- * @property {{titulo: string[], curtos: string, noticias: string, abrir: string, videos: (VibeCard & {avatar: string})[], shorts: VibeCard[], noticia: VibeCard & {resumo: string}, aviso: string}} vibe
+ * @property {{rotulo: string, titulo: string, avaliacao: {nota: number, maximo: number, rotulo: string}|null, depoimentos: {src: string|null, alt: string}[]}} prova - Um item por print de cliente: `src` é o arquivo (`null` = vaga/placeholder) e `alt`, a transcrição; só o que CONFIG traz publicável (validation.js), e `avaliacao` é `null` sem nota publicável.
+ * @property {{titulo: string[], curtos: string, noticias: string, abrir: string, videos: (VibeCard & {avatar: string})[], shorts: VibeCard[], noticia: VibeCard & {resumo: string}}} vibe
  * @property {{titulo: string, sub: string, parado: string}} video
  * @property {{titulo: string, sub: string, nota: string, antes: string, depois: string, areas: {nome: string, antes: number, depois: number}[]}} espectro
  * @property {{rotulo: string, estados: MapState[], numeros: MapNumber[], cta: string}} mapa
- * @property {{rotulo: string, vozes: Voice[]}} leva
+ * @property {{rotulo: string, titulo: string, sub: string, vozes: Voice[]}} leva
  * @property {{cta: string, garantia: {titulo: string, texto: string, selos: Seal[]}}} oferta
  * @property {{headline: {linhas: string[]}, titulo: string[], rotulo: string, sub: string, cta: string, condicoes: string}} fechamento - `headline` alimenta o último take do vídeo; o site usa `titulo`.
  * @property {string} objecoesRotulo
@@ -87,7 +87,7 @@ const MECHANISM = {
 };
 // Preço e garantia saem da config (o mesmo número do recibo, da doca e da trava de publicação). As cifras do FAQ
 // são por semana e por treino obrigatório do ciclo.
-const { moeda: currency, oferta: { preco: price } } = CONFIG.pilhaDeValor;
+const { moeda: currency, oferta: { preco: price, parcelas: installments, valorParcela: installment } } = CONFIG.pilhaDeValor;
 /**
  * @param {number} amount - Valor em reais.
  * @returns {string} Valor com a moeda.
@@ -95,6 +95,7 @@ const { moeda: currency, oferta: { preco: price } } = CONFIG.pilhaDeValor;
 const formatPrice = (amount) => `${currency} ${formatReais(amount)}`;
 const TOTAL_SESSIONS = MECHANISM.semanas * MECHANISM.sessoesObrigatorias;
 const PRICE = formatPrice(price);
+const INSTALLMENTS = `${installments}x de ${formatPrice(installment)}`;
 const GUARANTEE_DAYS = CONFIG.oferta.garantiaDias;
 const GUARANTEE = `${GUARANTEE_DAYS} dias de garantia`;
 
@@ -105,7 +106,7 @@ export const CONTENT = {
     headline: { linhas: ["Chega de", "Improviso"] },
     promessa: { texto: CORE_PROMISE },
     subheadline: {
-      texto: `Treinar sem evoluir é perder tempo. O Lithium substitui o achismo por ${MECHANISM.semanas} semanas de método exato para naturais colocarem massa de verdade.`,
+      texto: "Tudo o que você precisa para estruturar sua hipertrofia natural: treino, dieta e recuperação reunidos em um único aplicativo.",
     },
     cta: "Quero parar de improvisar",
     // Duas frases curtas na barra da base da dobra: o número em destaque e o que ele conta.
@@ -134,7 +135,7 @@ export const CONTENT = {
     cta: "Garantir meu acesso vitalício",
     estados: [
       // imagem: tela inicial do app · leitura: App Exclusivo (PWA) · origem: CONFIG.entrega
-      { capa: "01", src: "/images/image6.webp", pos: "object-[50%_10%]", faixa: "App direto no celular", nome: "Seu Quartel-General no Bolso", texto: "Instalado direto na tela inicial do seu celular, sem precisar de loja de aplicativos e sem anúncios. Treino, carga, dieta e metas a um toque de distância." },
+      { capa: "01", src: "/images/image6.webp", pos: "object-[50%_10%]", faixa: "App direto no celular", nome: "Seu Quartel-General no Bolso", texto: "Instalado direto na tela inicial do seu celular sem anúncios. Treino, carga, dieta e metas a um toque de distância." },
       // imagem: tela do Social Vibe · leitura: Social Vibe · origem: CONFIG.pilhaDeValor
       { capa: "02", src: "/images/image7.webp", pos: "object-[50%_10%]", faixa: "Mentalidade", nome: "Social Vibe", texto: "Ambiente feito para quem leva o treino a sério. Menos distração de rede social, mais cabeça no jogo e constância em silêncio." },
       // imagem: tela do Checklist Integrado · leitura: Checklist Integrado · origem: CONFIG.pilhaDeValor
@@ -157,14 +158,14 @@ export const CONTENT = {
       { id: "treino", nome: "Treino", texto: "A ficha já vem com a carga. Marque cada série quando terminar." },
     ],
   },
-  // Prova social: o rótulo e o título são copy daqui; os relatos e a nota vêm de CONFIG, só os publicáveis (validation.js).
+  // Prova social: o rótulo e o título são copy daqui; os prints e a nota vêm de CONFIG, só os publicáveis (validation.js).
   prova: {
     rotulo: "quem já usa o app",
     titulo: "Usuários do app",
     avaliacao: CONFIG.avaliacao && !getRatingIssues(CONFIG.avaliacao).length
       ? { nota: CONFIG.avaliacao.nota, maximo: CONFIG.avaliacao.maximo, rotulo: "Avaliação dos compradores" }
       : null,
-    depoimentos: getPublishableTestimonials(CONFIG.depoimentos).map(({ texto, identificacao, contexto, foto }) => ({ texto, nome: identificacao, contexto, src: foto })),
+    depoimentos: getPublishableTestimonials(CONFIG.depoimentos).map(({ print, alt = "" }) => ({ src: print, alt })),
   },
   video: {
     titulo: "Lithium em ação",
@@ -207,10 +208,11 @@ export const CONTENT = {
       src: "/images/vibe-5.webp",
       pos: "object-[50%_30%]",
     },
-    aviso: "Ilustração do mural. O conteúdo é atualizado dentro do app.",
   },
   leva: {
     rotulo: "o que você leva no arsenal",
+    titulo: "Você treina duro. Agora treine certo.",
+    sub: "Treino que progride toda semana, dieta feita para quem é natural e sono que recupera de verdade. Tudo pronto no app, sem você precisar montar nada.",
     vozes: [
       // imagem: tela do Protocolo Hipertrofia
       { nome: "Protocolo Hipertrofia", governa: "Treino", onde: `${MECHANISM.semanas} semanas`, fala: "Volume cirúrgico para naturais. Menos lixo no treino, mais tensão mecânica e progressão de carga toda semana.", src: "/images/image3.webp" },
@@ -221,7 +223,7 @@ export const CONTENT = {
     ],
   },
   oferta: {
-    cta: `Quero o Lithium agora por ${PRICE}`,
+    cta: "Quero o Lithium agora",
     garantia: {
       titulo: `Risco zero: Garantia incondicional de ${GUARANTEE_DAYS} dias`,
       texto: `Instale o app e teste tudo por ${GUARANTEE_DAYS} dias. Se não gostar, receba 100% do dinheiro de volta na Hotmart em um clique, sem perguntas.`,
@@ -239,13 +241,13 @@ export const CONTENT = {
     rotulo: "sua escolha",
     sub: "O tempo vai passar de qualquer jeito. A única diferença é se você vai continuar improvisando na academia ou executar um plano feito para quem é natural.",
     cta: `Começar minhas ${MECHANISM.semanas} semanas agora`,
-    condicoes: `${PRICE} pagamento único · Acesso imediato · ${GUARANTEE}`,
+    condicoes: `Pagamento único · Acesso imediato · ${GUARANTEE}`,
   },
   objecoesRotulo: "dúvidas antes de comprar",
   objecoesTitulo: "Perguntas frequentes",
   rodape: { tagline: "O básico bem feito, provado, sem mágica." },
   objecoes: [
-    { pergunta: "Por que tão barato? Tem pegadinha ou mensalidade escondida?", resposta: `Nenhuma pegadinha. Você paga ${PRICE} uma única vez e o acesso é vitalício. Sem assinatura sugando seu cartão todo mês. Dividido pelas ${MECHANISM.semanas} semanas, sai por ${formatPrice(Math.round((price / MECHANISM.semanas) * 100) / 100)} por semana, ou ${formatPrice(Math.round((price / TOTAL_SESSIONS) * 100) / 100)} por treino.` },
+    { pergunta: "Por que tão barato? Tem pegadinha ou mensalidade escondida?", resposta: `Nenhuma pegadinha. Você paga ${INSTALLMENTS} (ou ${PRICE} à vista) numa compra única e o acesso é vitalício. Sem assinatura sugando seu cartão todo mês. Dividido pelas ${MECHANISM.semanas} semanas, o à vista sai por ${formatPrice(Math.round((price / MECHANISM.semanas) * 100) / 100)} por semana, ou ${formatPrice(Math.round((price / TOTAL_SESSIONS) * 100) / 100)} por treino.` },
     { pergunta: "Eu trabalho ou estudo e não tenho tempo de morar na academia. Funciona para mim?", resposta: `Foi feito exatamente para isso. Você precisa de apenas ${MECHANISM.sessoesObrigatorias} sessões cirúrgicas de 60 a 75 minutos por semana (com ${MECHANISM.sessoesOpcionais} sessão extra opcional a partir da semana 5). Natural não cresce com 2 horas de treino junk volume; cresce com intensidade e recuperação.` },
     { pergunta: "Sou natural e já treino há meses sem ver resultado. Serve para mim?", resposta: "Serve principalmente para você. O Lithium não vende milagre genético nem promessa de físico hormonizado. Ele elimina os erros de volume, carga e constância que travam 90% dos naturais." },
     { pergunta: "E se eu falhar uma semana por causa de prova, trabalho ou imprevisto?", resposta: "Todo app comum quebra sua sequência e faz você desistir. O Lithium mede progresso por semana fechada e ativa o Plano de Retorno (Semana Verde e Semana Amarela) para você retomar o ritmo sem jogar fora o que construiu." },

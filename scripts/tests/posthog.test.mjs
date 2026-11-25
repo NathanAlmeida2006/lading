@@ -1,4 +1,4 @@
-// PostHog (src/infra/posthog.js): injeta so com aceite, chave e host; opt-in a cada aceite; recusa apaga o que o SDK gravou; evento so sai com aceite e SDK desta carga.
+// PostHog (src/infra/posthog.js): injeta sem esperar o aviso (chave e host bastam); persistencia memory sem aceite, localStorage+cookie com aceite; recusa apaga o que o SDK gravou.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -45,38 +45,71 @@ function ambiente({ cookie = "", local = new Map(), sessao = new Map() } = {}) {
 const expirou = (cookies, nome, dominio) =>
   cookies.some((c) => c.startsWith(`${nome}=; expires=Thu, 01 Jan 1970`) && c.endsWith(dominio ? `path=/; domain=${dominio}` : "path=/"));
 
-test("sem aceite, sem chave ou sem host nada e injetado", () => {
-  const combinacoes = [[null, "phc_teste", "https://us.i.posthog.com"], [false, "phc_teste", "https://us.i.posthog.com"], [true, null, "https://us.i.posthog.com"], [true, "phc_teste", null]];
-  for (const [consent, key, host] of combinacoes) {
+test("sem chave ou sem host nada e injetado", () => {
+  for (const [key, host] of [[null, "https://us.i.posthog.com"], ["phc_teste", null]]) {
     const amb = ambiente();
     try {
       CONFIG.posthog.key = key;
       CONFIG.posthog.host = host;
-      createPostHog(() => consent).loadPostHog();
-      assert.equal(amb.scripts.length, 0, `${consent} ${key} ${host}`);
+      createPostHog(() => null).loadPostHog();
+      assert.equal(amb.scripts.length, 0, `${key} ${host}`);
       assert.equal(globalThis.window.posthog, undefined);
     } finally { amb.restaurar(); }
   }
 });
 
-test("com aceite: um script so, init fora por padrao e opt_in a cada aceite", () => {
+test("sem resposta ou com recusa: um script so, init em memory, so funil, sem gravacao e sem cookieless_mode", () => {
+  for (const consent of [null, false]) {
+    const amb = ambiente();
+    try {
+      const ph = createPostHog(() => consent);
+      ph.loadPostHog();
+      ph.loadPostHog();
+      assert.equal(amb.scripts.length, 1);
+      assert.equal(amb.scripts[0].src, "https://us.i.posthog.com/static/array.js");
+      const [token, opcoes] = globalThis.window.posthog._i[0];
+      assert.equal(token, "phc_teste");
+      assert.equal(opcoes.persistence, "memory");
+      assert.equal(opcoes.person_profiles, "identified_only");
+      assert.equal(opcoes.disable_session_recording, true);
+      assert.equal(opcoes.capture_pageview, true);
+      assert.equal(opcoes.capture_pageleave, true);
+      assert.equal("cookieless_mode" in opcoes, false);
+      assert.equal("opt_out_capturing_by_default" in opcoes, false);
+      assert.equal(opcoes.before_send, stripEventUrls);
+      assert.deepEqual(amb.fila(), []);
+    } finally { amb.restaurar(); }
+  }
+});
+
+test("aceite previo: o init ja nasce com localStorage+cookie, sem set_config", () => {
   const amb = ambiente();
   try {
     const ph = createPostHog(() => true);
     ph.loadPostHog();
     ph.loadPostHog();
     assert.equal(amb.scripts.length, 1);
-    assert.equal(amb.scripts[0].src, "https://us.i.posthog.com/static/array.js");
-    const [token, opcoes] = globalThis.window.posthog._i[0];
-    assert.equal(token, "phc_teste");
-    assert.equal(opcoes.opt_out_capturing_by_default, true);
-    assert.equal(opcoes.opt_out_persistence_by_default, true);
-    assert.equal(opcoes.before_send, stripEventUrls);
-    assert.deepEqual(amb.fila().map((a) => a[0]), ["opt_in_capturing", "opt_in_capturing"]);
+    assert.equal(globalThis.window.posthog._i[0][1].persistence, "localStorage+cookie");
+    assert.deepEqual(amb.fila(), []);
   } finally { amb.restaurar(); }
 });
 
-test("aceitar e retirar: opt_out, eventos param e o que o PostHog gravou some", () => {
+test("aceitar no banner: set_config para localStorage+cookie, uma vez, sem reiniciar o SDK", () => {
+  const amb = ambiente();
+  try {
+    let aceite = null;
+    const ph = createPostHog(() => aceite);
+    ph.loadPostHog();
+    aceite = true;
+    ph.loadPostHog();
+    ph.loadPostHog();
+    assert.equal(amb.scripts.length, 1);
+    assert.equal(globalThis.window.posthog._i.length, 1);
+    assert.deepEqual(amb.fila(), [["set_config", { persistence: "localStorage+cookie" }]]);
+  } finally { amb.restaurar(); }
+});
+
+test("aceitar e retirar: volta a memory e o que o PostHog gravou some", () => {
   const local = new Map([["ph_phc_teste_posthog", "x"], ["__ph_opt_in_out_phc_teste", "1"], ["fluor:outra", "2"]]);
   const amb = ambiente({ cookie: "ph_phc_teste_posthog=abc; _ga=1", local });
   try {
@@ -85,8 +118,7 @@ test("aceitar e retirar: opt_out, eventos param e o que o PostHog gravou some", 
     ph.loadPostHog();
     aceite = null;
     ph.loadPostHog();
-    ph.capture("checkout_started");
-    assert.deepEqual(amb.fila().map((a) => a[0]), ["opt_in_capturing", "opt_out_capturing"]);
+    assert.deepEqual(amb.fila(), [["set_config", { persistence: "memory" }]]);
     assert.ok(expirou(amb.cookies, "ph_phc_teste_posthog", undefined), "host puro");
     assert.ok(expirou(amb.cookies, "ph_phc_teste_posthog", "www.lithium.app.br"), "subdominio");
     assert.ok(expirou(amb.cookies, "ph_phc_teste_posthog", "lithium.app.br"), "dominio registravel");
@@ -95,42 +127,44 @@ test("aceitar e retirar: opt_out, eventos param e o que o PostHog gravou some", 
   } finally { amb.restaurar(); }
 });
 
-test("recusa fria (false, sem SDK nesta carga): nenhum script, e o que uma visita anterior gravou some", () => {
+test("recusa fria (false): o SDK entra em memory e o que uma visita anterior gravou some", () => {
   const local = new Map([["ph_phc_velho_posthog", "x"], ["__ph_opt_in_out_phc_velho", "1"]]);
   const sessao = new Map([["ph_phc_velho_window_id", "x"], ["fluor:consentimento", "false"]]);
   const amb = ambiente({ cookie: "ph_phc_velho_posthog=abc", local, sessao });
   try {
     createPostHog(() => false).loadPostHog();
-    assert.equal(amb.scripts.length, 0);
+    assert.equal(amb.scripts.length, 1);
+    assert.equal(globalThis.window.posthog._i[0][1].persistence, "memory");
     assert.ok(expirou(amb.cookies, "ph_phc_velho_posthog", "lithium.app.br"));
     assert.equal(local.size, 0);
     assert.deepEqual([...sessao.keys()], ["fluor:consentimento"]);
   } finally { amb.restaurar(); }
 });
 
-test("sem resposta (null) e sem SDK nesta carga: nada e apagado", () => {
-  const local = new Map([["ph_phc_teste_posthog", "x"], ["__ph_opt_in_out_phc_teste", "1"]]);
+test("sem resposta (null): nenhum cookie e apagado, mas o opt-out que a versao antiga deixou no localStorage sai (calaria o SDK)", () => {
+  const local = new Map([["ph_phc_teste_posthog", "x"], ["__ph_opt_in_out_phc_teste", "0"]]);
   const amb = ambiente({ cookie: "ph_phc_teste_posthog=abc", local });
   try {
     createPostHog(() => null).loadPostHog();
     assert.equal(amb.cookies.length, 0);
-    assert.equal(local.size, 2);
+    assert.deepEqual([...local.keys()], ["ph_phc_teste_posthog"]);
   } finally { amb.restaurar(); }
 });
 
-test("capture e captureLog so saem com aceite e com o SDK desta carga", () => {
+test("capture e captureLog saem no modo anonimo, so com o SDK desta carga", () => {
   const amb = ambiente();
   try {
-    let aceite = false;
-    const ph = createPostHog(() => aceite);
+    const ph = createPostHog(() => null);
     ph.capture("antes");
-    aceite = true;
-    ph.capture("sem_sdk");
     ph.loadPostHog();
     ph.capture("faq_opened", { faq_position: 2 });
     ph.captureLog({ body: "x", level: "info" });
-    assert.deepEqual(amb.fila(), [["opt_in_capturing"], ["capture", "faq_opened", { faq_position: 2 }], ["captureLog", { body: "x", level: "info" }]]);
+    assert.deepEqual(amb.fila(), [["capture", "faq_opened", { faq_position: 2 }], ["captureLog", { body: "x", level: "info" }]]);
   } finally { amb.restaurar(); }
+});
+
+test("nenhuma chamada identify existe no modulo", () => {
+  assert.doesNotMatch(readFileSync(new URL("../../src/infra/posthog.js", import.meta.url), "utf8"), /\.identify\(/);
 });
 
 test("before_send: query e hash saem das URLs do evento; $direct e o resto ficam", () => {
@@ -202,7 +236,7 @@ test("script bloqueado (onerror): a fila para e nada e tentado de novo", () => {
     ph.capture("depois");
     ph.loadPostHog();
     assert.equal(amb.scripts.length, 1);
-    assert.deepEqual(amb.fila().map((a) => a[0]), ["opt_in_capturing"]);
+    assert.deepEqual(amb.fila(), []);
     assert.equal(avisos.length, 1);
   } finally {
     console.warn = original;

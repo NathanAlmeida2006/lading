@@ -4,7 +4,7 @@ import { AppTrack } from "./AppTrack.jsx";
 import { SessionCover } from "./SessionCover.jsx";
 import { LithiumLogo, LOGO_URL } from "./LithiumLogo.jsx";
 import { prepareModel } from "./Model3D.jsx";
-import { TakeArsenal, TakeCalendar, TakeLoad, TakeDoIt, TakeL3D, TakeManifesto, TakeNumbers, TakeRecord } from "./Takes.jsx";
+import { TakeArsenal, TakeCalendar, TakeHook, TakeLoad, TakeDoIt, TakeL3D, TakeManifesto, TakeNumbers, TakeRecord } from "./Takes.jsx";
 import { BEAT_MS, COVERS, STAGES, MUSIC_END, OBJECTS_3D, REPLAY_AFTER_MS } from "./timing.js";
 
 const logo = new Image();
@@ -32,6 +32,7 @@ export function prepareModels() {
 export default function Stage({ stage, schedule, origin, onRepeat }) {
   return (
     <>
+      {stage === STAGES.hook && <TakeHook startAt={schedule.current[STAGES.hook]} />}
       {stage === STAGES.l3d && <TakeL3D startAt={schedule.current[STAGES.l3d]} />}
       {/* Um unico fundo (preto + malha de pontos) para a carga e as seis capas: ele nao remonta nos cortes, so a frente troca. O grao fica aqui, sobre o bg-void, para misturar com ele (overlay) como nas outras secoes; na capa, sem fundo proprio, ele clareava o preto.
           Remontar o canvas a cada corte dava um piscar de um quadro e reiniciava a onda. As frentes abaixo sao transparentes. */}

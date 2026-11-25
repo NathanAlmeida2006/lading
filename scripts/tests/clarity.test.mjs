@@ -1,4 +1,4 @@
-// createClarity (src/infra/clarity.js): so com aceite e id; um script por carga; tag e evento saem; revogar apaga.
+// createClarity (src/infra/clarity.js): carrega sem esperar o aviso (so exige id); cookies de analise so com aceite (Consent API v2); um script por carga.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createClarity } from "../../src/infra/clarity.js";
@@ -13,37 +13,60 @@ function ambiente(id = "abc123") {
   return { scripts, restaurar: () => { CONFIG.clarity.id = original; delete globalThis.window; delete globalThis.document; } };
 }
 
-test("sem aceite ou sem id valido nada e injetado", () => {
-  for (const [consent, id] of [[null, "abc123"], [false, "abc123"], [true, null], [true, "a/../b"]]) {
-    const { scripts, restaurar } = ambiente(id);
+const fila = () => [...window.clarity.q].map((a) => [...a]);
+const NEGADO = ["consentv2", { ad_Storage: "denied", analytics_Storage: "denied" }];
+const ANALISE = ["consentv2", { ad_Storage: "denied", analytics_Storage: "granted" }];
+
+test("sem id valido nada e injetado, com qualquer resposta do aviso", () => {
+  for (const consent of [null, false, true]) {
+    for (const id of [null, "a/../b"]) {
+      const { scripts, restaurar } = ambiente(id);
+      try {
+        createClarity(() => consent).loadClarity();
+        assert.equal(scripts.length, 0);
+        assert.equal(window.clarity, undefined);
+      } finally { restaurar(); }
+    }
+  }
+});
+
+test("sem resposta ou com recusa: injeta um script so, com o padrao negado na fila ANTES do script, e nunca libera cookies", () => {
+  for (const consent of [null, false]) {
+    const { scripts, restaurar } = ambiente();
     try {
-      createClarity(() => consent).loadClarity();
-      assert.equal(scripts.length, 0);
-      assert.equal(window.clarity, undefined);
+      const clarity = createClarity(() => consent, () => ({ criativo: "ad7", vazio: undefined }));
+      clarity.loadClarity(); clarity.loadClarity();
+      assert.equal(scripts.length, 1);
+      assert.equal(scripts[0].src, "https://www.clarity.ms/tag/abc123");
+      clarity.sendEvent("viu_preco");
+      assert.deepEqual(fila(), [NEGADO, ["set", "criativo", "ad7"], ["event", "viu_preco"]]);
     } finally { restaurar(); }
   }
 });
 
-test("com aceite injeta um script so, grava a tag e envia o evento pela fila", () => {
+test("aceite previo: o padrao negado sai primeiro e analytics_Storage passa a granted (ad_Storage fica denied)", () => {
   const { scripts, restaurar } = ambiente();
   try {
-    const clarity = createClarity(() => true, () => ({ criativo: "ad7", vazio: undefined }));
+    const clarity = createClarity(() => true);
     clarity.loadClarity(); clarity.loadClarity();
     assert.equal(scripts.length, 1);
-    assert.equal(scripts[0].src, "https://www.clarity.ms/tag/abc123");
-    clarity.sendEvent("viu_preco");
-    assert.deepEqual([...window.clarity.q].map((a) => [...a]), [["set", "criativo", "ad7"], ["event", "viu_preco"]]);
+    assert.deepEqual(fila(), [NEGADO, ANALISE]);
   } finally { restaurar(); }
 });
 
-test("recusa fria (false, sem script nesta carga) expira _clck e _clsk no host e no dominio registravel", () => {
+test("aceitar na sessao e depois retirar: granted, depois denied, e _clck e _clsk expiram", () => {
+  let aceite = null;
   const { restaurar } = ambiente();
   const cookies = [];
   try {
     window.location = { hostname: "www.lithium.app.br" };
     Object.defineProperty(document, "cookie", { set: (v) => cookies.push(v), configurable: true });
-    createClarity(() => false).loadClarity();
-    assert.equal(window.clarity, undefined);
+    const clarity = createClarity(() => aceite);
+    clarity.loadClarity();
+    assert.equal(cookies.length, 0, "sem resposta nada e apagado");
+    aceite = true; clarity.loadClarity();
+    aceite = false; clarity.loadClarity();
+    assert.deepEqual(fila(), [NEGADO, ANALISE, NEGADO]);
     for (const nome of ["_clck", "_clsk"]) {
       for (const dominio of [undefined, "www.lithium.app.br", "lithium.app.br"]) {
         const fim = dominio ? `path=/; domain=${dominio}` : "path=/";
@@ -53,19 +76,15 @@ test("recusa fria (false, sem script nesta carga) expira _clck e _clsk no host e
   } finally { restaurar(); }
 });
 
-test("clarity de outra origem nao e assumido; revogar chama consent falso e para de enviar", () => {
-  let aceite = true;
+test("clarity de outra origem nao e assumido nem sobrescrito", () => {
   const { scripts, restaurar } = ambiente();
   try {
-    window.clarity = () => {};
-    createClarity(() => aceite).loadClarity();
+    const alheio = () => {};
+    window.clarity = alheio;
+    const clarity = createClarity(() => true);
+    clarity.loadClarity();
+    clarity.sendEvent("x");
     assert.equal(scripts.length, 0);
-    delete window.clarity;
-    const clarity = createClarity(() => aceite);
-    clarity.loadClarity();
-    aceite = false;
-    clarity.loadClarity();
-    clarity.sendEvent("clicou_checkout");
-    assert.deepEqual([...window.clarity.q].map((a) => [...a]), [["consent", false]]);
+    assert.equal(window.clarity, alheio);
   } finally { restaurar(); }
 });

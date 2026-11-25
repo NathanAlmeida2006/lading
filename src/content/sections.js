@@ -26,7 +26,7 @@ export const SECTIONS = [
   { id: "social-vibe", etapaCanonica: 3, rotulo: "Social Vibe", presente: true, foraDoIndice: true },
   { id: "o-que-e", etapaCanonica: 3, rotulo: "O que é", presente: true },
   { id: "prova-social", etapaCanonica: 5, rotulo: "Prova", presente: getPublishableTestimonials(CONFIG.depoimentos).length > 0, foraDoIndice: true,
-    justificativaAusencia: "Nenhum depoimento com origem, autorização e aprovação registradas (CONFIG.depoimentos)." },
+    justificativaAusencia: "Nenhum print de cliente com origem, autorização e aprovação registradas (CONFIG.depoimentos)." },
   { id: "mapa", etapaCanonica: 4, rotulo: "Mapa do caminho", presente: CONFIG.secoes.mapa.ativo,
     justificativaAusencia: CONFIG.secoes.mapa.justificativaAusencia },
   { id: "amostra", etapaCanonica: 6, rotulo: "Amostra", presente: CONFIG.secoes.amostra.ativo,

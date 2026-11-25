@@ -47,16 +47,16 @@
 /**
  * @typedef ClarityPort A porta do Clarity (replay e mapa de calor).
  * @property {(isForSending?: boolean) => boolean} isEligible - Se o Clarity pode carregar (`false`) ou enviar (`true`, padrão).
- * @property {() => void} loadClarity - Carrega o Clarity, uma vez, ou revoga o aceite quando ele foi retirado.
- * @property {(key: string, value: string) => void} setTag - Grava uma tag na sessão; sem aceite não sai.
- * @property {(name: string) => void} sendEvent - Envia um evento personalizado; sem aceite não sai.
+ * @property {() => void} loadClarity - Carrega o Clarity, uma vez, sem esperar o aviso (anônimo e sem cookies), e alinha os cookies de análise com a resposta.
+ * @property {(key: string, value: string) => void} setTag - Grava uma tag na sessão.
+ * @property {(name: string) => void} sendEvent - Envia um evento personalizado.
  */
 
 /**
  * @typedef PostHogPort A porta do PostHog (eventos de produto e logs).
- * @property {() => void} loadPostHog - Carrega o SDK, uma vez, e liga a captura com aceite; sem aceite, desliga e apaga o que ele gravou.
- * @property {(name: Parameters<import("posthog-js").PostHog["capture"]>[0], properties?: Parameters<import("posthog-js").PostHog["capture"]>[1]) => void} capture - Envia um evento; sem aceite não sai.
- * @property {(options: Parameters<import("posthog-js").PostHog["captureLog"]>[0]) => void} captureLog - Envia um log; sem aceite não sai.
+ * @property {() => void} loadPostHog - Carrega o SDK, uma vez, sem esperar o aviso (persistência em memória); o aceite passa para localStorage+cookie, e a recusa apaga o que ele gravou.
+ * @property {(name: Parameters<import("posthog-js").PostHog["capture"]>[0], properties?: Parameters<import("posthog-js").PostHog["capture"]>[1]) => void} capture - Envia um evento (anônimo, em memória, sem aceite).
+ * @property {(options: Parameters<import("posthog-js").PostHog["captureLog"]>[0]) => void} captureLog - Envia um log.
  */
 
 /**

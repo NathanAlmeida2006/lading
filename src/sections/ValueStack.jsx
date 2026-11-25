@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { CtaButton } from "../components/ui/CtaButton.jsx";
-import { CoverBackground } from "../components/visuals/CoverBackground.jsx";
+import { DotField } from "../components/visuals/DotField.jsx";
 import { revealLineMask, reveal, revealInCascade, useMotion } from "../sensory/index.js";
 import { isMotionReduced } from "../sensory/tokens.js";
 import { READY_VALUE_STACK } from "../content/valueStack.js";
@@ -50,8 +50,8 @@ export function ValueStack() {
   const { cabecalho } = READY_VALUE_STACK;
 
   return (
-    <section id="oferta" aria-labelledby="oferta-titulo" className={`${BLOCK} isolate py-16 md:py-24`} ref={root}>
-      <CoverBackground />
+    <section id="oferta" aria-labelledby="oferta-titulo" className={`${BLOCK} isolate border-t-0! pb-16 md:pb-24`} ref={root}>
+      <DotField variant="estelar" />
       <div className={`${ENVELOPE} relative z-1`}>
         <div className="max-w-[65ch] min-w-0 mx-auto">
           <header className="mb-8">
@@ -104,8 +104,9 @@ function ValueStackCard({ stackData }) {
         ))}
       </ol>
 
+      {/* Quase a largura do cartao: a palavra mede ~3,2x o corpo (medido); largura util = tela menos 66px. */}
       <p
-        className="pilha__conector w-fit mx-auto py-8 text-center font-secundaria font-extrabold uppercase leading-none brilho-varrido text-[length:clamp(56px,20vw,96px)]"
+        className="pilha__conectorw-fit mx-auto py-8 text-center font-secundaria font-extrabold uppercase leading-none brilho-varrido text-[length:min(144px,calc((100vw-66px)/3.4))]"
         data-revelar
       >
         {conector.rotulo}
@@ -115,9 +116,16 @@ function ValueStackCard({ stackData }) {
         <dl>
           <dt className="text-silver font-secundaria text-overline uppercase text-balance">{oferta.rotulo}</dt>
           <dd className="mt-2 text-bone-pure font-secundaria font-extrabold leading-none tabular-nums wrap-anywhere">
-            <span className="aberracao whitespace-nowrap text-[length:clamp(72px,29vw,150px)]"><span className="text-[0.4em]">{moeda} </span>{oferta.preco}</span>
+            <div className="flex items-baseline justify-between gap-3 mb-2">
+              <span className="text-silver text-[length:clamp(20px,6vw,32px)]">{oferta.parcelas}x de</span>
+              <span className="text-silver font-terciaria font-normal text-[10px]">{moeda} {oferta.totalParcelado} no cartão</span>
+            </div>
+            {/* Uma linha so: "R$ 28,55" mede ~3,23x o corpo (medido); a largura util e a tela menos 66px (envelope e padding do cartao). */}
+            <span className="aberracao whitespace-nowrap text-[length:min(150px,calc((100vw-66px)/3.3))]">{moeda} {oferta.valorParcela}</span>
           </dd>
+          <dd className="mt-3 text-right text-silver font-terciaria text-body">ou {moeda} {oferta.preco} à vista</dd>
         </dl>
+        <p className="flex items-center gap-3 text-bone font-secundaria font-extrabold uppercase tracking-wide text-[length:clamp(18px,5.5vw,26px)] before:h-px before:flex-1 before:bg-acento after:h-px after:flex-1 after:bg-acento">{oferta.selo}</p>
         <p className="font-terciaria text-body [--text-body:12.8px] lg:text-body-lg lg:[--text-body-lg:14.4px] text-center text-bone text-balance wrap-anywhere">{oferta.comparacao}</p>
         <p className="font-terciaria text-[12.8px] lg:text-[14.4px] text-center text-silver leading-loose text-balance wrap-anywhere">{oferta.subtexto}</p>
       </div>

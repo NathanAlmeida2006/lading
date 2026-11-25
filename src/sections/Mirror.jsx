@@ -71,7 +71,7 @@ export function Mirror() {
             </li>
           ))}
         </ol>
-        <div className="mt-8">
+        <div className="mt-16 md:mt-24">
           <CtaButton position="espelho" label={CONTENT.espelho.cta} />
         </div>
         </div>

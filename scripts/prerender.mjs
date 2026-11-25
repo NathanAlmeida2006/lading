@@ -97,7 +97,7 @@ if (CONFIG.pilhaDeValor.ativo === true) {
 // Prova social: a mesma regra da tela (validation.js). O que ela esconderia, o build recusa.
 for (const [indice, depoimento] of CONFIG.depoimentos.entries()) {
   for (const campo of getTestimonialIssues(depoimento)) {
-    falta(`depoimentos[${indice}].${campo}`, campo === "aprovado" ? "relato, identificação ou foto sem aprovação" : "lastro ausente ou inválido");
+    falta(`depoimentos[${indice}].${campo}`, campo === "aprovado" ? "print sem aprovação" : "lastro ausente ou inválido");
   }
 }
 const MOTIVO_NOTA = { nota: "nota fora de 0 ao máximo", fonte: "nota sem fonte", aprovado: "nota sem aprovação" };

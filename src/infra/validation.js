@@ -41,19 +41,22 @@ export function getDocumentUrl(value) {
   }
 }
 
-// O que um depoimento precisa ter para ir a tela: o que ela mostra (texto, @, contexto e foto) e o lastro (origem e
-// referencia opaca da autorizacao de uso do texto, do @ e da foto). O documento de autorizacao nunca entra no bundle.
-const TESTIMONIAL_FIELDS = ["id", "texto", "identificacao", "contexto", "foto", "origem", "autorizacaoRef"];
+// O que um print de cliente precisa ter para ir a tela: o arquivo, a transcricao dele (`alt`) e o lastro (origem e referencia
+// opaca da autorizacao de uso: o print mostra @, foto e conversa de quem escreveu). O documento de autorizacao nunca entra no bundle.
+const PRINT_FIELDS = ["print", "alt", "origem", "autorizacaoRef"];
 
 /**
- * Pendências de um depoimento: os campos que impedem publicá-lo (vazio = publicável), com `aprovado` por último. A tela só
- * mostra o depoimento sem pendência e o build recusa a configuração com qualquer uma: a mesma regra dos dois lados.
+ * Pendências de um depoimento (um print de cliente): os campos que impedem publicá-lo (vazio = publicável), com `aprovado` por
+ * último. A tela só mostra o que não tem pendência e o build recusa a configuração com qualquer uma: a mesma regra dos dois lados.
+ * `print: null` é uma vaga reservada (placeholder): não há pessoa nem conversa nela, então só o `id` é exigido.
  * @param {unknown} testimonial - Um item de `CONFIG.depoimentos`.
  * @returns {string[]} Os campos pendentes.
  */
 export function getTestimonialIssues(testimonial) {
   const record = /** @type {Record<string, unknown>} */ (testimonial ?? {});
-  const issues = TESTIMONIAL_FIELDS.filter((field) => !isRealText(record[field]));
+  const issues = isRealText(record.id) ? [] : ["id"];
+  if (record.print === null) return issues;
+  issues.push(...PRINT_FIELDS.filter((field) => !isRealText(record[field])));
   if (record.aprovado !== true) issues.push("aprovado");
   return issues;
 }

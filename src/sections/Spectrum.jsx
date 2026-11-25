@@ -68,7 +68,7 @@ export function Spectrum() {
   }, [isAfter]);
 
   return (
-    <section id="espectro" className={`${BLOCK} isolate py-16 md:py-24`}>
+    <section id="espectro" className={`${BLOCK} isolate border-t-0! pb-16 md:pb-24`}>
       <DotField variant="estelar" />
       <div className={`${ENVELOPE} relative z-1 flex flex-col items-center text-center`}>
         <h2 className="mb-4 text-bone font-secundaria text-h1 uppercase [--text-h1:40px] md:[--text-h1:51.2px]">{CONTENT.espectro.titulo}</h2>

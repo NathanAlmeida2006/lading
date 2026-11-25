@@ -88,6 +88,9 @@ test("buildPresentableValueStack do bloco da config traz os itens (so nomes) e a
   assert.equal(forma.moeda, "R$");
   assert.equal(forma.oferta.preco, "79,99");
   assert.ok(forma.oferta.comparacao && forma.oferta.subtexto);
+  assert.deepEqual([forma.oferta.parcelas, forma.oferta.valorParcela, forma.oferta.totalParcelado], [3, "28,55", "85,65"]);
+  assert.equal(forma.oferta.selo, "Pagamento único");
+  assert.match(forma.oferta.subtexto, /Sem assinaturas/);
 });
 
 test("o Pix da config tem o mesmo valor do preco a vista da pilha", () => {

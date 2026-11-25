@@ -5,16 +5,14 @@ import { existsSync } from "node:fs";
 import { CONTENT } from "../../src/content/content.js";
 import { CONFIG } from "../../src/infra/config.js";
 
-const PRECO = "R$ 79,99";
 const DIAS = `${CONFIG.oferta.garantiaDias} dias`;
 
 test("os textos de venda trazem o preco e a garantia da config", () => {
   assert.equal(CONFIG.pilhaDeValor.oferta.preco, 79.99);
   assert.equal(CONFIG.oferta.garantiaDias, 7);
-  for (const texto of [CONTENT.fechamento.condicoes]) {
-    assert.ok(texto.includes(PRECO) && texto.includes(`${DIAS} de garantia`), texto);
-  }
-  assert.equal(CONTENT.oferta.cta, `Quero o Lithium agora por ${PRECO}`);
+  // O fechamento nao repete o preco: ele mora so na oferta.
+  assert.equal(CONTENT.fechamento.condicoes, `Pagamento único · Acesso imediato · ${DIAS} de garantia`);
+  assert.equal(CONTENT.oferta.cta, "Quero o Lithium agora");
   assert.equal(CONTENT.oferta.garantia.titulo, `Risco zero: Garantia incondicional de ${DIAS}`);
   assert.deepEqual(CONTENT.doca, { texto: "Tenha acesso ao seu Lithium Vitalício", cta: "Garantir acesso" });
 });
@@ -31,11 +29,10 @@ test("a copy nao carrega preco riscado, 'de/por' nem cronometro", () => {
   assert.doesNotMatch(tudo, /R\$ ?200|riscad|cron[ôo]metro|\bde R\$ [\d.,]+ por R\$/i);
 });
 
-test("cada depoimento tem @, texto e um avatar que existe em public/", () => {
+test("cada depoimento e uma vaga (print: null) ou um print que existe em public/", () => {
   assert.equal(CONFIG.depoimentos.length, 5);
-  for (const { texto, identificacao, foto } of CONFIG.depoimentos) {
-    assert.ok(identificacao.startsWith("@") && texto.length > 40, identificacao);
-    assert.ok(existsSync(new URL(`../../public${foto}`, import.meta.url)), foto);
+  for (const { id, print } of CONFIG.depoimentos) {
+    if (print !== null) assert.ok(existsSync(new URL(`../../public${print}`, import.meta.url)), id);
   }
 });
 

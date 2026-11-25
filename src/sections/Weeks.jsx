@@ -34,7 +34,7 @@ export function Weeks() {
   }, []);
 
   return (
-    <section id="mapa" className={`${BLOCK} py-16 md:py-24`} ref={root}>
+    <section id="mapa" className={`${BLOCK} border-t-0! pb-16 md:pb-24`} ref={root}>
       <DotField variant="estelar" />
       <div className={`${ENVELOPE} relative z-1`}>
 

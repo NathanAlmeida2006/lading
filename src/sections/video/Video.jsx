@@ -28,8 +28,8 @@ const stopButton =
 
 /**
  * Secao de video, codigo puro: tela cheia, fundo preto e o play no meio. O clique toca um som e abre
- * a introducao: um unico circulo vermelho sai do play e cobre a secao, e o triangulo preto do play vira um L
- * enorme (Big Shoulders) e o "ithium" sobe na vertical, alinhado ao topo e a direita do L. As proximas partes do video entram depois, sobre esse vermelho.
+ * a introducao: o gancho (Takes.jsx, TakeHook) cobre o primeiro 1,5 s e sai; sob ele, um unico circulo vermelho sai do play e cobre a secao, e o
+ * triangulo preto do play vira um L enorme (Big Shoulders) e o "ithium" sobe na vertical, alinhado ao topo e a direita do L. As proximas partes do video entram depois, sobre esse vermelho.
  * Sob movimento reduzido nao ha circulo: o fundo vai direto ao vermelho.
  * @param {object} props - Sem props.
  * @returns {JSX.Element} A seção de vídeo.
@@ -77,7 +77,8 @@ export function Video() {
     setIsPlaying(true);
     // Cada estagio entra na sua batida, no relogio do clique (nenhum depende de a rolagem acabar).
     Object.assign(schedule.current, timeline.start(TIMELINE, t0));
-    // A tela fica parada entre o fim do circulo e o L, que so anda aos 1500 ms.
+    setStage(STAGES.hook); // o gancho ja esta na tela no quadro do clique, sem esperar o timer
+    // O gancho cobre o 1,5 s em que a tela ficava parada entre o fim do circulo e o L, que so anda aos 1500 ms.
     timeline.after(800, warmUpFluid);
   };
 

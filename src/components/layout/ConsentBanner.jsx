@@ -6,8 +6,8 @@ import { getDocumentUrl } from "../../infra/validation.js";
 /**
  * Consentimento antes do evento de terceiro (RNF-L23).
  *
- * O pixel da Meta, o PostHog e o Clarity (que grava a sessao) nao carregam sozinhos: esperam o aceite (o orquestrador
- * esta em instrumentation.js, nao aqui). O texto e curto e leva a politica de privacidade, que diz o que cada um faz: o
+ * O Clarity (sessao e mapa de calor) e o PostHog (funil) carregam ja no inicio, anonimos e sem cookies; o aceite so libera os
+ * cookies deles. O pixel da Meta (marketing) continua esperando o aceite (o orquestrador esta em instrumentation.js, nao aqui). O texto e curto e leva a politica de privacidade, que diz o que cada um faz: o
  * texto e o consentimento tudo ou nada foram mantidos pelo gerente em 22/11/2026. "Apenas essenciais" e uma opcao de peso igual a "Aceitar" (os dois em contorno, mesma classe) na tela,
  * e nao um link cinza no canto - o padrao escuro custaria mais em confianca do que rende em evento.
  *
@@ -64,7 +64,7 @@ export function ConsentBanner() {
     >
       <div className="flex flex-col gap-2 max-w-240 mx-auto sm:flex-row sm:items-center sm:gap-6">
         <p className="font-terciaria text-body text-center sm:text-left sm:flex-1 max-w-prose">
-          Usamos cookies e métricas para melhorar sua visita.
+          Medimos a visita de forma anônima, sem cookies. Aceitar libera cookies de análise completa e de marketing.
           {PRIVACY_URL && (
             <>
               {" "}Veja a <a className="underline underline-offset-4" href={PRIVACY_URL}>Privacidade</a>.

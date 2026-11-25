@@ -25,10 +25,12 @@ test("cada estagio dispara na sua batida: nao antes, e exatamente uma vez", () =
   let agora = 0;
   for (const [b, e] of TIMELINE) {
     const alvo = instante(getBeatTime(b));
-    mock.timers.tick(alvo - 1 - agora);
-    agora = alvo - 1;
-    assert.ok(!disparos.includes(e), `estagio ${e} disparou antes da batida ${b}`);
-    mock.timers.tick(1);
+    if (alvo > 0) { // o gancho cai no clique (0 ms): nao ha "antes" a conferir
+      mock.timers.tick(alvo - 1 - agora);
+      agora = alvo - 1;
+      assert.ok(!disparos.includes(e), `estagio ${e} disparou antes da batida ${b}`);
+    }
+    mock.timers.tick(alvo - agora);
     agora = alvo;
     assert.equal(disparos.filter((x) => x === e).length, 1, `estagio ${e} deveria ter disparado uma vez na batida ${b}`);
   }
@@ -95,7 +97,7 @@ test("reagendar depois de cancelar comeca limpo, sem eco do primeiro", () => com
   const segundo = [];
   scheduleStages(TIMELINE, Date.now(), (e) => segundo.push(e), Date.now);
   mock.timers.tick(instante(getBeatTime(DO_IT_BEAT)) + 10);
-  assert.deepEqual(primeiro, [TIMELINE[0][1]]);
+  assert.deepEqual(primeiro, TIMELINE.filter(([b]) => getBeatTime(b) <= 4000).map(([, e]) => e)); // o que ja tinha caido ate os 4000 ms
   assert.deepEqual(segundo, estagios);
 }));
 
