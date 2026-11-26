@@ -235,7 +235,7 @@ export const CONTENT = {
   spectrum: {
     title: "Espectro",
     sub: `Cinco áreas que sobem juntas quando o treino deixa de ser improviso.`,
-    note: "Seu Depois se constrói treino a treino, semana a semana. Valores ilustrativos.",
+    note: "Seu Depois se constrói treino a treino.",
     before: "Antes",
     after: "Depois",
     areas: [
@@ -364,7 +364,7 @@ export const CONTENT = {
     {
       question: "Sou natural e já treino há meses sem ver resultado. Serve para mim?",
       answer:
-        "Serve principalmente para você. O Lithium não vende milagre genético nem promessa de físico hormonizado. Ele elimina os erros de volume, carga e constância que travam 90% dos naturais.",
+        "Serve principalmente para quem já treina, mas ainda não encontrou uma estrutura consistente de treino, alimentação e recuperação.",
     },
     {
       question: "E se eu falhar uma semana por causa de prova, trabalho ou imprevisto?",
