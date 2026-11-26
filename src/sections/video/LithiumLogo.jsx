@@ -1,11 +1,20 @@
 /**
  * A logo do Lithium (a Art Dystopia de public/lithium-wordmark.svg) a tela cheia, em dois quadros: o 0, fundo preto e logo
- * branca; o 1, fundo vermelho (o acento) e logo preta. A logo e uma mascara: a cor sai do texto do quadro, e nao do SVG.
- * Cada quadro "bate": a logo chega um pouco maior e assenta (`animate-batida`).
+ * branca; o 1, fundo vermelho (o acento) e logo preta. A logo é uma máscara: a cor sai do texto do quadro, e não do SVG.
+ * Cada quadro "bate": a logo chega um pouco maior e assenta (`animate-beat`).
  */
 export const LOGO_URL = "/lithium-wordmark.svg";
 
-const MASK_STYLE = { maskImage: `url(${LOGO_URL})`, WebkitMaskImage: `url(${LOGO_URL})`, maskSize: "contain", WebkitMaskSize: "contain", maskRepeat: "no-repeat", WebkitMaskRepeat: "no-repeat", maskPosition: "center", WebkitMaskPosition: "center" };
+const MASK_STYLE = {
+  maskImage: `url(${LOGO_URL})`,
+  WebkitMaskImage: `url(${LOGO_URL})`,
+  maskSize: "contain",
+  WebkitMaskSize: "contain",
+  maskRepeat: "no-repeat",
+  WebkitMaskRepeat: "no-repeat",
+  maskPosition: "center",
+  WebkitMaskPosition: "center",
+};
 
 // Duas fatias da logo (a de cima e a de baixo), deslocadas para lados opostos e que voltam ao lugar em 130 ms, em degraus: o
 // "glitch" que acompanha a batida de cada quadro.
@@ -23,10 +32,23 @@ const SLICES = [
  */
 export function LithiumLogo({ frame, restartKey }) {
   return (
-    <div className={`absolute inset-0 z-4 flex items-center justify-center ${frame === 0 ? "bg-void text-bone" : "bg-acento text-void"}`} role="img" aria-label="Lithium">
-      <div className="relative w-[min(86vw,1100px)] aspect-[3784/1296] motion-safe:animate-batida" key={restartKey}>
+    <div
+      className={`absolute inset-0 z-4 flex items-center justify-center ${frame === 0 ? "bg-void text-bone" : "bg-accent text-void"}`}
+      role="img"
+      aria-label="Lithium"
+    >
+      <div
+        className="relative w-[min(86vw,1100px)] aspect-[3784/1296] motion-safe:animate-beat"
+        key={restartKey}
+      >
         <div className="absolute inset-0 bg-current" style={MASK_STYLE} />
-        {SLICES.map(({ cut, animation }) => <div className={`absolute inset-0 bg-current ${cut} ${animation}`} style={MASK_STYLE} key={cut} />)}
+        {SLICES.map(({ cut, animation }) => (
+          <div
+            className={`absolute inset-0 bg-current ${cut} ${animation}`}
+            style={MASK_STYLE}
+            key={cut}
+          />
+        ))}
       </div>
     </div>
   );

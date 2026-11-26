@@ -2,13 +2,13 @@ import { animate, createDrawable, splitText, stagger, steps, utils } from "anime
 import { getDuration, isMotionReduced } from "./tokens.js";
 import { openReadingMode } from "./reading.js";
 
-// Dispara na borda da tela, e nao 80px dentro: com rolagem rapida o elemento ja estaria no meio
-// da tela quando a animacao comecasse, e apareceria "de repente".
+// Dispara na borda da tela, e não 80px dentro: com rolagem rápida o elemento já estaria no meio
+// da tela quando a animação começasse, e apareceria "de repente".
 const ROOT_MARGIN = "0px 0px 0px 0px";
-// `outExpo` nativo do Anime.js 4: a string `cubicBezier(...)` foi removida do core (e importar a funcao
-// estoura o teto de JS). Difere de cubic-bezier(0.16, 1, 0.3, 1) em no maximo 0,012 (a 4% do tempo).
+// `outExpo` nativo do Anime.js 4: a string `cubicBezier(...)` foi removida do core (e importar a função
+// estoura o teto de JS). Difere de cubic-bezier(0.16, 1, 0.3, 1) em no máximo 0,012 (a 4% do tempo).
 const EXPO_EASING = "outExpo";
-// Aparicao fluida: curva expo-out em ~0,65 s, no lugar dos degraus `steps(2)` de 180 ms.
+// Aparição fluida: curva expo-out em ~0,65 s, no lugar dos degraus `steps(2)` de 180 ms.
 const REVEAL_DURATION_MS = 650;
 
 /* Um IntersectionObserver nativo dispara cada revelação. */
@@ -22,7 +22,9 @@ function fire(target) {
   observer?.unobserve(target);
   for (const action of actions) {
     if (document.documentElement.classList.contains("movimento-falhou")) break;
-    try { action(); } catch (error) {
+    try {
+      action();
+    } catch (error) {
       console.error(error);
       pending.clear();
       observer?.disconnect();
@@ -50,14 +52,21 @@ function whenInView(trigger, execute) {
     );
   }
   let animation;
-  const start = () => { animation = execute(); };
+  const start = () => {
+    animation = execute();
+  };
   const actions = pending.get(trigger) ?? new Set();
   actions.add(start);
   if (!pending.has(trigger)) {
     pending.set(trigger, actions);
-    try { observer.observe(trigger); } catch (error) {
+    try {
+      observer.observe(trigger);
+    } catch (error) {
       pending.delete(trigger);
-      if (!pending.size) { observer.disconnect(); observer = null; }
+      if (!pending.size) {
+        observer.disconnect();
+        observer = null;
+      }
       throw error;
     }
   }
@@ -77,11 +86,11 @@ function whenInView(trigger, execute) {
 }
 
 /* -------------------------------------------------------------------------
-   Revelacao
+   Revelação
    ------------------------------------------------------------------------- */
 
 /**
- * Aparicao simples ligada a rolagem. O caso comum de todo bloco.
+ * Aparição simples ligada a rolagem. O caso comum de todo bloco.
  * @param {Element} target - Elemento a revelar.
  * @param {object} [options={}] - Opções.
  * @param {number} [options.delay=0] - Atraso em ms.
@@ -101,11 +110,14 @@ export function reveal(target, { delay = 0, offset = 12 } = {}) {
       ease: isReduced ? "linear" : EXPO_EASING,
     }),
   );
-  return () => { cleanup?.(); utils.set(target, { opacity: 1, y: 0 }); };
+  return () => {
+    cleanup?.();
+    utils.set(target, { opacity: 1, y: 0 });
+  };
 }
 
 /**
- * Varios elementos entrando em cascata, com o mesmo corte.
+ * Vários elementos entrando em cascata, com o mesmo corte.
  * @param {Iterable<Element> | NodeListOf<Element>} targets - Elementos da cascata.
  * @param {object} [options={}] - Opções.
  * @param {number} [options.interval=70] - Intervalo entre itens em ms.
@@ -117,28 +129,33 @@ export function revealInCascade(targets, { interval = 70 } = {}) {
   const isReduced = isMotionReduced();
   utils.set(list, { opacity: 0, y: isReduced ? 0 : 10 });
 
-  // Cada item tem o proprio gatilho: uma lista longa nao cabe na viewport, e
+  // Cada item tem o próprio gatilho: uma lista longa não cabe na viewport, e
   // disparar a cascata inteira pelo primeiro item animaria no vazio o que
-  // ainda esta tres telas abaixo.
+  // ainda está três telas abaixo.
   const cleanups = [];
   for (const [index, item] of list.entries()) {
-    cleanups.push(whenInView(item, () =>
-      animate(item, {
-        opacity: [0, 1],
-        y: isReduced ? 0 : [10, 0],
-        duration: isReduced ? getDuration("--motion-fast") : REVEAL_DURATION_MS,
-        delay: isReduced ? 0 : Math.min(index, 3) * interval,
-        ease: isReduced ? "linear" : EXPO_EASING,
-      }),
-    ));
+    cleanups.push(
+      whenInView(item, () =>
+        animate(item, {
+          opacity: [0, 1],
+          y: isReduced ? 0 : [10, 0],
+          duration: isReduced ? getDuration("--motion-fast") : REVEAL_DURATION_MS,
+          delay: isReduced ? 0 : Math.min(index, 3) * interval,
+          ease: isReduced ? "linear" : EXPO_EASING,
+        }),
+      ),
+    );
   }
-  return () => { for (const cleanup of cleanups) cleanup?.(); utils.set(list, { opacity: 1, y: 0 }); };
+  return () => {
+    for (const cleanup of cleanups) cleanup?.();
+    utils.set(list, { opacity: 1, y: 0 });
+  };
 }
 
 /**
- * Divide o titulo em linhas (splitText, recorte em cada linha) e o revela pelo `reveal`.
- * Hoje a mascara nao anima: so o bloco inteiro esmaece. Decisao pendente do dono, desde 02/10:
- * tirar o splitText aperta o entrelinha, entao ele fica.
+ * Divide o título em linhas (splitText, recorte em cada linha) e o revela pelo `reveal`.
+ * Hoje a máscara não anima: só o bloco inteiro esmaece. Decisão pendente do dono, desde 02/10:
+ * tirar o splitText aperta o entrelinha, então ele fica.
  * Espera as fontes antes de dividir; uma desmontagem ou falha impede escrita tardia no DOM.
  * @param {Element} target - Título a dividir.
  * @param {object} [options={}] - Opções.
@@ -150,7 +167,12 @@ export function revealInCascade(targets, { interval = 70 } = {}) {
 export async function revealLineMask(target, { delay = 0 } = {}, signal) {
   if (!target) return;
   if (!isMotionReduced()) await document.fonts.ready;
-  if (signal?.aborted || !target.isConnected || document.documentElement.classList.contains("movimento-falhou")) return;
+  if (
+    signal?.aborted ||
+    !target.isConnected ||
+    document.documentElement.classList.contains("movimento-falhou")
+  )
+    return;
   let slices;
   let cleanup;
   try {
@@ -165,7 +187,10 @@ export async function revealLineMask(target, { delay = 0 } = {}, signal) {
         accessible: true,
       });
     }
-    return () => { cleanup?.(); slices?.revert(); };
+    return () => {
+      cleanup?.();
+      slices?.revert();
+    };
   } catch (error) {
     cleanup?.();
     slices?.revert();
@@ -174,12 +199,12 @@ export async function revealLineMask(target, { delay = 0 } = {}, signal) {
 }
 
 /**
- * Linhas compostas a mao subindo de dentro do recorte. E a mascara de linha
- * para titulo cujas quebras JA estao no markup (um `<span class="linha">` por
- * linha, com o texto num `.linha__texto` dentro), que e o caso das headlines
- * dos paineis e do titulo das doze semanas. Sem `splitText`: quem compos a
- * quebra foi o designer, nao o navegador, e e isso que a engenharia reversa
- * manda fazer nos titulos.
+ * Linhas compostas à mão subindo de dentro do recorte. É a máscara de linha
+ * para título cujas quebras JÁ estão no markup (um `<span class="linha">` por
+ * linha, com o texto num `.linha__texto` dentro), que é o caso das headlines
+ * dos painéis e do título das doze semanas. Sem `splitText`: quem compôs a
+ * quebra foi o designer, não o navegador, e é isso que a engenharia reversa
+ * manda fazer nos títulos.
  * @param {Iterable<Element> | NodeListOf<Element>} lines - Linhas, dentro dos recortes `.linha`.
  * @param {object} [options={}] - Opções.
  * @param {number} [options.delay=0] - Atraso em ms.
@@ -191,16 +216,24 @@ export function raiseLines(lines, { delay = 0, interval = 110, duration = 820 } 
   const list = Array.from(lines ?? []);
   if (!list.length) return;
   const isReduced = isMotionReduced();
-  // O gatilho e o recorte (`.linha`), nao a linha: ela nasce transladada para fora do recorte, e o
-  // IntersectionObserver nao enxerga um alvo recortado (nunca disparava; so a rede de seguranca
-  // do RNF-L35 destravava, zerando a linha antes de a secao chegar).
+  // O gatilho é o recorte (`.linha`), não a linha: ela nasce transladada para fora do recorte, e o
+  // IntersectionObserver não enxerga um alvo recortado (nunca disparava; só a rede de segurança
+  // do RNF-L35 destravava, zerando a linha antes de a seção chegar).
   const trigger = list[0].parentElement ?? list[0];
   if (isReduced) {
     utils.set(list, { opacity: 0 });
     const cleanup = whenInView(trigger, () =>
-      animate(list, { opacity: [0, 1], duration: getDuration("--motion-fast"), delay: delay, ease: "linear" }),
+      animate(list, {
+        opacity: [0, 1],
+        duration: getDuration("--motion-fast"),
+        delay: delay,
+        ease: "linear",
+      }),
     );
-    return () => { cleanup?.(); utils.set(list, { opacity: 1 }); };
+    return () => {
+      cleanup?.();
+      utils.set(list, { opacity: 1 });
+    };
   }
   utils.set(list, { y: "110%" });
   const cleanup = whenInView(trigger, () =>
@@ -211,12 +244,15 @@ export function raiseLines(lines, { delay = 0, interval = 110, duration = 820 } 
       ease: EXPO_EASING,
     }),
   );
-  return () => { cleanup?.(); utils.set(list, { y: "0%" }); };
+  return () => {
+    cleanup?.();
+    utils.set(list, { y: "0%" });
+  };
 }
 
 /**
- * Desenha um traco de SVG quando ele chega a tela. Serve a moldura e os
- * fios do fechamento. Sob movimento reduzido o traco ja nasce inteiro e so aparece.
+ * Desenha um traço de SVG quando ele chega a tela. Serve a moldura e os
+ * fios do fechamento. Sob movimento reduzido o traço já nasce inteiro e só aparece.
  */
 function drawStroke(targets, { delay = 0, duration } = {}) {
   const list = Array.from(targets ?? []).filter(Boolean);
@@ -226,7 +262,12 @@ function drawStroke(targets, { delay = 0, duration } = {}) {
   if (isReduced) utils.set(list, { opacity: 0 });
   const cleanup = whenInView(list[0], () => {
     if (isReduced) {
-      return animate(list, { opacity: [0, 1], duration: getDuration("--motion-fast"), delay: delay, ease: "linear" });
+      return animate(list, {
+        opacity: [0, 1],
+        duration: getDuration("--motion-fast"),
+        delay: delay,
+        ease: "linear",
+      });
     }
     return animate(createDrawable(list), {
       draw: ["0 0", "0 1"],
@@ -235,33 +276,40 @@ function drawStroke(targets, { delay = 0, duration } = {}) {
       ease: "out(2)",
     });
   });
-  return () => { cleanup?.(); utils.set(list, { opacity: 1 }); };
+  return () => {
+    cleanup?.();
+    utils.set(list, { opacity: 1 });
+  };
 }
 
 /* -------------------------------------------------------------------------
-   Interacao
+   Interação
    ------------------------------------------------------------------------- */
 
 /**
- * Resposta ao toque no botao. Um degrau: e confirmacao, nao animacao.
+ * Resposta ao toque no botão. Um degrau: é confirmação, não animação.
  * @param {Element} target - Botão a pulsar.
  * @returns {Animation | undefined} Animação em curso, ou undefined se o alvo não existe.
  */
 export function pulse(target) {
   if (!target) return;
-  return animate(target, { scale: [1, 0.97, 1], duration: getDuration("--motion-fast"), ease: steps(2) });
+  return animate(target, {
+    scale: [1, 0.97, 1],
+    duration: getDuration("--motion-fast"),
+    ease: steps(2),
+  });
 }
 
 /**
  * A entrada do painel de tela cheia do fechamento, quando ele chega a tela. (A dobra
  * entra por CSS, em styles/residual.css §7.)
  *
- * A ordem e a leitura: primeiro a moldura desenha o campo, depois os fios
+ * A ordem é a leitura: primeiro a moldura desenha o campo, depois os fios
  * abrem a grade, depois as duas linhas da headline sobem de dentro do recorte,
- * e so entao a promessa e o botao.
+ * e só então a promessa e o botão.
  *
- * Barato primeiro, caro depois: `reveal` so marca o elemento; `drawStroke` mede
- * cada traco e `raiseLines` escreve transform.
+ * Barato primeiro, caro depois: `reveal` só marca o elemento; `drawStroke` mede
+ * cada traço e `raiseLines` escreve transform.
  * @param {object} parts - Partes do painel.
  * @param {NodeListOf<SVGPathElement>} parts.frame - Traços da moldura.
  * @param {NodeListOf<SVGLineElement>} parts.threads - Fios do painel.
@@ -284,5 +332,7 @@ export function openPanel({ frame, threads, kicker, lines, body, action, footer 
     drawStroke(threads, { delay: 260 * step, duration: 620 }),
     raiseLines(lines, { delay: 380 * step }),
   ];
-  return () => { for (const cleanup of cleanups) cleanup?.(); };
+  return () => {
+    for (const cleanup of cleanups) cleanup?.();
+  };
 }

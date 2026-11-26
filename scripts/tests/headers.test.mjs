@@ -1,5 +1,5 @@
-// Cabecalhos de seguranca (public/_headers) e hash do script inline (index.html). Le os arquivos a partir deste teste, sem depender do cwd.
-// Fonte: cartao T-010 (criterio 1) e headers.mjs de referencia. Afirmacoes do cartao, um test() por afirmacao.
+// Cabeçalhos de segurança (public/_headers) e hash do script inline (index.html). Lê os arquivos a partir deste teste, sem depender do cwd.
+// Fonte: cartão T-010 (critério 1) e headers.mjs de referência. Afirmações do cartão, um test() por afirmação.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 const headers = readFileSync(new URL("../../public/_headers", import.meta.url), "utf8");
 const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
 
-// Leitura de blocos igual a do headers.mjs: linha sem recuo abre bloco (padrao de caminho); linha recuada e "Nome: valor".
+// Leitura de blocos igual a do headers.mjs: linha sem recuo abre bloco (padrão de caminho); linha recuada é "Nome: valor".
 const blocos = {};
 let atual = null;
 for (const linha of headers.split("\n")) {
@@ -21,17 +21,28 @@ for (const linha of headers.split("\n")) {
   }
 }
 const geral = blocos["/*"] ?? [];
-const valor = (lista, nome) => lista.find((l) => l.startsWith(`${nome}:`))?.slice(nome.length + 1).trim();
+const valor = (lista, name) =>
+  lista
+    .find((l) => l.startsWith(`${name}:`))
+    ?.slice(name.length + 1)
+    .trim();
 const csp = valor(geral, "Content-Security-Policy") ?? "";
-const diretiva = (nome) => csp.split(";").map((d) => d.trim()).find((d) => d.split(/\s+/)[0] === nome) ?? "";
-const fontes = (nome) => diretiva(nome).split(/\s+/).slice(1);
+const diretiva = (name) =>
+  csp
+    .split(";")
+    .map((d) => d.trim())
+    .find((d) => d.split(/\s+/)[0] === name) ?? "";
+const fontes = (name) => diretiva(name).split(/\s+/).slice(1);
 const scriptSrc = fontes("script-src");
 
-// Scripts inline executaveis: sem src, e type ausente ou JS (ld+json e outros ficam de fora).
+// Scripts inline executáveis: sem src, e type ausente ou JS (ld+json e outros ficam de fora).
 const hashes = [...html.matchAll(/<script(?![^>]*\bsrc\s*=)([^>]*)>([\s\S]*?)<\/script>/g)]
   .filter(([, atributos]) => {
     const tipo = atributos.match(/\btype\s*=\s*["']?([^"'\s>]+)/i)?.[1];
-    return tipo === undefined || ["module", "text/javascript", "application/javascript"].includes(tipo.toLowerCase());
+    return (
+      tipo === undefined ||
+      ["module", "text/javascript", "application/javascript"].includes(tipo.toLowerCase())
+    );
   })
   .map(([, , conteudo]) => `'sha256-${createHash("sha256").update(conteudo).digest("base64")}'`);
 
@@ -78,7 +89,10 @@ test("index.html tem ao menos um script inline executavel (o regex nao quebrou)"
 });
 
 test("cada script inline executavel do index.html tem seu hash em script-src", () => {
-  assert.deepEqual(hashes.filter((hash) => !scriptSrc.includes(hash)), []);
+  assert.deepEqual(
+    hashes.filter((hash) => !scriptSrc.includes(hash)),
+    [],
+  );
 });
 
 test("img-src traz https://www.facebook.com", () => {
@@ -94,10 +108,13 @@ test("object-src e exatamente 'none'", () => {
 });
 
 test("bloco /documents/* tem Cache-Control: public, max-age=31536000, immutable", () => {
-  assert.ok((blocos["/documents/*"] ?? []).includes("Cache-Control: public, max-age=31536000, immutable"));
+  assert.ok(
+    (blocos["/documents/*"] ?? []).includes("Cache-Control: public, max-age=31536000, immutable"),
+  );
 });
 
 test("Clarity liberado em script-src, connect-src e img-src", () => {
   assert.ok(scriptSrc.includes("https://*.clarity.ms"));
-  for (const d of ["connect-src", "img-src"]) assert.ok(fontes(d).includes("https://*.clarity.ms"), d);
+  for (const d of ["connect-src", "img-src"])
+    assert.ok(fontes(d).includes("https://*.clarity.ms"), d);
 });

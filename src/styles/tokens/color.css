@@ -21,11 +21,11 @@
   /* ---- Acentos de protocolo - §4.4 ---------------------------------------
      Extraídos dos três cartazes aprovados em 03-referencia/estilos/acid-graphics/.
      Um acento por superfície. Nunca dois na mesma. */
-  --rubro: #d2202c;    /* 01 Hipertrofia · ac3 Azrael  · 3,78:1 sobre --void:
+  --crimson: #d2202c;    /* 01 Hipertrofia · ac3 Azrael  · 3,78:1 sobre --void:
                           só texto ≥24px e componentes, nunca texto corrente */
-  --praga: #12a150;    /* 02 Dieta Básica · ac2 Peccatum · esmeralda chapado,
+  --pest: #12a150;    /* 02 Dieta Básica · ac2 Peccatum · esmeralda chapado,
                           NÃO é lima - o verde-lima está proibido */
-  --vigilia: #8b5cf6;  /* 03 Cuidado com o Sono · ac1 Gothic Art */
+  --vigil: #8b5cf6;  /* 03 Cuidado com o Sono · ac1 Gothic Art */
 
   /* ---- Semânticas de estado - §4.5 ---------------------------------------
      Nunca coincidem com acentos de protocolo. Nunca comunicam sozinhas. */
@@ -35,7 +35,7 @@
 
   /* Acento ativo do contexto. Trocado por protocolo; padrão = 01 Hipertrofia.
      Convenção herdada de build/estilo.css. */
-  --acento: var(--rubro);
+  --accent: var(--crimson);
 }
 
 /* ---- Modo Cartaz (tema claro) - §4.3 ---------------------------------------
@@ -55,9 +55,9 @@
   --bone: #0b0b0c;         /* --ink · 16,4:1 */
   --bone-pure: #000000;
 
-  --rubro: #a8101c;        /* 6,34:1 - sem restrição de tamanho no Cartaz */
-  --praga: #0a6e34;
-  --vigilia: #5b2bc4;
+  --crimson: #a8101c;        /* 6,34:1 - sem restrição de tamanho no Cartaz */
+  --pest: #0a6e34;
+  --vigil: #5b2bc4;
 
   --success: #116835;
   --warning: #7d5100;

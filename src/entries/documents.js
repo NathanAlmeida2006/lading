@@ -11,9 +11,9 @@ import { writeSessionValue } from "../infra/storage.js";
 
 startLenis();
 
-// Marca a aba: a landing, ao reabrir, nao repete a cortina nem a entrada do heroi (index.html le a chave crua "1";
-// o numero 1 serializado como JSON e exatamente esse texto). Armazenamento bloqueado: a landing abre com a introducao.
-writeSessionValue("fluor:de-documento", 1);
+// Marca a aba: a landing, ao reabrir, não repete a cortina nem a entrada do herói (index.html lê a chave crua "1";
+// o número 1 serializado como JSON é exatamente esse texto). Armazenamento bloqueado: a landing abre com a introdução.
+writeSessionValue("fluor:from-document", 1);
 
 const isReduced = isMotionReduced();
 
@@ -29,7 +29,7 @@ if (root) {
 
 // WCAG 2.2.2: o campo anda sozinho por mais de 5 s. Fora da tela até receber foco; sob movimento reduzido
 // não há o que pausar.
-const button = document.querySelector(".pausa");
+const button = document.querySelector(".pause");
 if (button && !isReduced) {
   button.hidden = false;
   button.addEventListener("click", () => setPaused(!isPaused()));

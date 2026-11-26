@@ -1,10 +1,10 @@
 /**
- * Le as duracoes e curvas do CSS, em vez de repeti-las aqui.
+ * Lê as durações e curvas do CSS, em vez de repeti-las aqui.
  *
- * RNF-L17 nao admite valor solto: os tokens de movimento vivem em
- * `tokens/motion.css`, que e traducao do mestre visual §10. Duplicar
+ * RNF-L17 não admite valor solto: os tokens de movimento vivem em
+ * `tokens/motion.css`, que é tradução do mestre visual §10. Duplicar
  * "180ms" neste arquivo criaria a segunda fonte da verdade que o RNF-G16
- * proibe, e ela envelheceria em silencio.
+ * proíbe, e ela envelheceria em silêncio.
  */
 const DEFAULTS = {
   "--motion-fast": 120,
@@ -35,9 +35,10 @@ export function getDuration(name) {
   return cache[name];
 }
 
-// Uma consulta so para a pagina inteira: `.matches` e vivo, e ha quem leia a cada quadro de rolagem.
+// Uma consulta só para a página inteira: `.matches` é vivo, e há quem leia a cada quadro de rolagem.
 let motionQuery = null;
-const getMotionQuery = () => (motionQuery ??= window.matchMedia("(prefers-reduced-motion: reduce)"));
+const getMotionQuery = () =>
+  (motionQuery ??= window.matchMedia("(prefers-reduced-motion: reduce)"));
 
 /**
  * Movimento nunca comunica sozinho (mestre §10). Com a preferencia ligada,
@@ -48,11 +49,11 @@ export function isMotionReduced() {
   return getMotionQuery().matches;
 }
 
-// Idem para o toque: o dedo rola e a CPU do celular e curta, entao o fundo anima mais devagar.
+// Idem para o toque: o dedo rola e a CPU do celular é curta, então o fundo anima mais devagar.
 let touchQuery = null;
 
 /**
- * Ponteiro grosso (dedo): os fundos animados desenham menos e congelam enquanto a pagina rola.
+ * Ponteiro grosso (dedo): os fundos animados desenham menos e congelam enquanto a página rola.
  * @returns {boolean} true quando o ponteiro principal é grosso (toque).
  */
 export function isTouchPointer() {

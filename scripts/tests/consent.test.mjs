@@ -1,4 +1,4 @@
-// Consentimento, assinantes e registro do checkout (src/infra/instrumentation.js). Cada cenario usa um import fresco (?c=n), com estado proprio.
+// Consentimento, assinantes e registro do checkout (src/infra/instrumentation.js). Cada cenário usa um import fresco (?c=n), com estado próprio.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CONFIG } from "../../src/infra/config.js";
@@ -57,7 +57,9 @@ test("assinante que lanca nao derruba os outros: o erro vai para console.error e
   let seguinte = 0;
   console.error = (erro) => erros.push(erro);
   try {
-    m.subscribeToConsent(() => { throw new Error("falha do assinante"); });
+    m.subscribeToConsent(() => {
+      throw new Error("falha do assinante");
+    });
     m.subscribeToConsent(() => seguinte++);
     m.answerConsent(true);
   } finally {
@@ -69,20 +71,20 @@ test("assinante que lanca nao derruba os outros: o erro vai para console.error e
 
 test("trackCheckoutStart nao lanca em Node (sem window, sem Pixel), com urlConfirmada true ou false", async () => {
   const m = await fresco();
-  const original = CONFIG.checkout.urlConfirmada;
+  const original = CONFIG.checkout.confirmedUrl;
   try {
-    for (const urlConfirmada of [true, false]) {
-      CONFIG.checkout.urlConfirmada = urlConfirmada;
-      assert.doesNotThrow(() => m.trackCheckoutStart("topo"), `urlConfirmada=${urlConfirmada}`);
+    for (const confirmedUrl of [true, false]) {
+      CONFIG.checkout.confirmedUrl = confirmedUrl;
+      assert.doesNotThrow(() => m.trackCheckoutStart("topo"), `urlConfirmada=${confirmedUrl}`);
     }
   } finally {
-    CONFIG.checkout.urlConfirmada = original;
+    CONFIG.checkout.confirmedUrl = original;
   }
 });
 
-// Stubs minimos de window, document e IntersectionObserver para o pixel de mentira: o InitiateCheckout so pode sair com URL confirmada.
+// Stubs mínimos de window, document e IntersectionObserver para o pixel de mentira: o InitiateCheckout só pode sair com URL confirmada.
 test("sem URL confirmada o InitiateCheckout nao sai; com URL confirmada, sai uma vez", async () => {
-  const antes = {
+  const before = {
     window: globalThis.window,
     document: globalThis.document,
     IntersectionObserver: globalThis.IntersectionObserver,
@@ -90,34 +92,48 @@ test("sem URL confirmada o InitiateCheckout nao sai; com URL confirmada, sai uma
     pixel: CONFIG.pixel.id,
   };
   const armazem = new Map();
-  globalThis.window = { sessionStorage: { getItem: (k) => armazem.get(k) ?? null, setItem: (k, v) => armazem.set(k, v) } };
+  globalThis.window = {
+    sessionStorage: {
+      getItem: (k) => armazem.get(k) ?? null,
+      setItem: (k, v) => armazem.set(k, v),
+    },
+  };
   globalThis.document = { createElement: () => ({}), head: { appendChild() {} } };
-  globalThis.IntersectionObserver = class { observe() {} unobserve() {} disconnect() {} };
+  globalThis.IntersectionObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
   try {
     CONFIG.pixel.id = "123";
     const m = await fresco();
     m.answerConsent(true);
     m.startMeasurement({});
-    const enviados = () => globalThis.window.fbq.queue.filter((args) => args[1] === "InitiateCheckout");
-    CONFIG.checkout.urlConfirmada = false;
+    const enviados = () =>
+      globalThis.window.fbq.queue.filter((args) => args[1] === "InitiateCheckout");
+    CONFIG.checkout.confirmedUrl = false;
     m.trackCheckoutStart("topo");
     assert.equal(enviados().length, 0);
-    CONFIG.checkout.urlConfirmada = true;
+    CONFIG.checkout.confirmedUrl = true;
     m.trackCheckoutStart("topo");
     assert.equal(enviados().length, 1);
   } finally {
-    for (const [nome, valor] of [["window", antes.window], ["document", antes.document], ["IntersectionObserver", antes.IntersectionObserver]]) {
-      if (valor === undefined) delete globalThis[nome];
-      else globalThis[nome] = valor;
+    for (const [name, valor] of [
+      ["window", before.window],
+      ["document", before.document],
+      ["IntersectionObserver", before.IntersectionObserver],
+    ]) {
+      if (valor === undefined) delete globalThis[name];
+      else globalThis[name] = valor;
     }
-    Object.assign(CONFIG.checkout, antes.checkout);
-    CONFIG.pixel.id = antes.pixel;
+    Object.assign(CONFIG.checkout, before.checkout);
+    CONFIG.pixel.id = before.pixel;
   }
 });
 
-// Revogacao (L-1) e autoConfig (L-4): pixel de mentira com cookie, script e fila observaveis.
+// Revogação (L-1) e autoConfig (L-4): pixel de mentira com cookie, script e fila observáveis.
 async function comPixel(corpo) {
-  const antes = {
+  const before = {
     window: globalThis.window,
     document: globalThis.document,
     IntersectionObserver: globalThis.IntersectionObserver,
@@ -127,15 +143,24 @@ async function comPixel(corpo) {
   const cookies = [];
   const scripts = [];
   globalThis.window = {
-    sessionStorage: { getItem: (k) => armazem.get(k) ?? null, setItem: (k, v) => armazem.set(k, v) },
+    sessionStorage: {
+      getItem: (k) => armazem.get(k) ?? null,
+      setItem: (k, v) => armazem.set(k, v),
+    },
     location: { hostname: "www.exemplo.com.br" },
   };
   globalThis.document = {
     createElement: () => ({}),
     head: { appendChild: (el) => scripts.push(el) },
-    set cookie(valor) { cookies.push(valor); },
+    set cookie(valor) {
+      cookies.push(valor);
+    },
   };
-  globalThis.IntersectionObserver = class { observe() {} unobserve() {} disconnect() {} };
+  globalThis.IntersectionObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
   try {
     CONFIG.pixel.id = "123";
     const m = await fresco();
@@ -143,34 +168,42 @@ async function comPixel(corpo) {
     const chamadas = () => globalThis.window.fbq.queue.map((args) => [...args]);
     await corpo({ m, cookies, scripts, chamadas });
   } finally {
-    for (const [nome, valor] of [["window", antes.window], ["document", antes.document], ["IntersectionObserver", antes.IntersectionObserver]]) {
-      if (valor === undefined) delete globalThis[nome];
-      else globalThis[nome] = valor;
+    for (const [name, valor] of [
+      ["window", before.window],
+      ["document", before.document],
+      ["IntersectionObserver", before.IntersectionObserver],
+    ]) {
+      if (valor === undefined) delete globalThis[name];
+      else globalThis[name] = valor;
     }
-    CONFIG.pixel.id = antes.pixel;
+    CONFIG.pixel.id = before.pixel;
   }
 }
 
 test("checkout nao confirmado: nenhum dos tres registra o clique; confirmado: cada um registra uma vez", async () => {
   await comRastreadores(async () => {
-    carga({ sessao: new Map([["fluor:consentimento", "true"]]), local: new Map() });
+    carga({ sessao: new Map([["fluor:consent", "true"]]), local: new Map() });
     const m = await fresco();
     m.startMeasurement({});
     const conta = () => ({
       pixel: globalThis.window.fbq.queue.filter((a) => a[1] === "InitiateCheckout").length,
-      clarity: (globalThis.window.clarity.q ?? []).filter((a) => a[0] === "event" && a[1] === "clicou_checkout").length,
-      posthog: globalThis.window.posthog.filter((a) => a[0] === "capture" && a[1] === "checkout_started").length,
+      clarity: (globalThis.window.clarity.q ?? []).filter(
+        (a) => a[0] === "event" && a[1] === "clicou_checkout",
+      ).length,
+      posthog: globalThis.window.posthog.filter(
+        (a) => a[0] === "capture" && a[1] === "checkout_started",
+      ).length,
     });
-    const confirmada = CONFIG.checkout.urlConfirmada;
+    const confirmada = CONFIG.checkout.confirmedUrl;
     try {
-      CONFIG.checkout.urlConfirmada = false;
+      CONFIG.checkout.confirmedUrl = false;
       m.trackCheckoutStart("dobra");
       assert.deepEqual(conta(), { pixel: 0, clarity: 0, posthog: 0 });
-      CONFIG.checkout.urlConfirmada = true;
+      CONFIG.checkout.confirmedUrl = true;
       m.trackCheckoutStart("dobra");
       assert.deepEqual(conta(), { pixel: 1, clarity: 1, posthog: 1 });
     } finally {
-      CONFIG.checkout.urlConfirmada = confirmada;
+      CONFIG.checkout.confirmedUrl = confirmada;
     }
   });
 });
@@ -179,17 +212,30 @@ test("aceitar e depois recusar: revoke, _fbp e _fbc expirados (host e dominio re
   await comPixel(({ m, cookies, chamadas }) => {
     m.answerConsent(true);
     m.answerConsent(false);
-    assert.ok(chamadas().some((a) => a[0] === "consent" && a[1] === "revoke"), "sem fbq(consent, revoke)");
-    for (const nome of ["_fbp", "_fbc"]) {
+    assert.ok(
+      chamadas().some((a) => a[0] === "consent" && a[1] === "revoke"),
+      "sem fbq(consent, revoke)",
+    );
+    for (const name of ["_fbp", "_fbc"]) {
       for (const dominio of [undefined, "www.exemplo.com.br", "exemplo.com.br"]) {
         const esperado = dominio ? `; domain=${dominio}` : "";
-        assert.ok(cookies.some((c) => c.startsWith(`${nome}=; expires=Thu, 01 Jan 1970`) && c.endsWith(`path=/${esperado}`)), `${nome} sem expirar em ${dominio ?? "host puro"}`);
+        assert.ok(
+          cookies.some(
+            (c) =>
+              c.startsWith(`${name}=; expires=Thu, 01 Jan 1970`) && c.endsWith(`path=/${esperado}`),
+          ),
+          `${name} sem expirar em ${dominio ?? "host puro"}`,
+        );
       }
     }
-    const antes = chamadas().length;
-    CONFIG.checkout.urlConfirmada = true;
-    try { m.trackCheckoutStart("topo"); } finally { CONFIG.checkout.urlConfirmada = false; }
-    assert.equal(chamadas().length, antes, "evento saiu depois da revogacao");
+    const before = chamadas().length;
+    CONFIG.checkout.confirmedUrl = true;
+    try {
+      m.trackCheckoutStart("topo");
+    } finally {
+      CONFIG.checkout.confirmedUrl = false;
+    }
+    assert.equal(chamadas().length, before, "evento saiu depois da revogacao");
   });
 });
 
@@ -198,8 +244,11 @@ test("recusar sem nunca ter aceitado nao carrega script nem chama fbq, mas expir
     m.answerConsent(false);
     assert.equal(scripts.length, 0);
     assert.equal(globalThis.window.fbq, undefined);
-    for (const nome of ["_fbp", "_fbc"]) {
-      assert.ok(cookies.some((c) => c.startsWith(`${nome}=; expires=Thu, 01 Jan 1970`)), nome);
+    for (const name of ["_fbp", "_fbc"]) {
+      assert.ok(
+        cookies.some((c) => c.startsWith(`${name}=; expires=Thu, 01 Jan 1970`)),
+        name,
+      );
     }
   });
 });
@@ -212,7 +261,9 @@ test("sem resposta (null) e sem pixel nesta carga: nenhum cookie e tocado", asyn
 });
 
 const fakeStorage = (map) => ({
-  get length() { return map.size; },
+  get length() {
+    return map.size;
+  },
   key: (i) => [...map.keys()][i] ?? null,
   getItem: (k) => map.get(k) ?? null,
   setItem: (k, v) => map.set(k, String(v)),
@@ -221,7 +272,7 @@ const fakeStorage = (map) => ({
 
 // Ids e chave de teste dos três rastreadores; restaura a janela, o document e o CONFIG ao fim.
 async function comRastreadores(corpo) {
-  const antes = {
+  const before = {
     window: globalThis.window,
     document: globalThis.document,
     IntersectionObserver: globalThis.IntersectionObserver,
@@ -236,13 +287,17 @@ async function comRastreadores(corpo) {
   try {
     return await corpo();
   } finally {
-    for (const [nome, valor] of [["window", antes.window], ["document", antes.document], ["IntersectionObserver", antes.IntersectionObserver]]) {
-      if (valor === undefined) delete globalThis[nome];
-      else globalThis[nome] = valor;
+    for (const [name, valor] of [
+      ["window", before.window],
+      ["document", before.document],
+      ["IntersectionObserver", before.IntersectionObserver],
+    ]) {
+      if (valor === undefined) delete globalThis[name];
+      else globalThis[name] = valor;
     }
-    CONFIG.pixel.id = antes.pixel;
-    CONFIG.clarity.id = antes.clarity;
-    Object.assign(CONFIG.posthog, antes.posthog);
+    CONFIG.pixel.id = before.pixel;
+    CONFIG.clarity.id = before.clarity;
+    Object.assign(CONFIG.posthog, before.posthog);
   }
 }
 
@@ -254,17 +309,33 @@ function carga({ sessao, local, cookie = "", href = "https://www.lithium.app.br/
   const log = [];
   globalThis.window = {
     location: { href, search: url.search, hostname: url.hostname },
-    history: { state: null, replaceState: (_s, _t, nova) => log.push(["replaceState", String(nova)]) },
+    history: {
+      state: null,
+      replaceState: (_s, _t, nova) => log.push(["replaceState", String(nova)]),
+    },
     sessionStorage: fakeStorage(sessao),
     localStorage: fakeStorage(local),
   };
   globalThis.document = {
     createElement: () => ({}),
-    head: { appendChild: (el) => { scripts.push(el); log.push(["script", el.src]); } },
-    get cookie() { return cookie; },
-    set cookie(valor) { cookies.push(valor); },
+    head: {
+      appendChild: (el) => {
+        scripts.push(el);
+        log.push(["script", el.src]);
+      },
+    },
+    get cookie() {
+      return cookie;
+    },
+    set cookie(valor) {
+      cookies.push(valor);
+    },
   };
-  globalThis.IntersectionObserver = class { observe() {} unobserve() {} disconnect() {} };
+  globalThis.IntersectionObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
   return { scripts, cookies, log };
 }
 
@@ -278,7 +349,10 @@ test("PostHog: carrega no F5 sem esperar o aviso, em memory; aceitar faz set_con
     assert.equal(globalThis.window.posthog._i[0][1].persistence, "memory");
     m.answerConsent(true);
     m.answerConsent(null);
-    assert.deepEqual(globalThis.window.posthog.filter((a) => a[0] === "set_config").map((a) => a[1].persistence), ["localStorage+cookie", "memory"]);
+    assert.deepEqual(
+      globalThis.window.posthog.filter((a) => a[0] === "set_config").map((a) => a[1].persistence),
+      ["localStorage+cookie", "memory"],
+    );
 
     carga({ sessao, local }); // F5: a janela e o SDK somem, o sessionStorage e o localStorage ficam
     m = await fresco();
@@ -286,7 +360,10 @@ test("PostHog: carrega no F5 sem esperar o aviso, em memory; aceitar faz set_con
     assert.equal(globalThis.window.posthog._i.length, 1, "um init so por carga");
     assert.equal(globalThis.window.posthog._i[0][1].persistence, "memory");
     m.answerConsent(true);
-    assert.deepEqual(globalThis.window.posthog.filter((a) => a[0] === "set_config").map((a) => a[1].persistence), ["localStorage+cookie"]);
+    assert.deepEqual(
+      globalThis.window.posthog.filter((a) => a[0] === "set_config").map((a) => a[1].persistence),
+      ["localStorage+cookie"],
+    );
   });
 });
 
@@ -295,26 +372,56 @@ test("Clarity e PostHog carregam na largada mesmo sem resposta; o Pixel da Meta 
     const { scripts } = carga({ sessao: new Map(), local: new Map() });
     const m = await fresco();
     m.startMeasurement({});
-    assert.deepEqual(scripts.map((el) => new URL(el.src).hostname).sort(), ["us.i.posthog.com", "www.clarity.ms"]);
-    assert.deepEqual([...globalThis.window.clarity.q].map((a) => [...a]), [["consentv2", { ad_Storage: "denied", analytics_Storage: "denied" }]]);
+    assert.deepEqual(scripts.map((el) => new URL(el.src).hostname).sort(), [
+      "us.i.posthog.com",
+      "www.clarity.ms",
+    ]);
+    assert.deepEqual(
+      [...globalThis.window.clarity.q].map((a) => [...a]),
+      [["consentv2", { ad_Storage: "denied", analytics_Storage: "denied" }]],
+    );
     m.answerConsent(true);
-    assert.deepEqual(scripts.map((el) => new URL(el.src).hostname).sort(), ["connect.facebook.net", "us.i.posthog.com", "www.clarity.ms"]);
-    assert.deepEqual([...globalThis.window.clarity.q].map((a) => a[0] === "consentv2" && a[1].analytics_Storage), ["denied", "granted"]);
+    assert.deepEqual(scripts.map((el) => new URL(el.src).hostname).sort(), [
+      "connect.facebook.net",
+      "us.i.posthog.com",
+      "www.clarity.ms",
+    ]);
+    assert.deepEqual(
+      [...globalThis.window.clarity.q].map((a) => a[0] === "consentv2" && a[1].analytics_Storage),
+      ["denied", "granted"],
+    );
   });
 });
 
 test("recusa fria: com false na sessao e cookies de uma visita anterior, a largada apaga os dos tres rastreadores e so o Pixel fica sem script", async () => {
   await comRastreadores(async () => {
-    const sessao = new Map([["fluor:consentimento", "false"]]);
-    const local = new Map([["ph_phc_teste_posthog", "1"], ["__ph_opt_in_out_phc_teste", "1"]]);
-    const { scripts, cookies } = carga({ sessao, local, cookie: "_fbp=1; _clck=2; ph_phc_teste_posthog=3" });
+    const sessao = new Map([["fluor:consent", "false"]]);
+    const local = new Map([
+      ["ph_phc_teste_posthog", "1"],
+      ["__ph_opt_in_out_phc_teste", "1"],
+    ]);
+    const { scripts, cookies } = carga({
+      sessao,
+      local,
+      cookie: "_fbp=1; _clck=2; ph_phc_teste_posthog=3",
+    });
     const m = await fresco();
     m.startMeasurement({});
-    assert.deepEqual(scripts.map((el) => new URL(el.src).hostname).sort(), ["us.i.posthog.com", "www.clarity.ms"]);
+    assert.deepEqual(scripts.map((el) => new URL(el.src).hostname).sort(), [
+      "us.i.posthog.com",
+      "www.clarity.ms",
+    ]);
     assert.equal(globalThis.window.fbq, undefined);
     assert.equal(globalThis.window.posthog._i[0][1].persistence, "memory");
-    for (const nome of ["_fbp", "_fbc", "_clck", "_clsk", "ph_phc_teste_posthog"]) {
-      assert.ok(cookies.some((c) => c.startsWith(`${nome}=; expires=Thu, 01 Jan 1970`) && c.endsWith("; domain=lithium.app.br")), nome);
+    for (const name of ["_fbp", "_fbc", "_clck", "_clsk", "ph_phc_teste_posthog"]) {
+      assert.ok(
+        cookies.some(
+          (c) =>
+            c.startsWith(`${name}=; expires=Thu, 01 Jan 1970`) &&
+            c.endsWith("; domain=lithium.app.br"),
+        ),
+        name,
+      );
     }
     assert.equal(local.size, 0);
   });
@@ -322,21 +429,24 @@ test("recusa fria: com false na sessao e cookies de uma visita anterior, a larga
 
 test("video_started sai uma vez por carga, mesmo com Parar e um play novo", async () => {
   await comRastreadores(async () => {
-    carga({ sessao: new Map([["fluor:consentimento", "true"]]), local: new Map() });
+    carga({ sessao: new Map([["fluor:consent", "true"]]), local: new Map() });
     const m = await fresco();
     m.startMeasurement({});
     m.trackVideoStart();
     m.trackVideoStart();
     const fila = globalThis.window.posthog;
     assert.equal(fila.filter((a) => a[0] === "capture" && a[1] === "video_started").length, 1);
-    assert.equal(fila.filter((a) => a[0] === "captureLog" && a[1]?.body === "landing video started").length, 1);
+    assert.equal(
+      fila.filter((a) => a[0] === "captureLog" && a[1]?.body === "landing video started").length,
+      1,
+    );
   });
 });
 
 test("a URL e limpa antes de qualquer rastreador", async () => {
   await comRastreadores(async () => {
     const { log } = carga({
-      sessao: new Map([["fluor:consentimento", "true"]]),
+      sessao: new Map([["fluor:consent", "true"]]),
       local: new Map(),
       href: "https://www.lithium.app.br/?email=a%40b.com&utm_source=facebook",
     });
@@ -350,11 +460,17 @@ test("a URL e limpa antes de qualquer rastreador", async () => {
 // A ordem das assinaturas: o orquestrador carrega os scripts antes de o alcance decidir se cria o observador.
 test("com aceite na largada, ou no aceite depois dela, o alcance ja acha os scripts e observa na mesma resposta", async () => {
   await comRastreadores(async () => {
-    CONFIG.clarity.id = null; // so o Pixel depende do aceite: com o Clarity ligado o observador ja existiria antes dele
+    CONFIG.clarity.id = null; // só o Pixel depende do aceite: com o Clarity ligado o observador já existiria antes dele
     for (const inicio of ["true", null]) {
-      carga({ sessao: new Map(inicio ? [["fluor:consentimento", inicio]] : []), local: new Map() });
+      carga({ sessao: new Map(inicio ? [["fluor:consent", inicio]] : []), local: new Map() });
       const observados = [];
-      globalThis.IntersectionObserver = class { observe(alvo) { observados.push(alvo.id); } unobserve() {} disconnect() {} };
+      globalThis.IntersectionObserver = class {
+        observe(alvo) {
+          observados.push(alvo.id);
+        }
+        unobserve() {}
+        disconnect() {}
+      };
       globalThis.document.getElementById = (id) => ({ id });
       const m = await fresco();
       m.startMeasurement({ oferta: { etapa: 7 } });
@@ -375,7 +491,10 @@ test("desligar a medicao cancela o orquestrador: um aceite depois disso nao carr
     parar();
     m.answerConsent(true);
     assert.equal(scripts.length, 2, "so Clarity e PostHog, carregados na largada");
-    assert.ok(scripts.every((el) => !el.src.includes("facebook")), "o Pixel nao carrega depois do desligamento");
+    assert.ok(
+      scripts.every((el) => !el.src.includes("facebook")),
+      "o Pixel nao carrega depois do desligamento",
+    );
   });
 });
 
@@ -387,7 +506,9 @@ test("aceitar de novo depois de revogar manda grant, regrava o aceite e nao inje
     assert.equal(m.readConsent(), true);
     assert.equal(scripts.length, 1);
     assert.equal(chamadas().filter((a) => a[0] === "init").length, 1);
-    const nomes = chamadas().filter((a) => a[0] === "consent").map((a) => a[1]);
+    const nomes = chamadas()
+      .filter((a) => a[0] === "consent")
+      .map((a) => a[1]);
     assert.deepEqual(nomes, ["revoke", "grant"]);
   });
 });
@@ -405,19 +526,32 @@ test("autoConfig desligado antes do init, com o id do pixel", async () => {
   await comPixel(({ m, chamadas }) => {
     m.answerConsent(true);
     const ordem = chamadas().map((a) => a[0]);
-    assert.deepEqual(chamadas().slice(0, 2), [["set", "autoConfig", false, "123"], ["init", "123"]]);
-    assert.ok(ordem.indexOf("set") < ordem.indexOf("init") && ordem.indexOf("init") < ordem.indexOf("track"));
+    assert.deepEqual(chamadas().slice(0, 2), [
+      ["set", "autoConfig", false, "123"],
+      ["init", "123"],
+    ]);
+    assert.ok(
+      ordem.indexOf("set") < ordem.indexOf("init") &&
+        ordem.indexOf("init") < ordem.indexOf("track"),
+    );
   });
 });
 
-// Fronteira: `window.fbq` vem de fora e e `unknown` ate ser funcao. Terceiro que o troca por outra coisa nao derruba a pagina.
+// Fronteira: `window.fbq` vem de fora e é `unknown` até ser função. Terceiro que o troca por outra coisa não derruba a página.
 test("window.fbq trocado por nao-funcao: nada sai, nada lanca e a revogacao ainda expira os cookies", async () => {
   await comPixel(({ m, cookies }) => {
     m.answerConsent(true);
     globalThis.window.fbq = "lixo";
-    CONFIG.checkout.urlConfirmada = true;
-    try { assert.doesNotThrow(() => m.trackCheckoutStart("dobra")); } finally { CONFIG.checkout.urlConfirmada = false; }
+    CONFIG.checkout.confirmedUrl = true;
+    try {
+      assert.doesNotThrow(() => m.trackCheckoutStart("dobra"));
+    } finally {
+      CONFIG.checkout.confirmedUrl = false;
+    }
     assert.doesNotThrow(() => m.answerConsent(false));
-    assert.ok(cookies.some((c) => c.startsWith("_fbp=; expires=Thu, 01 Jan 1970")), "cookie nao expirou");
+    assert.ok(
+      cookies.some((c) => c.startsWith("_fbp=; expires=Thu, 01 Jan 1970")),
+      "cookie nao expirou",
+    );
   });
 });

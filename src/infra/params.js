@@ -4,42 +4,52 @@ import { readSessionValue, writeSessionValue } from "./storage.js";
 
 const PARAMS_STORAGE_KEY = "fluor:params";
 
-// Lista permitida: so estas chaves sao lidas da URL e repassadas ao checkout.
+// Lista permitida: só estas chaves são lidas da URL e repassadas ao checkout.
 const TRACKING_PARAM_KEYS = /** @type {const} */ ([
-  "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
-  "fbclid", "src", "sck",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+  "fbclid",
+  "src",
+  "sck",
 ]);
 
 /** @typedef {(typeof TRACKING_PARAM_KEYS)[number]} TrackingParamKey Chave de rastreio permitida. */
 
 /** @typedef {Partial<Record<TrackingParamKey, string>>} CampaignParams Parâmetros da visita: só chaves de rastreio, com valor de texto permitido. */
 
-// Letras (com acento), numeros, espaco e os separadores comuns de campanha. O `URLSearchParams` decodifica `+` e `%20`
-// para espaco e `%C3%A7` para `ç`; na saida, `searchParams.append` codifica de novo, entao nada aqui vira URL crua.
-// Sem `<`, `>`, aspas, `&`, `=`, `#` nem controle (quebra de linha, tab): o que nao e valor de campanha fica de fora.
-// Sem `@`, nem o `%40` de um duplo encode: e-mail nao e valor de campanha, e iria de tag ao Clarity e de `sck` a Hotmart.
+// Letras (com acento), números, espaço e os separadores comuns de campanha. O `URLSearchParams` decodifica `+` e `%20`
+// para espaço e `%C3%A7` para `ç`; na saída, `searchParams.append` codifica de novo, então nada aqui vira URL crua.
+// Sem `<`, `>`, aspas, `&`, `=`, `#` nem controle (quebra de linha, tab): o que não é valor de campanha fica de fora.
+// Sem `@`, nem o `%40` de um duplo encode: e-mail não é valor de campanha, e iria de tag ao Clarity e de `sck` a Hotmart.
 const ALLOWED_VALUE_PATTERN = /^[\p{L}\p{N} ._~:+%/-]+$/u;
 const ENCODED_AT_PATTERN = /%40/i;
-// Teto por valor. O `fbclid` real passa de 100 caracteres e a Meta nao documenta o maximo: 500 deixa folga
+// Teto por valor. O `fbclid` real passa de 100 caracteres e a Meta não documenta o máximo: 500 deixa folga
 // e a URL do checkout segue muito abaixo dos limites de URL (cerca de 2000).
 /** @type {Partial<Record<TrackingParamKey, number>>} */
 const MAX_VALUE_LENGTH = { fbclid: 500 };
 const DEFAULT_MAX_VALUE_LENGTH = 128;
 
 /**
- * Valor de texto, so com os caracteres permitidos e dentro do teto da chave.
+ * Valor de texto, só com os caracteres permitidos e dentro do teto da chave.
  * @param {TrackingParamKey} key - Chave de rastreio.
  * @param {unknown} value - Valor a conferir.
  * @returns {value is string} `true` quando o valor pode seguir para o checkout.
  */
 const isAllowedValue = (key, value) =>
-  typeof value === "string" && value.trim() !== "" && value.length <= (MAX_VALUE_LENGTH[key] ?? DEFAULT_MAX_VALUE_LENGTH) && ALLOWED_VALUE_PATTERN.test(value) && !ENCODED_AT_PATTERN.test(value);
+  typeof value === "string" &&
+  value.trim() !== "" &&
+  value.length <= (MAX_VALUE_LENGTH[key] ?? DEFAULT_MAX_VALUE_LENGTH) &&
+  ALLOWED_VALUE_PATTERN.test(value) &&
+  !ENCODED_AT_PATTERN.test(value);
 
 /**
- * Filtra chave a chave: cada valor invalido cai sozinho e os validos sobrevivem. Vale para a URL e para o que veio
- * do sessionStorage (que pode estar corrompido: qualquer coisa que nao seja objeto simples vira `{}`).
+ * Filtra chave a chave: cada valor inválido cai sozinho e os válidos sobrevivem. Vale para a URL e para o que veio
+ * do sessionStorage (que pode estar corrompido: qualquer coisa que não seja objeto simples vira `{}`).
  * @param {unknown} candidate - O que veio da URL ou do sessionStorage.
- * @returns {CampaignParams} So as chaves de rastreio com valor permitido.
+ * @returns {CampaignParams} Só as chaves de rastreio com valor permitido.
  */
 function keepAllowedParams(candidate) {
   /** @type {CampaignParams} */
@@ -54,7 +64,7 @@ function keepAllowedParams(candidate) {
 }
 
 /* -------------------------------------------------------------------------
-   Parametros de campanha
+   Parâmetros de campanha
    ------------------------------------------------------------------------- */
 
 /**
@@ -63,15 +73,17 @@ function keepAllowedParams(candidate) {
  */
 const readUrlParams = () => {
   const search = new URLSearchParams(window.location.search);
-  return keepAllowedParams(Object.fromEntries(TRACKING_PARAM_KEYS.map((key) => [key, search.get(key)])));
+  return keepAllowedParams(
+    Object.fromEntries(TRACKING_PARAM_KEYS.map((key) => [key, search.get(key)])),
+  );
 };
 
 /**
- * Le a URL e guarda o que veio (RF-L30). A gravacao e necessaria porque quem abre a politica ou os termos volta para `/`
+ * Lê a URL e guarda o que veio (RF-L30). A gravação é necessária porque quem abre a política ou os termos volta para `/`
  * sem query. Tudo passa por `keepAllowedParams` antes de sair e antes de gravar. A visita com campanha na URL se MESCLA ao
- * guardado (a URL ganha chave a chave); sem campanha na URL, o guardado continua como esta. Roda uma vez por carga, na
- * criacao de `createCampaignParams`: nunca dentro de render.
- * @returns {CampaignParams} Os parametros de rastreio validos: URL por cima do guardado na sessão.
+ * guardado (a URL ganha chave a chave); sem campanha na URL, o guardado continua como está. Roda uma vez por carga, na
+ * criação de `createCampaignParams`: nunca dentro de render.
+ * @returns {CampaignParams} Os parâmetros de rastreio válidos: URL por cima do guardado na sessão.
  */
 export function captureCampaignParams() {
   const fromUrl = readUrlParams();
@@ -96,7 +108,7 @@ export function cleanUrl() {
     url.search = search;
     window.history.replaceState(window.history.state, "", url.href);
   } catch {
-    /* sem history ou URL estranha: a URL segue como esta */
+    /* sem history ou URL estranha: a URL segue como está */
   }
 }
 
@@ -108,22 +120,22 @@ const getEmptyParamsOnServer = () => EMPTY_PARAMS;
 
 /**
  * Monta a URL do checkout com a origem preservada (RF-L26). A URL-base de
- * `CONFIG.checkout.url` sai como esta (origin, pathname e query): so se
- * ACRESCENTA, e chave que a base ja traz nao e sobrescrita. Sem URL confirmada
+ * `CONFIG.checkout.url` sai como está (origin, pathname e query): só se
+ * ACRESCENTA, e chave que a base já traz não é sobrescrita. Sem URL confirmada
  * o href fica intacto.
  *
- * Limitacao: em build estatico sem JavaScript o link do checkout funciona e
- * aponta para a URL-base, mas as UTMs da visita nao sao repassadas, porque a
+ * Limitação: em build estático sem JavaScript o link do checkout funciona e
+ * aponta para a URL-base, mas as UTMs da visita não são repassadas, porque a
  * leitura e o repasse ocorrem no navegador.
- * @param {Record<string, unknown>|CampaignParams} [params={}] - Parametros da visita; só as chaves de rastreio com valor de texto permitido entram.
- * @returns {string} A URL do checkout, com os parametros acrescentados, ou a URL-base intacta.
+ * @param {Record<string, unknown>|CampaignParams} [params={}] - Parâmetros da visita; só as chaves de rastreio com valor de texto permitido entram.
+ * @returns {string} A URL do checkout, com os parâmetros acrescentados, ou a URL-base intacta.
  */
 export function buildCheckoutUrl(params = {}) {
   const {
     url,
-    urlConfirmada: isUrlConfirmed,
-    parametroRastreio: trackingParam,
-    parametroConfirmado: isTrackingParamConfirmed,
+    confirmedUrl: isUrlConfirmed,
+    trackingParam: trackingParam,
+    confirmedParam: isTrackingParamConfirmed,
   } = CONFIG.checkout;
   if (isUrlConfirmed !== true) return url;
   let base;
@@ -148,40 +160,45 @@ export function buildCheckoutUrl(params = {}) {
   for (const [key, value] of Object.entries(allowed)) appendIfMissing(key, value);
   if (allowed.utm_source) appendIfMissing("src", allowed.utm_source); // Hotmart: src = origem
   const origin = allowed.utm_content ?? allowed.utm_campaign ?? allowed.src;
-  if (origin && isTrackingParamConfirmed === true && typeof trackingParam === "string" && trackingParam.trim()) {
+  if (
+    origin &&
+    isTrackingParamConfirmed === true &&
+    typeof trackingParam === "string" &&
+    trackingParam.trim()
+  ) {
     appendIfMissing(trackingParam.trim(), origin);
   }
   return base.href;
 }
 
 /**
- * Fábrica dos parametros de campanha: captura uma vez, na criacao (no navegador), e limpa a URL logo depois, antes de
- * qualquer rastreador carregar. `readCampaignParams` e o snapshot do `useSyncExternalStore`: so le, nunca grava. No
- * servidor e na hidratacao, `{}`.
+ * Fábrica dos parâmetros de campanha: captura uma vez, na criação (no navegador), e limpa a URL logo depois, antes de
+ * qualquer rastreador carregar. `readCampaignParams` é o snapshot do `useSyncExternalStore`: só lê, nunca grava. No
+ * servidor e na hidratação, `{}`.
  * @returns {{useCampaignParams: () => CampaignParams, readCampaignParams: () => CampaignParams}} O hook e a leitura dos parametros da visita.
  */
 export function createCampaignParams() {
   /** @type {CampaignParams} */
-  let params = EMPTY_PARAMS; // o mesmo `{}` quando nao ha campanha, para ninguem re-renderizar a toa
+  let params = EMPTY_PARAMS; // o mesmo `{}` quando não há campanha, para ninguém re-renderizar à toa
   if (typeof window !== "undefined") {
     try {
       const captured = captureCampaignParams();
       if (Object.keys(captured).length) params = captured;
     } catch {
-      /* janela sem location (teste ou ambiente estranho): sem parametros */
+      /* janela sem location (teste ou ambiente estranho): sem parâmetros */
     }
     cleanUrl();
   }
 
   /**
-   * Os parametros da visita, sempre o mesmo objeto.
-   * @returns {CampaignParams} Os parametros da visita.
+   * Os parâmetros da visita, sempre o mesmo objeto.
+   * @returns {CampaignParams} Os parâmetros da visita.
    */
   const readCampaignParams = () => params;
 
   /**
-   * Hook: os parametros da visita, sem re-renderizar quando não mudam.
-   * @returns {CampaignParams} Os parametros da visita.
+   * Hook: os parâmetros da visita, sem re-renderizar quando não mudam.
+   * @returns {CampaignParams} Os parâmetros da visita.
    */
   function useCampaignParams() {
     return useSyncExternalStore(subscribeNoop, readCampaignParams, getEmptyParamsOnServer);

@@ -9,9 +9,12 @@ import { subscribeToPause } from "../../sensory/pause.js";
  * @returns {() => void} Desliga a vigia.
  */
 export function watchPlayback(player, onStop) {
-  const observer = new IntersectionObserver(([entry]) => {
-    if (!entry.isIntersecting) onStop();
-  }, { threshold: 0 });
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (!entry.isIntersecting) onStop();
+    },
+    { threshold: 0 },
+  );
   observer.observe(player);
   const cancelPause = subscribeToPause((isPausedNow) => {
     if (isPausedNow) onStop();

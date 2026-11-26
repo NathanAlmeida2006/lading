@@ -10,9 +10,12 @@ export function loadChoreographies() {
   if (!loading) {
     loading = import("./choreographies.js").catch((error) => {
       loading = undefined;
-      // Diagnostico da tentativa: um so, aqui. Os consumidores que esperam esta mesma promessa
-      // recebem a rejeicao e so liberam a leitura (index.js), sem repetir o registro.
-      console.error("Falha ao carregar o chunk de coreografias; a leitura segue sem movimento.", error);
+      // Diagnóstico da tentativa: um só, aqui. Os consumidores que esperam esta mesma promessa
+      // recebem a rejeição e só liberam a leitura (index.js), sem repetir o registro.
+      console.error(
+        "Falha ao carregar o chunk de coreografias; a leitura segue sem movimento.",
+        error,
+      );
       throw error;
     });
   }

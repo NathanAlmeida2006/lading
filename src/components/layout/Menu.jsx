@@ -4,9 +4,9 @@ import { INDEX_SECTION_IDS, SECTIONS_BY_ID } from "../../content/sections.js";
 import { padTwoDigits, ENVELOPE } from "../../app/ui.js";
 import { Wordmark } from "../ui/Wordmark.jsx";
 
-/** Link de cada secao na lista do menu em tela cheia. */
+/** Link de cada seção na lista do menu em tela cheia. */
 const MENU_LINK =
-  "flex items-baseline gap-4 py-[clamp(6px,1.5svh,18px)] text-void font-secundaria " +
+  "flex items-baseline gap-4 py-[clamp(6px,1.5svh,18px)] text-void font-secondary " +
   "text-[length:clamp(2.5rem,4.5vw,3.5rem)] leading-none tracking-[0.02em] font-extrabold uppercase " +
   "transition-transform duration-300 ease-(--ease-expo) hover:translate-x-4 focus-visible:translate-x-4 " +
   "[&:hover_.menu-nome]:text-transparent [&:hover_.menu-nome]:[-webkit-text-stroke:1.5px_var(--void)] " +
@@ -15,10 +15,10 @@ const MENU_LINK =
 const SECTION_NAMES = { inicio: "Início" };
 
 /**
- * Menu em tela cheia: botao na dobra, lista numerada das secoes presentes.
- * Os links sao `#id` simples; o Lenis (`anchors: true`) faz a rolagem, e a pagina so precisa
- * fechar o menu. `data-lenis-prevent` + overflow travado impedem a pagina de rolar por baixo.
- * @returns {JSX.Element} O acionador e o dialogo do menu (o dialogo vai ao body quando montado).
+ * Menu em tela cheia: botão na dobra, lista numerada das seções presentes.
+ * Os links são `#id` simples; o Lenis (`anchors: true`) faz a rolagem, e a página só precisa
+ * fechar o menu. `data-lenis-prevent` + overflow travado impedem a página de rolar por baixo.
+ * @returns {JSX.Element} O acionador e o diálogo do menu (o diálogo vai ao body quando montado).
  */
 export function Menu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,9 +37,9 @@ export function Menu() {
     }
   }, []);
 
-  // Antes de montar (HTML estatico, bundle lento ou ausente) o menu e CSS puro: o acionador e um
-  // link para `#menu`, o dialogo vai inline e abre por `:target`, e Fechar e um link para a dobra.
-  // Os links do indice ja sao `#id` nativos. Estado revelado, porque so e visivel quando alvo.
+  // Antes de montar (HTML estático, bundle lento ou ausente) o menu é CSS puro: o acionador é um
+  // link para `#menu`, o diálogo vai inline e abre por `:target`, e Fechar é um link para a dobra.
+  // Os links do índice já são `#id` nativos. Estado revelado, porque só é visível quando alvo.
   const isVisible = isOpen || !isMounted;
   const CloseTag = isMounted ? "button" : "a";
 
@@ -48,7 +48,7 @@ export function Menu() {
     const menu = dialog.current;
     if (!menu) return;
 
-    // O portal e irmao da raiz React: o `inert` dos irmaos tambem contem o foco e isola o proprio modal.
+    // O portal é irmão da raiz React: o `inert` dos irmãos também contém o foco e isola o próprio modal.
     const background = [...document.body.children].filter((element) => element !== menu);
     for (const element of background) element.inert = true;
     const scrollRoots = [document.documentElement, document.body];
@@ -65,7 +65,9 @@ export function Menu() {
       document.removeEventListener("keydown", handleKey, true);
       for (const element of background) element.inert = false;
       for (const element of scrollRoots) element.style.removeProperty("overflow");
-      const node = destination.current ? document.getElementById(destination.current) : trigger.current; // eslint-disable-line react-hooks/exhaustive-deps -- trigger.current e lido na limpeza de proposito: o foco volta ao no atual, e isConnected descarta no trocado
+      const node = destination.current
+        ? document.getElementById(destination.current)
+        : trigger.current; // eslint-disable-line react-hooks/exhaustive-deps -- trigger.current é lido na limpeza de propósito: o foco volta ao nó atual, e isConnected descarta no trocado
       if (!node?.isConnected) return;
       const tabIndex = node.getAttribute("tabindex");
       if (destination.current && tabIndex === null) node.setAttribute("tabindex", "-1");
@@ -84,15 +86,19 @@ export function Menu() {
       data-lenis-prevent
       inert={isMounted ? !isOpen : undefined}
       style={isMounted ? { clipPath: isOpen ? "inset(0 0 0 0)" : "inset(0 0 100% 0)" } : undefined}
-      className={`fixed inset-0 z-100 flex flex-col py-4 lg:py-8 bg-acento text-void transition-[clip-path] duration-700 ease-(--ease-expo) ${isMounted ? (isOpen ? "" : "pointer-events-none") : "invisible target:visible"}`}
+      className={`fixed inset-0 z-100 flex flex-col py-4 lg:py-8 bg-accent text-void transition-[clip-path] duration-700 ease-(--ease-expo) ${isMounted ? (isOpen ? "" : "pointer-events-none") : "invisible target:visible"}`}
     >
-      {/* Espelha a linha do cabecalho da dobra (mesmo envelope, wordmark invisivel como medida): o X
-          cai sobre as tres barras em qualquer largura, sem coordenada congelada. */}
+      {/* Espelha a linha do cabeçalho da dobra (mesmo envelope, wordmark invisível como medida): o X
+          cai sobre as três barras em qualquer largura, sem coordenada congelada. */}
       <div className={`${ENVELOPE} flex-none flex items-center justify-between gap-4`}>
-        <div aria-hidden="true"><Wordmark isReference className="block w-33 invisible" /></div>
+        <div aria-hidden="true">
+          <Wordmark isReference className="block w-33 invisible" />
+        </div>
         <CloseTag
           ref={closeButton}
-          {...(isMounted ? { type: "button", onClick: () => setIsOpen(false) } : { href: "#inicio" })}
+          {...(isMounted
+            ? { type: "button", onClick: () => setIsOpen(false) }
+            : { href: "#inicio" })}
           aria-label="Fechar menu"
           className="relative z-1 w-12 h-12 -my-2 -mr-1 cursor-pointer text-void"
         >
@@ -101,7 +107,10 @@ export function Menu() {
         </CloseTag>
       </div>
 
-      <nav className={`${ENVELOPE} flex-1 flex flex-col min-h-0 overflow-y-auto`} aria-label="Navegação principal">
+      <nav
+        className={`${ENVELOPE} flex-1 flex flex-col min-h-0 overflow-y-auto`}
+        aria-label="Navegação principal"
+      >
         <ol className="w-full flex flex-col my-auto">
           {INDEX_SECTION_IDS.map((id, index) => (
             <li key={id} className="relative">
@@ -114,18 +123,20 @@ export function Menu() {
                 href={`#${id}`}
                 onClick={() => {
                   destination.current = id;
-                  // Liberar o fundo antes de o evento chegar ao Lenis ou a ancora nativa.
+                  // Liberar o fundo antes de o evento chegar ao Lenis ou a âncora nativa.
                   flushSync(() => setIsOpen(false));
                 }}
                 className={MENU_LINK}
               >
-                <span className="font-terciaria text-mono-reg tabular-nums text-void">{padTwoDigits(index + 1)}</span>
+                <span className="font-tertiary text-mono-reg tabular-nums text-void">
+                  {padTwoDigits(index + 1)}
+                </span>
                 <span className="block min-w-0 break-words overflow-y-clip pt-[0.15em] -mt-[0.15em]">
                   <span
                     className={`menu-nome block transition-transform duration-700 ease-(--ease-expo) ${isVisible ? "translate-y-0" : "translate-y-[160%]"}`}
                     style={{ transitionDelay: isVisible ? `${350 + index * 60}ms` : "0ms" }}
                   >
-                    {SECTION_NAMES[id] ?? SECTIONS_BY_ID[id].rotulo}
+                    {SECTION_NAMES[id] ?? SECTIONS_BY_ID[id].label}
                   </span>
                 </span>
               </a>

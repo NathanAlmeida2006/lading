@@ -1,13 +1,13 @@
 /* ============================================================================
    Tailwind v4 · tema
    ============================================================================
-   O Tailwind aqui NAO traz paleta nem escala propria (spec §4.2, RNF-L17):
-   as cores sao os tokens do ds-bundle, por referencia, e o que sobra do tema
-   padrao e so aritmetica de px.
+   O Tailwind aqui NÃO traz paleta nem escala própria (spec §4.2, RNF-L17):
+   as cores são os tokens do ds-bundle, por referência, e o que sobra do tema
+   padrão é só aritmética de px.
 
-   `@theme inline` e o que faz o tema Sigilo/Cartaz continuar funcionando. Sem o
+   `@theme inline` é o que faz o tema Sigilo/Cartaz continuar funcionando. Sem o
    `inline`, `bg-void` viraria `var(--color-void)`, resolvido uma vez em `:root`
-   e herdado ja resolvido pelas secoes Cartaz (o mesmo defeito do `--acento`,
+   e herdado já resolvido pelas seções Cartaz (o mesmo defeito do `--accent`,
    RNF-L36). Com ele, `bg-void` vira `var(--void)` e resolve em cada elemento.
    ========================================================================== */
 @import "tailwindcss" source(none);
@@ -23,46 +23,70 @@
   --color-silver: var(--silver);
   --color-bone: var(--bone);
   --color-bone-pure: var(--bone-pure);
-  --color-acento: var(--acento);
+  --color-accent: var(--accent);
 }
 
 @theme {
-  /* A regua de tempo do passo da secao do app (AppShowcase.jsx): enche em 5 s. */
-  --animate-regua: regua 5s linear forwards;
-  @keyframes regua {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(1); }
+  /* A régua de tempo do passo da seção do app (AppShowcase.jsx): enche em 5 s. */
+  --animate-ruler: ruler 5s linear forwards;
+  @keyframes ruler {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
   }
 
-  /* O celular da secao do app (AppShowcase.jsx): a tela rola de cima ate `--rola` (definido por tela), segura 1,2 s no topo; o toque
-     no icone da aba acontece no fim dos 7,5 s do passo, um instante antes do corte para a tela seguinte. */
-  --animate-app-rola: app-rola 5.2s cubic-bezier(0.45, 0, 0.2, 1) 1.2s both;
-  @keyframes app-rola {
-    from { transform: translateY(0); }
-    to { transform: translateY(var(--rola)); }
+  /* O celular da seção do app (AppShowcase.jsx): a tela rola de cima até `--scroll` (definido por tela), segura 1,2 s no topo; o toque
+     no ícone da aba acontece no fim dos 7,5 s do passo, um instante antes do corte para a tela seguinte. */
+  --animate-app-scroll: app-scroll 5.2s cubic-bezier(0.45, 0, 0.2, 1) 1.2s both;
+  @keyframes app-scroll {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(var(--scroll));
+    }
   }
-  /* Os trilhos do fundo da secao do app (Trilhos.jsx): o rastro tem a altura do trilho e vai de +100% a -100% de si mesmo (a ponta sai
-     de baixo da secao e some em cima). Duracao e atraso vem de cada trilho. */
-  --animate-trilho: trilho linear infinite;
-  @keyframes trilho {
-    from { transform: translateY(100%); }
-    to { transform: translateY(-100%); }
+  /* Os trilhos do fundo da seção do app (Rails.jsx): o rastro tem a altura do trilho e vai de +100% a -100% de si mesmo (a ponta sai
+     de baixo da seção e some em cima). Duração e atraso vêm de cada trilho. */
+  --animate-rail: rail linear infinite;
+  @keyframes rail {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(-100%);
+    }
   }
-  --animate-app-toque: app-toque 7.5s linear both;
-  @keyframes app-toque {
-    0%, 84% { opacity: 0; transform: scale(0.5); }
-    88% { opacity: 1; transform: scale(1); }
-    97% { opacity: 0; transform: scale(1.5); }
-    100% { opacity: 0; }
+  --animate-app-tap: app-tap 7.5s linear both;
+  @keyframes app-tap {
+    0%,
+    84% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    88% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    97% {
+      opacity: 0;
+      transform: scale(1.5);
+    }
+    100% {
+      opacity: 0;
+    }
   }
 
-  /* px, e nao rem: o original e todo em px (tokens/shape-spacing.css), entao nem a
-     preferencia de fonte do navegador nem o zoom de texto do `verificar`
-     (RNF-L12, `html { font-size: 32px }`) mexem em espaco ou breakpoint.
+  /* px, e não rem: o original é todo em px (tokens/shape-spacing.css), então nem a
+     preferência de fonte do navegador nem o zoom de texto do `verificar`
+     (RNF-L12, `html { font-size: 32px }`) mexem em espaço ou breakpoint.
      A escala de 4px do Tailwind coincide com --space-1..9:
      1=4 · 2=8 · 3=12 · 4=16 · 6=24 · 8=32 · 12=48 · 16=64 · 24=96. */
   --spacing: 4px;
-  --radius-xs: 2px; /* --radius-touch: o unico raio do sistema */
+  --radius-xs: 2px; /* --radius-touch: o único raio do sistema */
 
   --breakpoint-xs: 480px;
   --breakpoint-sm: 640px;
@@ -71,8 +95,10 @@
   --breakpoint-wide: 1440px;
 
   /* ---- Tipografia · espelha .design-sync/ds-bundle/tokens/tipografia.css §3.8 -------------------- */
-  --font-secundaria: "Big Shoulders Display", "Big Shoulders Reserva Arial", "Big Shoulders Reserva Roboto", "Oswald", "Arial Narrow", sans-serif;
-  --font-terciaria: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-secondary:
+    "Big Shoulders Display", "Big Shoulders Reserva Arial", "Big Shoulders Reserva Roboto",
+    "Oswald", "Arial Narrow", sans-serif;
+  --font-tertiary: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --text-display-xxl: clamp(72px, 27vw, 240px);
   --text-display-xxl--line-height: 0.86;
@@ -125,46 +151,46 @@
   --text-mono-reg--font-weight: 500;
 
   /* Escala x1,2 (Leva, Espelho): cada token herda line-height, tracking e peso do de origem. */
-  --text-h3-grande: 24px;
-  --text-h3-grande--line-height: 1.25;
-  --text-h3-grande--font-weight: 600;
-  --text-h2-grande: 28.8px;
-  --text-h2-grande--line-height: 1.15;
-  --text-h2-grande--letter-spacing: 0.03em;
-  --text-h2-grande--font-weight: 700;
-  --text-h3-voz: 23.76px;
-  --text-h3-voz--line-height: 1.25;
-  --text-h3-voz--font-weight: 600;
-  --text-h3-voz-lg: 28.51px;
-  --text-h3-voz-lg--line-height: 1.15;
-  --text-label-grande: 18px;
-  --text-label-grande--line-height: 1;
-  --text-label-grande--letter-spacing: 0.04em;
-  --text-label-grande--font-weight: 600;
-  --text-caption-grande: 15.6px;
-  --text-caption-grande--line-height: 1.4;
-  --text-caption-grande--font-weight: 400;
-  --text-mono-grande: 13.2px;
-  --text-mono-grande--line-height: 1.2;
-  --text-mono-grande--font-weight: 500;
+  --text-h3-large: 24px;
+  --text-h3-large--line-height: 1.25;
+  --text-h3-large--font-weight: 600;
+  --text-h2-large: 28.8px;
+  --text-h2-large--line-height: 1.15;
+  --text-h2-large--letter-spacing: 0.03em;
+  --text-h2-large--font-weight: 700;
+  --text-h3-voice: 23.76px;
+  --text-h3-voice--line-height: 1.25;
+  --text-h3-voice--font-weight: 600;
+  --text-h3-voice-lg: 28.51px;
+  --text-h3-voice-lg--line-height: 1.15;
+  --text-label-large: 18px;
+  --text-label-large--line-height: 1;
+  --text-label-large--letter-spacing: 0.04em;
+  --text-label-large--font-weight: 600;
+  --text-caption-large: 15.6px;
+  --text-caption-large--line-height: 1.4;
+  --text-caption-large--font-weight: 400;
+  --text-mono-large: 13.2px;
+  --text-mono-large--line-height: 1.2;
+  --text-mono-large--font-weight: 500;
 }
 
-/* O `:hover` do Tailwind v4 so vale em `@media (hover: hover)`. O original
-   responde ao toque (hover "grudado" apos o toque), entao volta ao `:hover` puro. */
+/* O `:hover` do Tailwind v4 só vale em `@media (hover: hover)`. O original
+   responde ao toque (hover "grudado" após o toque), então volta ao `:hover` puro. */
 @custom-variant hover (&:hover);
 
-/* O Tailwind so tem breakpoint de LARGURA minima. Estes tres vem do original: a dobra e o
+/* O Tailwind só tem breakpoint de LARGURA mínima. Estes três vêm do original: a dobra e o
    fechamento cedem a headline em tela baixa e escondem o micro-registro em tela rasa, e o
-   indice fixo some em tela estreita (<= 380px, e nao `max-*`, que no v4 e `<`). */
+   índice fixo some em tela estreita (<= 380px, e não `max-*`, que no v4 é `<`). */
 @custom-variant tela-baixa (@media (max-height: 700px));
 @custom-variant tela-rasa (@media (max-height: 620px));
 @custom-variant tela-estreita (@media (max-width: 380px));
 
-/* Estado de JavaScript (RNF-L16): sem a classe `js`, a pagina abre inteira. */
+/* Estado de JavaScript (RNF-L16): sem a classe `js`, a página abre inteira. */
 @custom-variant js (:where(.js) &);
 
-/* Enquanto a cortina de introducao esta pendente (classe escrita no <html> pelo
+/* Enquanto a cortina de introdução está pendente (classe escrita no <html> pelo
    script inline do index.html, antes da primeira pintura). */
-@custom-variant pendente (:where(.intro-pendente) &);
+@custom-variant pendente (:where(.intro-pending) &);
 
 @import "./residual.css";

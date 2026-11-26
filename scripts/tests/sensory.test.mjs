@@ -1,4 +1,4 @@
-// Camada sensorial sem navegador: rede de seguranca dos rotulos (L-5) e refeitura do campo na troca de densidade (L-7).
+// Camada sensorial sem navegador: rede de segurança dos rótulos (L-5) e refeitura do campo na troca de densidade (L-7).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -9,36 +9,83 @@ test("a rede de seguranca de leitura consulta os rotulos (.rotulo), que o reveal
   const consultas = [];
   globalThis.document = {
     documentElement: { classList: { remove() {}, add() {} } },
-    querySelectorAll(seletor) { consultas.push(seletor); return []; },
+    querySelectorAll(seletor) {
+      consultas.push(seletor);
+      return [];
+    },
   };
   openReadingMode();
   assert.ok(REVEALED_SELECTOR.includes(".rotulo"));
-  assert.ok(consultas.some((seletor) => seletor.includes(".rotulo")), consultas.join(" | "));
+  assert.ok(
+    consultas.some((seletor) => seletor.includes(".rotulo")),
+    consultas.join(" | "),
+  );
 });
 
 test("ensureVisibility usa a mesma lista de seletores da rede de leitura", () => {
-  const origem = readFileSync(new URL("../../src/sensory/index.js", import.meta.url), "utf8");
-  assert.ok(origem.includes("querySelectorAll(REVEALED_SELECTOR)"));
+  const origin = readFileSync(new URL("../../src/sensory/index.js", import.meta.url), "utf8");
+  assert.ok(origin.includes("querySelectorAll(REVEALED_SELECTOR)"));
 });
 
-// Ambiente minimo para o campo: observadores que so guardam o callback, e canvas que contam o buffer.
+// Ambiente mínimo para o campo: observadores que só guardam o callback, e canvas que contam o buffer.
 function montarCampo() {
   const observadores = { intersection: [], resize: [] };
-  globalThis.IntersectionObserver = class { constructor(cb) { observadores.intersection.push(cb); } observe(alvo) { this.alvo = alvo; } unobserve() {} disconnect() {} };
-  globalThis.ResizeObserver = class { constructor(cb) { observadores.resize.push(cb); } observe() {} disconnect() {} };
+  globalThis.IntersectionObserver = class {
+    constructor(cb) {
+      observadores.intersection.push(cb);
+    }
+    observe(alvo) {
+      this.alvo = alvo;
+    }
+    unobserve() {}
+    disconnect() {}
+  };
+  globalThis.ResizeObserver = class {
+    constructor(cb) {
+      observadores.resize.push(cb);
+    }
+    observe() {}
+    disconnect() {}
+  };
   const chamadas = [];
-  const ctx = new Proxy({ fillRect: (...args) => chamadas.push(args.join(",")) }, { get: (alvo, chave) => alvo[chave] ?? (() => {}), set: (alvo, chave, valor) => ((alvo[chave] = valor), true) });
+  const ctx = new Proxy(
+    { fillRect: (...args) => chamadas.push(args.join(",")) },
+    {
+      get: (alvo, chave) => alvo[chave] ?? (() => {}),
+      set: (alvo, chave, valor) => ((alvo[chave] = valor), true),
+    },
+  );
   const canvases = [];
   globalThis.cancelAnimationFrame = () => {};
   globalThis.window = { devicePixelRatio: 1, addEventListener() {} };
-  globalThis.document = { createElement: () => { const canvas = { width: 0, height: 0, style: {}, getContext: () => ctx, remove() {} }; canvases.push(canvas); return canvas; } };
+  globalThis.document = {
+    createElement: () => {
+      const canvas = { width: 0, height: 0, style: {}, getContext: () => ctx, remove() {} };
+      canvases.push(canvas);
+      return canvas;
+    },
+  };
   const parent = { clientWidth: 800, clientHeight: 320 };
   const root = { parentElement: parent, append() {} };
-  const stop = startField(root, { variant: "malha", colors: { dot: "#fff", thread: "#333", accent: "#f00" }, isReduced: true, isTouch: false });
-  // `section` (o da secao, criado em startField) liga a observacao; `nearObserver` acorda cada ladrilho.
+  const stop = startField(root, {
+    variant: "malha",
+    colors: { dot: "#fff", thread: "#333", accent: "#f00" },
+    isReduced: true,
+    isTouch: false,
+  });
+  // `section` (o da seção, criado em startField) liga a observação; `nearObserver` acorda cada ladrilho.
   const [nearObserver, section] = observadores.intersection;
   const medir = () => observadores.resize[0]();
-  return { observadores, canvases, chamadas, window: globalThis.window, nearObserver, section, medir, stop };
+  return {
+    observadores,
+    canvases,
+    chamadas,
+    window: globalThis.window,
+    nearObserver,
+    section,
+    medir,
+    stop,
+  };
 }
 
 test("trocar so o devicePixelRatio refaz o buffer do campo e repinta no mesmo instante dos outros ladrilhos", () => {
@@ -54,33 +101,40 @@ test("trocar so o devicePixelRatio refaz o buffer do campo e repinta no mesmo in
   medir();
   assert.equal(canvases[0].width, 1600);
   assert.equal(canvases[0].height, 640);
-  // Mesma largura e altura, mesmo instante (lastTime, e nao performance.now()): o desenho e o mesmo.
+  // Mesma largura e altura, mesmo instante (lastTime, e não performance.now()): o desenho é o mesmo.
   assert.equal(chamadas.splice(0).join("|"), pinturaInicial);
   stop();
 });
 
-// Divide a consulta nas virgulas do nivel de cima (fora de parenteses): cada parte e um seletor da lista.
+// Divide a consulta nas vírgulas do nível de cima (fora de parenteses): cada parte e um seletor da lista.
 const partesDaConsulta = (consulta) => {
   const partes = [];
-  let profundidade = 0, inicio = 0;
+  let profundidade = 0;
+  let inicio = 0;
   for (let i = 0; i < consulta.length; i++) {
     if (consulta[i] === "(") profundidade++;
     else if (consulta[i] === ")") profundidade--;
-    else if (consulta[i] === "," && profundidade === 0) { partes.push(consulta.slice(inicio, i).trim()); inicio = i + 1; }
+    else if (consulta[i] === "," && profundidade === 0) {
+      partes.push(consulta.slice(inicio, i).trim());
+      inicio = i + 1;
+    }
   }
   partes.push(consulta.slice(inicio).trim());
   return partes;
 };
 
-test("as redes de seguranca nao entram nas telas do app do video (.app-rolo)", () => {
+test("as redes de seguranca nao entram nas telas do app do video (.app-scroller)", () => {
   const consultas = [];
   globalThis.document = {
     documentElement: { classList: { remove() {}, add() {} } },
-    querySelectorAll(seletor) { consultas.push(seletor); return []; },
+    querySelectorAll(seletor) {
+      consultas.push(seletor);
+      return [];
+    },
   };
   openReadingMode();
-  assert.ok(REVEALED_SELECTOR.endsWith(":not(.app-rolo *)"), REVEALED_SELECTOR);
+  assert.ok(REVEALED_SELECTOR.endsWith(":not(.app-scroller *)"), REVEALED_SELECTOR);
   const partes = partesDaConsulta(consultas[0]);
   assert.equal(partes.length, 2, consultas[0]);
-  for (const parte of partes) assert.ok(parte.endsWith(":not(.app-rolo *)"), parte);
+  for (const parte of partes) assert.ok(parte.endsWith(":not(.app-scroller *)"), parte);
 });

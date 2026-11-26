@@ -5,253 +5,380 @@ import { formatReais } from "./valueStack.js";
 
 /**
  * @typedef MirrorCard Carta da seção Espelho: o antes e o depois.
- * @property {string} titulo - "Do X ao Y".
+ * @property {string} title - "Do X ao Y".
  * @property {string} [src] - Imagem da carta; ausente quando a carta não tem imagem.
- * @property {string} depois - O que o protocolo entrega.
- * @property {string} lastro - Rótulo curto do que sustenta a promessa.
+ * @property {string} after - O que o protocolo entrega.
+ * @property {string} backing - Rótulo curto do que sustenta a promessa.
  */
 
 /**
  * @typedef MapState Estado do Mapa: uma tela do app.
- * @property {string} capa - Número da capa (`"01"`).
+ * @property {string} cover - Número da capa (`"01"`).
  * @property {string} src - Imagem da tela.
- * @property {string} [pos] - Classe de enquadramento da imagem (`object-[...]`).
- * @property {string} faixa - Faixa curta acima do nome.
- * @property {string} nome - Nome do estado.
- * @property {string} texto - Descrição.
+ * @property {string} [position] - Classe de enquadramento da imagem (`object-[...]`).
+ * @property {string} range - Faixa curta acima do nome.
+ * @property {string} name - Nome do estado.
+ * @property {string} text - Descrição.
  */
 
 /**
  * @typedef MapNumber Número em destaque do Mapa.
  * @property {number} valor - O número.
- * @property {string} rotulo - O que ele conta.
- * @property {boolean} [destaque] - Marca o número em destaque.
+ * @property {string} label - O que ele conta.
+ * @property {boolean} [highlight] - Marca o número em destaque.
  */
 
 /**
  * @typedef Voice Voz da Leva: um protocolo.
- * @property {string} nome - Nome do protocolo.
- * @property {string} governa - O que o protocolo governa.
- * @property {string} onde - Onde ele vive.
- * @property {string} fala - A fala do protocolo.
+ * @property {string} name - Nome do protocolo.
+ * @property {string} governs - O que o protocolo governa.
+ * @property {string} where - Onde ele vive.
+ * @property {string} speech - A fala do protocolo.
  * @property {string} src - Imagem da tela do protocolo.
- * @property {string} [pos] - Classe de enquadramento da imagem (`object-[...]`).
+ * @property {string} [position] - Classe de enquadramento da imagem (`object-[...]`).
  * @property {boolean} [zoom] - Aproxima a imagem em 5% (o card recorta o excesso).
  */
 
 /**
  * @typedef FaqEntry Pergunta frequente e a resposta.
- * @property {string} pergunta
- * @property {string} resposta
+ * @property {string} question
+ * @property {string} answer
  */
 
 /**
  * @typedef VibeCard Cartão do mural Social Vibe.
- * @property {string} titulo - Título do cartão.
- * @property {string} fonte - Legenda (o lugar do canal).
+ * @property {string} title - Título do cartão.
+ * @property {string} source - Legenda (o lugar do canal).
  * @property {string} src - Capa do cartão.
- * @property {string} pos - Classe de enquadramento da capa (`object-[...]`).
+ * @property {string} position - Classe de enquadramento da capa (`object-[...]`).
  */
 
 /**
  * @typedef Seal Selo da garantia.
- * @property {"pagamento"|"protecao"|"garantia"} icone - Ícone do selo (o desenho fica em ValueStack.jsx).
- * @property {string} texto - O que o selo diz.
+ * @property {"payment"|"protection"|"guarantee"} icon - Ícone do selo (o desenho fica em ValueStack.jsx).
+ * @property {string} text - O que o selo diz.
  */
 
 /**
  * @typedef Content O texto público das seções.
- * @property {{rotulo: string, cta: string, destaques: {valor: number|null, rotulo: string}[], headline: {linhas: string[]}, promessa: {texto: string}, subheadline: {texto: string}}} dobra - `promessa` alimenta o take 1 do vídeo.
- * @property {{semanas: number, sessoesObrigatorias: number, sessoesOpcionais: number}} mecanismo
- * @property {{rotulo: string}} intro
- * @property {{texto: string, cta: string}} doca
- * @property {{rotulo: string, titulo: string, sub: string, cta: string, cartas: MirrorCard[]}} espelho
- * @property {{titulo: string, passos: {id: string, nome: string, texto: string}[]}} demo
- * @property {{rotulo: string, titulo: string, avaliacao: {nota: number, maximo: number, rotulo: string}|null, depoimentos: {src: string|null, alt: string}[]}} prova - Um item por print de cliente: `src` é o arquivo (`null` = vaga/placeholder) e `alt`, a transcrição; só o que CONFIG traz publicável (validation.js), e `avaliacao` é `null` sem nota publicável.
- * @property {{titulo: string[], curtos: string, noticias: string, abrir: string, videos: (VibeCard & {avatar: string})[], shorts: VibeCard[], noticia: VibeCard & {resumo: string}}} vibe
- * @property {{titulo: string, sub: string, parado: string}} video
- * @property {{titulo: string, sub: string, nota: string, antes: string, depois: string, areas: {nome: string, antes: number, depois: number}[]}} espectro
- * @property {{rotulo: string, estados: MapState[], numeros: MapNumber[], cta: string}} mapa
- * @property {{rotulo: string, titulo: string, sub: string, vozes: Voice[]}} leva
- * @property {{cta: string, garantia: {titulo: string, texto: string, selos: Seal[]}}} oferta
- * @property {{headline: {linhas: string[]}, titulo: string[], rotulo: string, sub: string, cta: string, condicoes: string}} fechamento - `headline` alimenta o último take do vídeo; o site usa `titulo`.
- * @property {string} objecoesRotulo
- * @property {string} objecoesTitulo
- * @property {{tagline: string}} rodape
- * @property {FaqEntry[]} objecoes
+ * @property {{label: string, cta: string, highlights: {valor: number|null, label: string}[], headline: {lines: string[]}, promise: {text: string}, subheadline: {text: string}}} fold - `promise` alimenta o take 1 do vídeo.
+ * @property {{weeks: number, requiredSessions: number, optionalSessions: number}} mechanism
+ * @property {{label: string}} intro
+ * @property {{text: string, cta: string}} dock
+ * @property {{label: string, title: string, sub: string, cta: string, cards: MirrorCard[]}} mirror
+ * @property {{title: string, steps: {id: string, name: string, text: string}[]}} demo
+ * @property {{label: string, title: string, assessment: {note: number, max: number}|null, testimonials: {src: string|null, alt: string}[]}} proof - Um item por print de cliente: `src` é o arquivo (`null` = vaga/placeholder) e `alt`, a transcrição; só o que CONFIG traz publicável (validation.js), e `avaliacao` é `null` sem nota publicável.
+ * @property {{title: string[], shortVideos: string, news: string, open: string, videos: (VibeCard & {avatar: string})[], shorts: VibeCard[], newsItem: VibeCard & {summary: string}}} vibe
+ * @property {{title: string, sub: string, idle: string}} video
+ * @property {{title: string, sub: string, note: string, before: string, after: string, areas: {name: string, before: number, after: number}[]}} spectrum
+ * @property {{label: string, states: MapState[], numbers: MapNumber[], cta: string}} roadmap
+ * @property {{label: string, title: string, sub: string, voices: Voice[]}} batch
+ * @property {{cta: string, guarantee: {title: string, text: string, seals: Seal[]}}} offer
+ * @property {{headline: {lines: string[]}, title: string[], label: string, sub: string, cta: string, conditions: string}} closing - `headline` alimenta o último take do vídeo; o site usa `title`.
+ * @property {string} objectionsLabel
+ * @property {string} objectionsTitle
+ * @property {{tagline: string}} footer
+ * @property {FaqEntry[]} objections
  */
 
 const CORE_PROMISE = "O que não cresce é a comparação com quem não é natural.";
 const MECHANISM = {
-  semanas: 12, sessoesObrigatorias: 3, sessoesOpcionais: 1,
+  weeks: 12,
+  requiredSessions: 3,
+  optionalSessions: 1,
 };
 // Preço e garantia saem da config (o mesmo número do recibo, da doca e da trava de publicação). As cifras do FAQ
 // são por semana e por treino obrigatório do ciclo.
-const { moeda: currency, oferta: { preco: price, parcelas: installments, valorParcela: installment } } = CONFIG.pilhaDeValor;
+const {
+  currency: currency,
+  offer: { price: price, installments: installments, installmentValue: installment },
+} = CONFIG.valueStack;
 /**
  * @param {number} amount - Valor em reais.
  * @returns {string} Valor com a moeda.
  */
 const formatPrice = (amount) => `${currency} ${formatReais(amount)}`;
-const TOTAL_SESSIONS = MECHANISM.semanas * MECHANISM.sessoesObrigatorias;
+const TOTAL_SESSIONS = MECHANISM.weeks * MECHANISM.requiredSessions;
 const PRICE = formatPrice(price);
 const INSTALLMENTS = `${installments}x de ${formatPrice(installment)}`;
-const GUARANTEE_DAYS = CONFIG.oferta.garantiaDias;
+const GUARANTEE_DAYS = CONFIG.offer.guaranteeDays;
 const GUARANTEE = `${GUARANTEE_DAYS} dias de garantia`;
 
 /** @type {Content} */
 export const CONTENT = {
-  dobra: {
-    rotulo: "hipertrofia · natural",
-    headline: { linhas: ["Chega de", "Improviso"] },
-    promessa: { texto: CORE_PROMISE },
+  fold: {
+    label: "hipertrofia · natural",
+    headline: { lines: ["Chega de", "Improviso"] },
+    promise: { text: CORE_PROMISE },
     subheadline: {
-      texto: "Tudo o que você precisa para estruturar sua hipertrofia natural: treino, dieta e recuperação reunidos em um único aplicativo.",
+      text: "Tudo o que você precisa para estruturar sua hipertrofia natural: treino, dieta e recuperação reunidos em um único aplicativo.",
     },
     cta: "Quero parar de improvisar",
     // Duas frases curtas na barra da base da dobra: o número em destaque e o que ele conta.
-    destaques: [
-      { valor: 3, rotulo: "protocolos" },
-      { valor: GUARANTEE_DAYS, rotulo: "dias de garantia" },
+    highlights: [
+      { valor: 3, label: "protocolos" },
+      { valor: GUARANTEE_DAYS, label: "dias de garantia" },
     ],
   },
-  mecanismo: MECHANISM,
-  intro: { rotulo: "(protocolo 01 · hipertrofia)" },
-  doca: { texto: "Tenha acesso ao seu Lithium Vitalício", cta: "Garantir acesso" },
-  espelho: {
-    rotulo: "o choque de realidade",
-    titulo: "Mais 6 meses treinando para continuar invisível?",
+  mechanism: MECHANISM,
+  intro: { label: "(protocolo 01 · hipertrofia)" },
+  dock: { text: "Tenha acesso ao seu Lithium Vitalício", cta: "Garantir acesso" },
+  mirror: {
+    label: "o choque de realidade",
+    title: "Mais 6 meses treinando para continuar invisível?",
     sub: "A diferença entre quem só frequenta academia e quem muda de físico está no sistema.",
-    cta: `Quero meu protocolo de ${MECHANISM.semanas} semanas`,
-    cartas: [
+    cta: `Quero meu protocolo de ${MECHANISM.weeks} semanas`,
+    cards: [
       // imagem: tela do app Lithium
-      { titulo: "Da teoria inútil ao passo a passo no bolso", src: "/images/image1.webp", depois: "Chega de PDF perdido no celular: abra o app e execute 3 fases claras (Aprender, Construir e Consolidar), com propósito em cada série.", lastro: "Execução guiada" },
+      {
+        title: "Da teoria inútil ao passo a passo no bolso",
+        src: "/images/image1.webp",
+        after:
+          "Chega de PDF perdido no celular: abra o app e execute 3 fases claras (Aprender, Construir e Consolidar), com propósito em cada série.",
+        backing: "Execução guiada",
+      },
       // imagem: Semana Verde e Semana Amarela
-      { titulo: "Da semana perdida ao Plano de Retorno", src: "/images/image2.webp", depois: "Faltou na academia e bateu vontade de largar tudo? O sistema de Semana Verde e Semana Amarela recalibra seu ritmo automaticamente. Você cai, ajusta e não volta para a estaca zero.", lastro: "Blindado contra falhas" },
+      {
+        title: "Da semana perdida ao Plano de Retorno",
+        src: "/images/image2.webp",
+        after:
+          "Faltou na academia e bateu vontade de largar tudo? O sistema de Semana Verde e Semana Amarela recalibra seu ritmo automaticamente. Você cai, ajusta e não volta para a estaca zero.",
+        backing: "Blindado contra falhas",
+      },
     ],
   },
-  mapa: {
-    rotulo: "como funciona na prática",
+  roadmap: {
+    label: "como funciona na prática",
     cta: "Garantir meu acesso vitalício",
-    estados: [
+    states: [
       // imagem: tela inicial do app · leitura: App Exclusivo (PWA) · origem: CONFIG.entrega
-      { capa: "01", src: "/images/image6.webp", pos: "object-[50%_10%]", faixa: "App direto no celular", nome: "Seu Quartel-General no Bolso", texto: "Instalado direto na tela inicial do seu celular sem anúncios. Treino, carga, dieta e metas a um toque de distância." },
-      // imagem: tela do Social Vibe · leitura: Social Vibe · origem: CONFIG.pilhaDeValor
-      { capa: "02", src: "/images/image7.webp", pos: "object-[50%_10%]", faixa: "Mentalidade", nome: "Social Vibe", texto: "Ambiente feito para quem leva o treino a sério. Menos distração de rede social, mais cabeça no jogo e constância em silêncio." },
-      // imagem: tela do Checklist Integrado · leitura: Checklist Integrado · origem: CONFIG.pilhaDeValor
-      { capa: "03", src: "/images/image8.webp", faixa: "Disciplina diária", nome: "Checklist de Execução", texto: "O aplicativo cobra o que você prometeu fazer. Marque treino, dieta e sono no dia e veja na sua cara se você está evoluindo ou dando desculpa." },
+      {
+        cover: "01",
+        src: "/images/image6.webp",
+        position: "object-[50%_10%]",
+        range: "App direto no celular",
+        name: "Seu Quartel-General no Bolso",
+        text: "Instalado direto na tela inicial do seu celular sem anúncios. Treino, carga, dieta e metas a um toque de distância.",
+      },
+      // imagem: tela do Social Vibe · leitura: Social Vibe · origem: CONFIG.valueStack
+      {
+        cover: "02",
+        src: "/images/image7.webp",
+        position: "object-[50%_10%]",
+        range: "Mentalidade",
+        name: "Social Vibe",
+        text: "Ambiente feito para quem leva o treino a sério. Menos distração de rede social, mais cabeça no jogo e constância em silêncio.",
+      },
+      // imagem: tela do Checklist Integrado · leitura: Checklist Integrado · origem: CONFIG.valueStack
+      {
+        cover: "03",
+        src: "/images/image8.webp",
+        range: "Disciplina diária",
+        name: "Checklist de Execução",
+        text: "O aplicativo cobra o que você prometeu fazer. Marque treino, dieta e sono no dia e veja na sua cara se você está evoluindo ou dando desculpa.",
+      },
     ],
-    numeros: [
-      { valor: TOTAL_SESSIONS, rotulo: "TREINOS PRONTOS" },
-      { valor: 3, rotulo: "PROTOCOLOS INTEGRADOS" },
-      { valor: MECHANISM.semanas, rotulo: "SEMANAS DE EVOLUÇÃO", destaque: true },
-      { valor: 1, rotulo: "PAGAMENTO ÚNICO" },
+    numbers: [
+      { valor: TOTAL_SESSIONS, label: "TREINOS PRONTOS" },
+      { valor: 3, label: "PROTOCOLOS INTEGRADOS" },
+      { valor: MECHANISM.weeks, label: "SEMANAS DE EVOLUÇÃO", highlight: true },
+      { valor: 1, label: "PAGAMENTO ÚNICO" },
     ],
   },
   // O celular navegando pelo app (AppShowcase.jsx): um passo por tela real do app, na ordem em que aparecem.
   demo: {
-    titulo: "O app por dentro",
-    passos: [
-      { id: "hoje", nome: "Hoje", texto: "O dia em três toques: como foi a noite, o treino e o que você comeu." },
-      { id: "trilha", nome: "Trilha", texto: "Cada protocolo, passo a passo, uma etapa de cada vez." },
-      { id: "exercicios", nome: "Exercícios", texto: "O jeito certo de executar cada movimento, com o músculo trabalhado em destaque." },
-      { id: "treino", nome: "Treino", texto: "A ficha já vem com a carga. Marque cada série quando terminar." },
+    title: "O app por dentro",
+    steps: [
+      {
+        id: "hoje",
+        name: "Hoje",
+        text: "O dia em três toques: como foi a noite, o treino e o que você comeu.",
+      },
+      {
+        id: "trilha",
+        name: "Trilha",
+        text: "Cada protocolo, passo a passo, uma etapa de cada vez.",
+      },
+      {
+        id: "exercicios",
+        name: "Exercícios",
+        text: "O jeito certo de executar cada movimento, com o músculo trabalhado em destaque.",
+      },
+      {
+        id: "treino",
+        name: "Treino",
+        text: "A ficha já vem com a carga. Marque cada série quando terminar.",
+      },
     ],
   },
   // Prova social: o rótulo e o título são copy daqui; os prints e a nota vêm de CONFIG, só os publicáveis (validation.js).
-  prova: {
-    rotulo: "quem já usa o app",
-    titulo: "Usuários do app",
-    avaliacao: CONFIG.avaliacao && !getRatingIssues(CONFIG.avaliacao).length
-      ? { nota: CONFIG.avaliacao.nota, maximo: CONFIG.avaliacao.maximo, rotulo: "Avaliação dos compradores" }
-      : null,
-    depoimentos: getPublishableTestimonials(CONFIG.depoimentos).map(({ print, alt = "" }) => ({ src: print, alt })),
+  proof: {
+    label: "quem já usa o app",
+    title: "Usuários do app",
+    assessment:
+      CONFIG.assessment && !getRatingIssues(CONFIG.assessment).length
+        ? {
+            note: CONFIG.assessment.note,
+            max: CONFIG.assessment.max,
+          }
+        : null,
+    testimonials: getPublishableTestimonials(CONFIG.testimonials).map(({ print, alt = "" }) => ({
+      src: print,
+      alt,
+    })),
   },
   video: {
-    titulo: "Lithium em ação",
+    title: "Lithium em ação",
     sub: "Tudo o que você recebe, em 30 segundos. Ligue o som e sinta o ritmo.",
-    parado: "Toque no play para começar",
+    idle: "Toque no play para começar",
   },
-  espectro: {
-    titulo: "Espectro",
+  spectrum: {
+    title: "Espectro",
     sub: `Cinco áreas que sobem juntas quando o treino deixa de ser improviso.`,
-    nota: "Seu Depois se constrói treino a treino, semana a semana. Valores ilustrativos.",
-    antes: "Antes",
-    depois: "Depois",
+    note: "Seu Depois se constrói treino a treino, semana a semana. Valores ilustrativos.",
+    before: "Antes",
+    after: "Depois",
     areas: [
-      { nome: "Estética", antes: 30, depois: 85 },
-      { nome: "Força", antes: 35, depois: 88 },
-      { nome: "Confiança", antes: 25, depois: 80 },
-      { nome: "Disciplina", antes: 30, depois: 90 },
-      { nome: "Foco", antes: 20, depois: 82 },
+      { name: "Estética", before: 30, after: 85 },
+      { name: "Força", before: 35, after: 88 },
+      { name: "Confiança", before: 25, after: 80 },
+      { name: "Disciplina", before: 30, after: 90 },
+      { name: "Foco", before: 20, after: 82 },
     ],
   },
-  // Rotulos fixos do mural do app. As capas sao public/images/vibe-N.webp (origem em source-media/social-vibe).
+  // Rótulos fixos do mural do app. As capas são public/images/vibe-N.webp (origem em source-media/social-vibe).
   vibe: {
-    titulo: ["Social", "Vibe"],
-    curtos: "Shorts",
-    noticias: "Notícias · fisiculturismo",
-    abrir: "Abrir",
-    // Os titulos e legendas dos cartoes explicam o mural: nao sao videos nem noticias reais.
+    title: ["Social", "Vibe"],
+    shortVideos: "Shorts",
+    news: "Notícias · fisiculturismo",
+    open: "Abrir",
+    // Os títulos e legendas dos cartões explicam o mural: não são vídeos nem notícias reais.
     videos: [
-      { titulo: "Os canais de treino que você acompanha, reunidos num só lugar", fonte: "Vídeos · atualizados 3x ao dia", src: "/images/vibe-1.webp", pos: "object-[50%_25%]", avatar: "/images/icon6.webp" },
-      { titulo: "Um toque e o vídeo abre no YouTube, em outra aba, fora do app", fonte: "Você volta ao treino quando quiser", src: "/images/vibe-2.webp", pos: "object-[50%_20%]", avatar: "/images/icon7.webp" },
+      {
+        title: "Os canais de treino que você acompanha, reunidos num só lugar",
+        source: "Vídeos · atualizados 3x ao dia",
+        src: "/images/vibe-1.webp",
+        position: "object-[50%_25%]",
+        avatar: "/images/icon6.webp",
+      },
+      {
+        title: "Um toque e o vídeo abre no YouTube, em outra aba, fora do app",
+        source: "Você volta ao treino quando quiser",
+        src: "/images/vibe-2.webp",
+        position: "object-[50%_20%]",
+        avatar: "/images/icon7.webp",
+      },
     ],
     shorts: [
-      { titulo: "Shorts para ver entre uma série e outra", fonte: "Role de lado", src: "/images/vibe-3.webp", pos: "object-[40%_50%]" },
-      { titulo: "Treino em 30 segundos, sem se perder na rede social", fonte: "Abre fora do app", src: "/images/vibe-4.webp", pos: "object-[50%_50%]" },
+      {
+        title: "Shorts para ver entre uma série e outra",
+        source: "Role de lado",
+        src: "/images/vibe-3.webp",
+        position: "object-[40%_50%]",
+      },
+      {
+        title: "Treino em 30 segundos, sem se perder na rede social",
+        source: "Abre fora do app",
+        src: "/images/vibe-4.webp",
+        position: "object-[50%_50%]",
+      },
     ],
-    noticia: {
-      titulo: "As notícias do fisiculturismo, sem abrir a rede social",
-      resumo: "O mural reúne vídeos, Shorts e manchetes num só lugar. Você vê o que importa, abre o que quiser e volta pro treino com a cabeça no jogo.",
-      fonte: "Notícias · abre fora do app",
+    newsItem: {
+      title: "As notícias do fisiculturismo, sem abrir a rede social",
+      summary:
+        "O mural reúne vídeos, Shorts e manchetes num só lugar. Você vê o que importa, abre o que quiser e volta pro treino com a cabeça no jogo.",
+      source: "Notícias · abre fora do app",
       src: "/images/vibe-5.webp",
-      pos: "object-[50%_30%]",
+      position: "object-[50%_30%]",
     },
   },
-  leva: {
-    rotulo: "o que você leva no arsenal",
-    titulo: "Você treina duro. Agora treine certo.",
+  batch: {
+    label: "o que você leva no arsenal",
+    title: "Você treina duro. Agora treine certo.",
     sub: "Treino que progride toda semana, dieta feita para quem é natural e sono que recupera de verdade. Tudo pronto no app, sem você precisar montar nada.",
-    vozes: [
+    voices: [
       // imagem: tela do Protocolo Hipertrofia
-      { nome: "Protocolo Hipertrofia", governa: "Treino", onde: `${MECHANISM.semanas} semanas`, fala: "Volume cirúrgico para naturais. Menos lixo no treino, mais tensão mecânica e progressão de carga toda semana.", src: "/images/image3.webp" },
+      {
+        name: "Protocolo Hipertrofia",
+        governs: "Treino",
+        where: `${MECHANISM.weeks} semanas`,
+        speech:
+          "Volume cirúrgico para naturais. Menos lixo no treino, mais tensão mecânica e progressão de carga toda semana.",
+        src: "/images/image3.webp",
+      },
       // imagem: tela do Protocolo Dieta
-      { nome: "Protocolo Dieta", governa: "Combustível", onde: "no app", zoom: true, fala: "Comida de verdade calculada para ganhar massa densa. Sem bulking sujo que só te dá barriga e sem cardápio impossível de seguir.", src: "/images/image4.webp" },
+      {
+        name: "Protocolo Dieta",
+        governs: "Combustível",
+        where: "no app",
+        zoom: true,
+        speech:
+          "Comida de verdade calculada para ganhar massa densa. Sem bulking sujo que só te dá barriga e sem cardápio impossível de seguir.",
+        src: "/images/image4.webp",
+      },
       // imagem: tela do Protocolo Sono
-      { nome: "Protocolo Sono", governa: "Recuperação", onde: "no app", fala: "Quem é natural não tem hormônio sintético para mascarar treino mal recuperado. Ajuste seu sono e transforme descanso em músculo.", src: "/images/image5.webp", pos: "object-[50%_0%]" },
+      {
+        name: "Protocolo Sono",
+        governs: "Recuperação",
+        where: "no app",
+        speech:
+          "Quem é natural não tem hormônio sintético para mascarar treino mal recuperado. Ajuste seu sono e transforme descanso em músculo.",
+        src: "/images/image5.webp",
+        position: "object-[50%_0%]",
+      },
     ],
   },
-  oferta: {
+  offer: {
     cta: "Quero o Lithium agora",
-    garantia: {
-      titulo: `Risco zero: Garantia incondicional de ${GUARANTEE_DAYS} dias`,
-      texto: `Instale o app e teste tudo por ${GUARANTEE_DAYS} dias. Se não gostar, receba 100% do dinheiro de volta na Hotmart em um clique, sem perguntas.`,
-      selos: [
-        { icone: "pagamento", texto: "Pagamento via Hotmart." },
-        { icone: "protecao", texto: "Compra protegida." },
-        { icone: "garantia", texto: `Garantia de ${GUARANTEE_DAYS} dias.` },
+    guarantee: {
+      title: `Risco zero: Garantia incondicional de ${GUARANTEE_DAYS} dias`,
+      text: `Instale o app e teste tudo por ${GUARANTEE_DAYS} dias. Se não gostar, receba 100% do dinheiro de volta na Hotmart em um clique, sem perguntas.`,
+      seals: [
+        { icon: "payment", text: "Pagamento via Hotmart." },
+        { icon: "protection", text: "Compra protegida." },
+        { icon: "guarantee", text: `Garantia de ${GUARANTEE_DAYS} dias.` },
       ],
     },
   },
-  fechamento: {
-    // Só o último take do vídeo lê `headline`; o fechamento do site usa `titulo` (a primeira linha em contorno).
-    headline: { linhas: ["Apenas", "Faça."] },
-    titulo: [`Mais ${MECHANISM.semanas} semanas de evolução`, "ou desculpas?"],
-    rotulo: "sua escolha",
+  closing: {
+    // Só o último take do vídeo lê `headline`; o fechamento do site usa `title` (a primeira linha em contorno).
+    headline: { lines: ["Apenas", "Faça."] },
+    title: [`Mais ${MECHANISM.weeks} semanas de evolução`, "ou desculpas?"],
+    label: "sua escolha",
     sub: "O tempo vai passar de qualquer jeito. A única diferença é se você vai continuar improvisando na academia ou executar um plano feito para quem é natural.",
-    cta: `Começar minhas ${MECHANISM.semanas} semanas agora`,
-    condicoes: `Pagamento único · Acesso imediato · ${GUARANTEE}`,
+    cta: `Começar minhas ${MECHANISM.weeks} semanas agora`,
+    conditions: `Pagamento único · Acesso imediato · ${GUARANTEE}`,
   },
-  objecoesRotulo: "dúvidas antes de comprar",
-  objecoesTitulo: "Perguntas frequentes",
-  rodape: { tagline: "O básico bem feito, provado, sem mágica." },
-  objecoes: [
-    { pergunta: "Por que tão barato? Tem pegadinha ou mensalidade escondida?", resposta: `Nenhuma pegadinha. Você paga ${INSTALLMENTS} (ou ${PRICE} à vista) numa compra única e o acesso é vitalício. Sem assinatura sugando seu cartão todo mês. Dividido pelas ${MECHANISM.semanas} semanas, o à vista sai por ${formatPrice(Math.round((price / MECHANISM.semanas) * 100) / 100)} por semana, ou ${formatPrice(Math.round((price / TOTAL_SESSIONS) * 100) / 100)} por treino.` },
-    { pergunta: "Eu trabalho ou estudo e não tenho tempo de morar na academia. Funciona para mim?", resposta: `Foi feito exatamente para isso. Você precisa de apenas ${MECHANISM.sessoesObrigatorias} sessões cirúrgicas de 60 a 75 minutos por semana (com ${MECHANISM.sessoesOpcionais} sessão extra opcional a partir da semana 5). Natural não cresce com 2 horas de treino junk volume; cresce com intensidade e recuperação.` },
-    { pergunta: "Sou natural e já treino há meses sem ver resultado. Serve para mim?", resposta: "Serve principalmente para você. O Lithium não vende milagre genético nem promessa de físico hormonizado. Ele elimina os erros de volume, carga e constância que travam 90% dos naturais." },
-    { pergunta: "E se eu falhar uma semana por causa de prova, trabalho ou imprevisto?", resposta: "Todo app comum quebra sua sequência e faz você desistir. O Lithium mede progresso por semana fechada e ativa o Plano de Retorno (Semana Verde e Semana Amarela) para você retomar o ritmo sem jogar fora o que construiu." },
-    { pergunta: "Como recebo o acesso depois de pagar?", resposta: "Na mesma hora. Assim que o Pix ou cartão aprova na Hotmart, você já é redirecionado para ativar e instalar o app direto no seu celular e começar hoje mesmo, com acesso de backup enviado também por e-mail." },
-    { pergunta: "E se eu comprar e não gostar?", resposta: `Você tem ${GUARANTEE_DAYS} dias de garantia incondicional pela Hotmart. Testou e não curtiu? É só solicitar o reembolso na plataforma e cada centavo volta para a sua conta.` },
+  objectionsLabel: "dúvidas antes de comprar",
+  objectionsTitle: "Perguntas frequentes",
+  footer: { tagline: "O básico bem feito, provado, sem mágica." },
+  objections: [
+    {
+      question: "Por que tão barato? Tem pegadinha ou mensalidade escondida?",
+      answer: `Nenhuma pegadinha. Você paga ${INSTALLMENTS} (ou ${PRICE} à vista) numa compra única e o acesso é vitalício. Sem assinatura sugando seu cartão todo mês. Dividido pelas ${MECHANISM.weeks} semanas, o à vista sai por ${formatPrice(Math.round((price / MECHANISM.weeks) * 100) / 100)} por semana, ou ${formatPrice(Math.round((price / TOTAL_SESSIONS) * 100) / 100)} por treino.`,
+    },
+    {
+      question: "Eu trabalho ou estudo e não tenho tempo de morar na academia. Funciona para mim?",
+      answer: `Foi feito exatamente para isso. Você precisa de apenas ${MECHANISM.requiredSessions} sessões cirúrgicas de 60 a 75 minutos por semana (com ${MECHANISM.optionalSessions} sessão extra opcional a partir da semana 5). Natural não cresce com 2 horas de treino junk volume; cresce com intensidade e recuperação.`,
+    },
+    {
+      question: "Sou natural e já treino há meses sem ver resultado. Serve para mim?",
+      answer:
+        "Serve principalmente para você. O Lithium não vende milagre genético nem promessa de físico hormonizado. Ele elimina os erros de volume, carga e constância que travam 90% dos naturais.",
+    },
+    {
+      question: "E se eu falhar uma semana por causa de prova, trabalho ou imprevisto?",
+      answer:
+        "Todo app comum quebra sua sequência e faz você desistir. O Lithium mede progresso por semana fechada e ativa o Plano de Retorno (Semana Verde e Semana Amarela) para você retomar o ritmo sem jogar fora o que construiu.",
+    },
+    {
+      question: "Como recebo o acesso depois de pagar?",
+      answer:
+        "Na mesma hora. Assim que o Pix ou cartão aprova na Hotmart, você já é redirecionado para ativar e instalar o app direto no seu celular e começar hoje mesmo, com acesso de backup enviado também por e-mail.",
+    },
+    {
+      question: "E se eu comprar e não gostar?",
+      answer: `Você tem ${GUARANTEE_DAYS} dias de garantia incondicional pela Hotmart. Testou e não curtiu? É só solicitar o reembolso na plataforma e cada centavo volta para a sua conta.`,
+    },
   ],
 };

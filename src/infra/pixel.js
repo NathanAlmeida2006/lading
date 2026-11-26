@@ -16,7 +16,7 @@ import { expireCookies } from "./storage.js";
 
 /** @typedef {((...args: unknown[]) => void) & Fbq} FbqFunction */
 
-// Tudo o que a pagina sabe enviar (RF-L28). Nome fora desta lista nao sai: `Purchase` nao tem como nascer aqui.
+// Tudo o que a página sabe enviar (RF-L28). Nome fora desta lista não sai: `Purchase` não tem como nascer aqui.
 /** @type {Record<import("./contracts.js").PixelEventName, "track"|"trackCustom">} */
 const PIXEL_METHOD_BY_EVENT = {
   PageView: "track",
@@ -50,14 +50,14 @@ function getFbq() {
  * @returns {import("./contracts.js").PixelPort} A porta do pixel.
  */
 export function createPixel(readConsent) {
-  let isPixelInjected = false; // o script que ESTE modulo pos na pagina; `window.fbq` alheio nao conta
-  let hasPixelFailed = false; // o script nao carregou (bloqueado): o stub enfileiraria para sempre, sem enviar
+  let isPixelInjected = false; // o script que ESTE módulo põe na página; `window.fbq` alheio não conta
+  let hasPixelFailed = false; // o script não carregou (bloqueado): o stub enfileiraria para sempre, sem enviar
   let hasPageViewSent = false;
-  let isRevoked = false; // o visitante tirou o aceite com o pixel ja carregado: sem eventos ate novo aceite
+  let isRevoked = false; // o visitante tirou o aceite com o pixel já carregado: sem eventos até novo aceite
 
   /**
-   * A guarda unica (RNF-L23). Carregar o pixel exige aceite e id; enviar exige, alem disso, o
-   * script injetado por este modulo. Nada de terceiro acontece fora dela.
+   * A guarda única (RNF-L23). Carregar o pixel exige aceite e id; enviar exige, além disso, o
+   * script injetado por este módulo. Nada de terceiro acontece fora dela.
    * @param {boolean} [isForSending=true] - `false` para só carregar; `true` (padrão) para enviar.
    * @returns {boolean} `true` quando o pixel pode carregar ou enviar.
    */
@@ -67,23 +67,27 @@ export function createPixel(readConsent) {
   }
 
   /**
-   * Sem aceite. Revoga o pixel que este modulo carregou (`fbq("consent", "revoke")`, uma vez ate o proximo aceite) e expira
-   * `_fbp` e `_fbc`. Na recusa explicita (`false`) expira sempre, mesmo sem pixel nesta carga: o cookie pode ser de uma
-   * visita anterior que aceitou. Sem resposta (`null`) e sem pixel carregado nao ha o que fazer.
+   * Sem aceite. Revoga o pixel que este módulo carregou (`fbq("consent", "revoke")`, uma vez até o próximo aceite) e expira
+   * `_fbp` e `_fbc`. Na recusa explícita (`false`) expira sempre, mesmo sem pixel nesta carga: o cookie pode ser de uma
+   * visita anterior que aceitou. Sem resposta (`null`) e sem pixel carregado não há o que fazer.
    * @param {boolean|null} consent - A resposta atual (qualquer uma menos `true`).
    * @returns {void}
    */
   function revokePixel(consent) {
     if (isPixelInjected && !isRevoked) {
       isRevoked = true;
-      try { getFbq()?.("consent", "revoke"); } catch { /* o tracker nao derruba a pagina */ }
+      try {
+        getFbq()?.("consent", "revoke");
+      } catch {
+        /* o tracker não derruba a página */
+      }
     }
     if (consent === false || isRevoked) expireCookies(PIXEL_COOKIE_NAMES);
   }
 
   /**
-   * Idempotente: um script, um `init` e um PageView por carga de pagina. Sem aceite, revoga um pixel
-   * ja carregado; com novo aceite depois de revogar, so devolve a permissao (`grant`), sem segundo script.
+   * Idempotente: um script, um `init` e um PageView por carga de página. Sem aceite, revoga um pixel
+   * já carregado; com novo aceite depois de revogar, só devolve a permissão (`grant`), sem segundo script.
    * @returns {void}
    */
   function loadPixel() {
@@ -94,22 +98,29 @@ export function createPixel(readConsent) {
     }
     if (!isEligible(false)) return;
     if (!isPixelInjected) {
-      if (getTrackerWindow().fbq) return; // pixel de outra origem: este modulo nao assume o que nao carregou
+      if (getTrackerWindow().fbq) return; // pixel de outra origem: este módulo não assume o que não carregou
       try {
-        const fbq = /** @type {FbqFunction} */ (function () {
-          fbq.callMethod ? fbq.callMethod.apply(fbq, arguments) : fbq.queue.push(arguments);
-        });
-        fbq.push = fbq; fbq.loaded = true; fbq.version = "2.0"; fbq.queue = [];
+        const fbq = /** @type {FbqFunction} */ (
+          function () {
+            fbq.callMethod ? fbq.callMethod.apply(fbq, arguments) : fbq.queue.push(arguments);
+          }
+        );
+        fbq.push = fbq;
+        fbq.loaded = true;
+        fbq.version = "2.0";
+        fbq.queue = [];
         const trackerWindow = getTrackerWindow();
         trackerWindow.fbq = fbq;
         trackerWindow._fbq ??= fbq;
         const script = document.createElement("script");
         script.async = true;
         script.src = "https://connect.facebook.net/en_US/fbevents.js";
-        script.onerror = () => { hasPixelFailed = true; };
+        script.onerror = () => {
+          hasPixelFailed = true;
+        };
         document.head.appendChild(script);
         isPixelInjected = true;
-        // A configuracao automatica le metadados da pagina e cliques sem evento declarado: desligada antes do init.
+        // A configuração automática lê metadados da página e cliques sem evento declarado: desligada antes do init.
         fbq("set", "autoConfig", false, getPixelId());
         fbq("init", getPixelId());
       } catch {
@@ -117,7 +128,11 @@ export function createPixel(readConsent) {
       }
     } else if (isRevoked) {
       isRevoked = false;
-      try { getFbq()?.("consent", "grant"); } catch { /* o tracker nao derruba a pagina */ }
+      try {
+        getFbq()?.("consent", "grant");
+      } catch {
+        /* o tracker não derruba a página */
+      }
     }
     if (!hasPageViewSent) hasPageViewSent = sendEvent("PageView");
   }
@@ -149,7 +164,7 @@ export function createPixel(readConsent) {
    * @returns {void}
    */
   function trackCheckoutStart(ctaPosition) {
-    sendEvent("InitiateCheckout", { posicaoCTA: ctaPosition, campanha: CONFIG.campanha });
+    sendEvent("InitiateCheckout", { posicaoCTA: ctaPosition, campanha: CONFIG.campaign });
   }
 
   return { isEligible, loadPixel, sendEvent, trackCheckoutStart };

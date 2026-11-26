@@ -14,13 +14,13 @@
 
   /* Celebração de recorde e meta batida - §10.
      O valor é da §10; o bloco de tokens da §11 não o nomeia. */
-  --motion-celebracao: 320ms;
+  --motion-celebration: 320ms;
 
   --ease-default: cubic-bezier(0.2, 0, 0, 1);
 
   /* Curvas de corte seco - a assinatura. Use nas revelações de marca. */
-  --ease-corte-2: steps(2);
-  --ease-corte-3: steps(3);
+  --ease-cut-2: steps(2);
+  --ease-cut-3: steps(3);
 }
 
 /* Motion nunca comunica sozinho. Com prefers-reduced-motion, tudo vira

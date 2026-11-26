@@ -1,17 +1,17 @@
 /**
- * Instrumentacao: parametros, consentimento, os tres rastreadores (Pixel, Clarity e PostHog) e alcance das secoes.
+ * Instrumentação: parâmetros, consentimento, os três rastreadores (Pixel, Clarity e PostHog) e alcance das seções.
  *
- * Regra que organiza o arquivo inteiro (RF-L29): a landing reporta INTENCAO,
- * a Hotmart reporta o FATO. `Purchase` nao nasce aqui. Pixel que dispara compra
- * no clique conta venda que pode nao ter acontecido, e o ledger passa a
+ * Regra que organiza o arquivo inteiro (RF-L29): a landing reporta INTENÇÃO,
+ * a Hotmart reporta o FATO. `Purchase` não nasce aqui. Pixel que dispara compra
+ * no clique conta venda que pode não ter acontecido, e o ledger passa a
  * registrar receita que o extrato desmente.
  *
- * O estado de mensuracao mora nas fabricas, instanciadas uma vez aqui, e nao em
- * componente: sobrevive ao StrictMode e a remontagem, e a pagina tem um dono so
- * para "ja enviei isto?".
+ * O estado de mensuração mora nas fábricas, instanciadas uma vez aqui, e não em
+ * componente: sobrevive ao StrictMode e a remontagem, e a página tem um dono só
+ * para "já enviei isto?".
  *
- * Um orquestrador so liga o consentimento aos tres rastreadores (`syncTrackers`): cada resposta do aviso, e a largada da
- * medicao, carrega, libera ou revoga Pixel, Clarity e PostHog, na mesma ordem. O alcance (reach.js) so observa as secoes.
+ * Um orquestrador só liga o consentimento aos três rastreadores (`syncTrackers`): cada resposta do aviso, e a largada da
+ * medição, carrega, libera ou revoga Pixel, Clarity e PostHog, na mesma ordem. O alcance (reach.js) só observa as seções.
  */
 import { createCampaignParams } from "./params.js";
 import { CONFIG } from "./config.js";
@@ -23,18 +23,20 @@ import { createReach } from "./reach.js";
 
 export { buildCheckoutUrl } from "./params.js";
 
-// Primeiro de tudo: le os parametros da visita uma vez e limpa a URL (params.js), antes de qualquer rastreador carregar.
+// Primeiro de tudo: lê os parâmetros da visita uma vez e limpa a URL (params.js), antes de qualquer rastreador carregar.
 const campaignParams = createCampaignParams();
 const consent = createConsent();
 const pixel = createPixel(consent.readConsent);
-// `criativo` = utm_content do anuncio: filtra as gravacoes por criativo no painel do Clarity. A captura so guarda valor ja
-// validado (mesma regra do checkout), entao a URL nunca escreve texto livre na tag.
-const clarity = createClarity(consent.readConsent, () => ({ criativo: campaignParams.readCampaignParams().utm_content }));
+// `criativo` = utm_content do anuncio: filtra as gravações por criativo no painel do Clarity. A captura só guarda valor já
+// validado (mesma regra do checkout), então a URL nunca escreve texto livre na tag.
+const clarity = createClarity(consent.readConsent, () => ({
+  criativo: campaignParams.readCampaignParams().utm_content,
+}));
 const posthog = createPostHog(consent.readConsent);
 const reach = createReach({ subscribeToConsent: consent.subscribeToConsent, pixel, clarity });
 
 /**
- * O orquestrador do consentimento: os tres rastreadores, na mesma ordem, a cada resposta do aviso.
+ * O orquestrador do consentimento: os três rastreadores, na mesma ordem, a cada resposta do aviso.
  * @returns {void}
  */
 function syncTrackers() {
@@ -44,8 +46,8 @@ function syncTrackers() {
 }
 
 /**
- * Hook: os parametros da visita (ver `createCampaignParams`).
- * @returns {import("./params.js").CampaignParams} Os parametros da visita.
+ * Hook: os parâmetros da visita (ver `createCampaignParams`).
+ * @returns {import("./params.js").CampaignParams} Os parâmetros da visita.
  */
 export const useCampaignParams = campaignParams.useCampaignParams;
 
@@ -82,9 +84,13 @@ export const answerConsent = consent.answerConsent;
  * @returns {void}
  */
 export function trackCheckoutStart(ctaPosition) {
-  if (CONFIG.checkout.urlConfirmada !== true) return;
+  if (CONFIG.checkout.confirmedUrl !== true) return;
   posthog.capture("checkout_started", { cta_position: ctaPosition });
-  posthog.captureLog({ body: "checkout intent recorded", level: "info", attributes: { cta_position: ctaPosition } });
+  posthog.captureLog({
+    body: "checkout intent recorded",
+    level: "info",
+    attributes: { cta_position: ctaPosition },
+  });
   pixel.trackCheckoutStart(ctaPosition);
   clarity.sendEvent("clicou_checkout");
 }
@@ -105,12 +111,16 @@ export function trackVideoStart() {
  */
 export function trackFaqOpen(faqPosition) {
   posthog.capture("faq_opened", { faq_position: faqPosition });
-  posthog.captureLog({ body: "faq answer opened", level: "info", attributes: { faq_position: faqPosition } });
+  posthog.captureLog({
+    body: "faq answer opened",
+    level: "info",
+    attributes: { faq_position: faqPosition },
+  });
 }
 
 /**
- * Liga a medicao: o orquestrador dos rastreadores e o alcance das secoes (ver `createReach`). O orquestrador assina o
- * consentimento ANTES do alcance: na mesma resposta, os scripts ja estao na pagina quando o alcance decide se cria o observador.
+ * Liga a medição: o orquestrador dos rastreadores e o alcance das seções (ver `createReach`). O orquestrador assina o
+ * consentimento ANTES do alcance: na mesma resposta, os scripts já estão na página quando o alcance decide se cria o observador.
  * @param {import("./contracts.js").ReachById} [reachById={}] - Mapa de alcance das seções.
  * @returns {() => void} Desliga a medicao: cancela as duas assinaturas e desconecta o observador.
  */

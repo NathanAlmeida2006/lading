@@ -3,45 +3,45 @@ import { isRealEmail } from "./validation.js";
 /**
  * @typedef ValueStackItem Item da pilha de valor.
  * @property {string} id - Identificador estável do item.
- * @property {string} nome - Nome mostrado na tela.
+ * @property {string} name - Nome mostrado na tela.
  */
 
 /**
- * @typedef ValueStackBlock Bloco `pilhaDeValor`: o que a seção de oferta mostra.
- * @property {boolean} ativo - `false` retira a seção do preview.
- * @property {boolean} confirmado - Só `true` libera a publicação (o build recusa sem ele).
- * @property {string} fonte - De onde vieram os valores.
- * @property {string} moeda - Símbolo da moeda.
- * @property {string} cabecalho - Título da seção.
- * @property {ValueStackItem[]} itens - O que a compra inclui (só nomes: nenhum preço avulso é mostrado).
- * @property {string} tituloItens - Título acima da lista, no lugar de uma marca por item (ex.: "Itens inclusos").
- * @property {{rotulo: string}} conector - Ligação entre a lista e a oferta.
- * @property {{rotulo: string, preco: number, parcelas: number, valorParcela: number, selo: string, comparacao: string, subtexto: string}} oferta - O destaque parcelado (número e valor das parcelas), o preço à vista, o selo do pagamento único, a comparação e o detalhe do pagamento.
+ * @typedef ValueStackBlock Bloco `valueStack`: o que a seção de oferta mostra.
+ * @property {boolean} active - `false` retira a seção do preview.
+ * @property {boolean} confirmed - Só `true` libera a publicação (o build recusa sem ele).
+ * @property {string} source - De onde vieram os valores.
+ * @property {string} currency - Símbolo da moeda.
+ * @property {string} header - Título da seção.
+ * @property {ValueStackItem[]} items - O que a compra inclui (só nomes: nenhum preço avulso é mostrado).
+ * @property {string} itemsTitle - Título acima da lista, no lugar de uma marca por item (ex.: "Itens inclusos").
+ * @property {{label: string}} connector - Ligação entre a lista e a oferta.
+ * @property {{label: string, price: number, installments: number, installmentValue: number, seal: string, subtext: string}} offer - O destaque parcelado (número e valor das parcelas), o preço à vista, o selo do pagamento único, e o detalhe do pagamento.
  */
 
 /**
  * @typedef SampleSection Seção de amostra (RF-L08).
- * @property {boolean} ativo - Seção exibida.
- * @property {string|null} justificativaAusencia - Por que a seção não aparece; `null` quando aparece.
- * @property {string|null} trechoReal - Trecho real do miolo; `null` até haver um aprovado.
- * @property {string|null} origem - De onde o trecho veio; `null` até haver um.
+ * @property {boolean} active - Seção exibida.
+ * @property {string|null} absenceReason - Por que a seção não aparece; `null` quando aparece.
+ * @property {string|null} realExcerpt - Trecho real do miolo; `null` até haver um aprovado.
+ * @property {string|null} origin - De onde o trecho veio; `null` até haver um.
  */
 
 /**
  * @typedef Bonus Bônus da oferta, quando confirmado.
  * @property {string} id
- * @property {string} nome
- * @property {string} descricao
- * @property {string} origem
- * @property {boolean} confirmado
+ * @property {string} name
+ * @property {string} description
+ * @property {string} origin
+ * @property {boolean} confirmed
  */
 
 /**
  * @typedef PriceAnchor Ancoragem de preço, quando confirmada.
- * @property {number|string} precoComparativo - Preço de comparação; texto no formato `1.234,56` também vale.
- * @property {string} fundamento
- * @property {string} fonte
- * @property {boolean} confirmado
+ * @property {number|string} comparisonPrice - Preço de comparação; texto no formato `1.234,56` também vale.
+ * @property {string} rationale
+ * @property {string} source
+ * @property {boolean} confirmed
  */
 
 /**
@@ -51,34 +51,34 @@ import { isRealEmail } from "./validation.js";
  * @property {string} id - Identificador estável.
  * @property {string|null} print - O arquivo do print (`/images/prints/print-1.webp`); `null` enquanto é só a vaga.
  * @property {string} [alt] - O que o print mostra e diz (transcrição, para leitor de tela); obrigatório com `print`.
- * @property {string|null} [origem] - De onde o print veio (canal e data); obrigatório com `print`.
- * @property {string|null} [autorizacaoRef] - Referência opaca à autorização de uso do print (@, foto e conversa); obrigatória com `print`.
- * @property {boolean} [aprovado] - Aprovação do gerente para publicar; `true` obrigatório com `print`.
+ * @property {string|null} [origin] - De onde o print veio (canal e data); obrigatório com `print`.
+ * @property {string|null} [authorizationRef] - Referência opaca à autorização de uso do print (@, foto e conversa); obrigatória com `print`.
+ * @property {boolean} [approved] - Aprovação do gerente para publicar; `true` obrigatório com `print`.
  */
 
 /**
  * @typedef Rating Nota de avaliação dos compradores.
- * @property {number} nota - A nota.
- * @property {number} maximo - A nota máxima.
- * @property {string|null} fonte - De onde a nota vem (plataforma, data, número de avaliações); `null` até ser registrada.
- * @property {boolean} aprovado - Aprovação do gerente para publicar.
+ * @property {number} note - A nota.
+ * @property {number} max - A nota máxima.
+ * @property {string|null} source - De onde a nota vem (plataforma, data, número de avaliações); `null` até ser registrada.
+ * @property {boolean} approved - Aprovação do gerente para publicar.
  */
 
 /**
  * @typedef Config Dados comerciais da instância. `null` indica informação ainda não confirmada.
- * @property {ValueStackBlock} pilhaDeValor - A seção de pilha de valor.
- * @property {string} campanha - Identificador da campanha, enviado em todo evento do pixel.
- * @property {{mapa: {ativo: boolean, justificativaAusencia: string|null}, amostra: SampleSection}} secoes - Seções opcionais (RF-L08).
- * @property {{disponivel: boolean, moeda: string, pix: {ativo: boolean, valor: number|string|null, confirmado: boolean}, parcelamento: string|null, garantiaDias: number|null, garantiaCondicoes: string|null, garantiaCanal: string|null, bonus: Bonus[], ancoragem: PriceAnchor|null}} oferta - Condições da oferta.
- * @property {{formato: string, canal: string|null, modoDeAcesso: string|null, prazo: string|null}} entrega - Como o produto chega ao comprador (RF-L25).
- * @property {{contato: string}} fornecedor - Contato: aparece no rodapé e nos documentos legais.
- * @property {{url: string, urlConfirmada: boolean, parametroRastreio: string|null, parametroConfirmado: boolean}} checkout - Destino único de todos os CTAs.
+ * @property {ValueStackBlock} valueStack - A seção de pilha de valor.
+ * @property {string} campaign - Identificador da campanha, enviado em todo evento do pixel.
+ * @property {{mapa: {active: boolean, absenceReason: string|null}, amostra: SampleSection}} sections - Seções opcionais (RF-L08).
+ * @property {{available: boolean, currency: string, pix: {active: boolean, value: number|string|null, confirmed: boolean}, installmentPlan: string|null, guaranteeDays: number|null, guaranteeConditions: string|null, guaranteeChannel: string|null, bonus: Bonus[], anchoring: PriceAnchor|null}} offer - Condições da oferta.
+ * @property {{format: string, channel: string|null, accessMode: string|null, deadline: string|null}} delivery - Como o produto chega ao comprador (RF-L25).
+ * @property {{contact: string}} supplier - Contato: aparece no rodapé e nos documentos legais.
+ * @property {{url: string, confirmedUrl: boolean, trackingParam: string|null, confirmedParam: boolean}} checkout - Destino único de todos os CTAs.
  * @property {{id: string|null}} pixel - Pixel da Meta; `null` até o id existir.
  * @property {{id: string|null}} clarity - Microsoft Clarity; `null` até o id existir.
  * @property {{key: string|null, host: string|null}} posthog - PostHog: chave pública do projeto e host de ingestão; `null` fora do build de produção ou sem a variável.
- * @property {{politicaPrivacidade: string, termosDeUso: string}} legal - Documentos legais.
- * @property {Testimonial[]} depoimentos - Depoimentos da prova social.
- * @property {Rating|null} avaliacao - Nota dos compradores; `null` sem nota.
+ * @property {{privacyPolicy: string, termsOfUse: string}} legal - Documentos legais.
+ * @property {Testimonial[]} testimonials - Depoimentos da prova social.
+ * @property {Rating|null} assessment - Nota dos compradores; `null` sem nota.
  */
 
 /**
@@ -90,13 +90,15 @@ import { isRealEmail } from "./validation.js";
  */
 export function readTrackerEnv(env, name) {
   const value = env?.[name];
-  return (env?.PROD || env?.VITE_ENABLE_PIXEL_DEV) && typeof value === "string" && value.trim() ? value.trim() : null;
+  return (env?.PROD || env?.VITE_ENABLE_PIXEL_DEV) && typeof value === "string" && value.trim()
+    ? value.trim()
+    : null;
 }
 
 // Um acesso só ao ambiente do Vite: o build troca `import.meta.env` pelo objeto inteiro, e cada acesso seria uma cópia no bundle.
 const ENV = import.meta.env;
 
-// O prazo da garantia aparece no texto do preço e em `oferta.garantiaDias`: um número só.
+// O prazo da garantia aparece no texto do preço e em `offer.guaranteeDays`: um número só.
 const GARANTIA_DIAS = 7;
 
 /**
@@ -104,82 +106,81 @@ const GARANTIA_DIAS = 7;
  * @type {Config}
  */
 export const CONFIG = {
-  // Dados comerciais da seção de pilha de valor. Só `confirmado` true libera a publicação (o build recusa
-  // sem ele, salvo ALLOW_UNCONFIRMED=1); `ativo` false retira a seção do preview. Nenhum "preço antigo" nem
+  // Dados comerciais da seção de pilha de valor. Só `confirmed` true libera a publicação (o build recusa
+  // sem ele, salvo ALLOW_UNCONFIRMED=1); `active` false retira a seção do preview. Nenhum "preço antigo" nem
   // preço avulso por item: a página só mostra o que a compra inclui e o preço real da Hotmart.
-  pilhaDeValor: {
-    ativo: true, // desliga a seção no preview
-    confirmado: true, // preço à vista confirmado na Hotmart
-    fonte: "checkout da Hotmart; preço confirmado pelo responsável em 19/11/2026",
-    moeda: "R$",
-    cabecalho: "Tudo o que você precisa para mudar de patamar",
-    itens: [
-      { id: "protocolo-hipertrofia", nome: "Protocolo Hipertrofia" },
-      { id: "protocolo-dieta", nome: "Protocolo Dieta para Naturais" },
-      { id: "protocolo-sono", nome: "Protocolo Sono e Recuperação" },
-      { id: "app", nome: "App Lithium Vitalício" },
-      { id: "checklist-integrado", nome: "Checklist de Execução + Social Vibe" },
-      { id: "plano-retorno", nome: "Plano de retorno" },
+  valueStack: {
+    active: true, // desliga a seção no preview
+    confirmed: true, // preço à vista confirmado na Hotmart
+    source: "checkout da Hotmart; preço confirmado pelo responsável em 19/11/2026",
+    currency: "R$",
+    header: "Tudo o que você precisa para mudar de patamar",
+    items: [
+      { id: "protocolo-hipertrofia", name: "Protocolo Hipertrofia" },
+      { id: "protocolo-dieta", name: "Protocolo Dieta para Naturais" },
+      { id: "protocolo-sono", name: "Protocolo Sono e Recuperação" },
+      { id: "app", name: "App Lithium Vitalício" },
+      { id: "checklist-integrado", name: "Checklist de Execução + Social Vibe" },
+      { id: "plano-retorno", name: "Plano de retorno" },
     ],
-    tituloItens: "Itens inclusos",
-    conector: { rotulo: "Vitalício" },
-    oferta: {
-      rotulo: "Acesso vitalício por:",
+    itemsTitle: "Itens inclusos",
+    connector: { label: "Vitalício" },
+    offer: {
+      label: "Acesso vitalício por:",
       // O cartão na Hotmart tem juros: 3 x 28,55 não é 79,99 / 3. O valor da parcela vem do checkout, não de conta.
-      parcelas: 3,
-      valorParcela: 28.55,
-      preco: 79.99,
-      // "Menos de R$ 2,23" vale para 79,99 / 36 treinos = 2,22; scripts/tests/faq.test.mjs trava a conta (preço, 36 treinos e 12 semanas).
-      comparacao: "Menos de R$ 2,23 por treino, considerando 36 treinos ao longo das 12 semanas.",
-      selo: "Pagamento único", // em destaque, logo abaixo do preço: quebra a objeção de assinatura
-      subtexto: `Sem assinaturas ou cobranças recorrentes · ${GARANTIA_DIAS} dias de garantia`,
+      installments: 3,
+      installmentValue: 28.55,
+      price: 79.99,
+      seal: "Pagamento único", // em destaque, logo abaixo do preço: quebra a objeção de assinatura
+      subtext: `Sem assinaturas ou cobranças recorrentes · ${GARANTIA_DIAS} dias de garantia`,
     },
   },
 
-  campanha: "cmp-2026-10-teto-natural",
+  campaign: "cmp-2026-10-teto-natural",
 
   // RF-L08: o mapa existe; a amostra espera um trecho real do miolo.
-  secoes: {
-    mapa: { ativo: true, justificativaAusencia: null },
+  sections: {
+    mapa: { active: true, absenceReason: null },
     amostra: {
-      ativo: false,
-      justificativaAusencia: "Ainda não há trecho real do miolo aprovado para exibição (Marco 4 do Lithium).",
-      trechoReal: null,
-      origem: null,
+      active: false,
+      absenceReason:
+        "Ainda não há trecho real do miolo aprovado para exibição (Marco 4 do Lithium).",
+      realExcerpt: null,
+      origin: null,
     },
   },
 
-  oferta: {
-    disponivel: true, // oferta-base; false retira os CTAs fora de uma condição vigente
-    // O preço à vista mora em `pilhaDeValor.oferta.preco` (RF-L23): a tela e a trava do build leem dele.
-    moeda: "R$",
+  offer: {
+    available: true, // oferta-base; false retira os CTAs fora de uma condição vigente
+    // O preço à vista mora em `valueStack.offer.price` (RF-L23): a tela e a trava do build leem dele.
+    currency: "R$",
     // O valor do Pix tem de ser igual ao preço à vista da pilha (o build confere); a doca o lê daqui.
-    pix: { ativo: true, valor: 79.99, confirmado: true },
-    parcelamento: null, // opcional, quando confirmado
-    garantiaDias: GARANTIA_DIAS,
-    garantiaCondicoes: "Incondicional",
-    garantiaCanal: "Direto pela plataforma Hotmart",
-    bonus: [], // { id, nome, descricao, origem, confirmado }
-    ancoragem: null, // { precoComparativo, fundamento, fonte, confirmado }
+    pix: { active: true, value: 79.99, confirmed: true },
+    installmentPlan: null, // opcional, quando confirmado
+    guaranteeDays: GARANTIA_DIAS,
+    guaranteeConditions: "Incondicional",
+    guaranteeChannel: "Direto pela plataforma Hotmart",
+    bonus: [], // { id, name, description, origin, confirmed }
+    anchoring: null, // { comparisonPrice, rationale, source, confirmed }
   },
 
-  entrega: {
-    formato: "app", // RF-L25
-    canal: "Web App (PWA) com e-mail de backup",
-    modoDeAcesso: "Redirecionamento imediato pós-compra",
-    prazo: "Imediato após aprovação do pagamento",
+  delivery: {
+    format: "app", // RF-L25
+    channel: "Web App (PWA) com e-mail de backup",
+    accessMode: "Redirecionamento imediato pós-compra",
+    deadline: "Imediato após aprovação do pagamento",
   },
 
   // Contato do fornecedor: rodapé e documentos legais (privacy.html, terms.html, pelo vite) leem daqui.
-  fornecedor: {
-    contato: "suportelithiumbr@gmail.com", // e-mail de suporte: aparece no fechamento, no rodapé e nos documentos legais
+  supplier: {
+    contact: "suportelithiumbr@gmail.com", // e-mail de suporte: aparece no fechamento, no rodapé e nos documentos legais
   },
 
   checkout: {
     url: "https://pay.hotmart.com/Y108171272A", // checkout da Hotmart: único destino de todos os CTAs
-    urlConfirmada: true,
-    parametroRastreio: "sck", // Hotmart: sck recebe utm_content (ou utm_campaign), ver buildCheckoutUrl
-    parametroConfirmado: true,
+    confirmedUrl: true,
+    trackingParam: "sck", // Hotmart: sck recebe utm_content (ou utm_campaign), ver buildCheckoutUrl
+    confirmedParam: true,
   },
 
   // Só IDs públicos (nunca token da API de Conversões nem chave pessoal do PostHog). Fora do build de produção ficam `null`
@@ -187,32 +188,52 @@ export const CONFIG = {
   pixel: { id: readTrackerEnv(ENV, "VITE_META_PIXEL_ID") },
   clarity: { id: readTrackerEnv(ENV, "VITE_CLARITY_ID") },
   // PostHog: chave pública do projeto e host de ingestão.
-  posthog: { key: readTrackerEnv(ENV, "VITE_POSTHOG_KEY"), host: readTrackerEnv(ENV, "VITE_POSTHOG_HOST") },
+  posthog: {
+    key: readTrackerEnv(ENV, "VITE_POSTHOG_KEY"),
+    host: readTrackerEnv(ENV, "VITE_POSTHOG_HOST"),
+  },
 
   legal: {
     // Arquivos estáticos em public/ (ou URL HTTPS real). O build valida que existem.
-    politicaPrivacidade: "/privacy.html",
-    termosDeUso: "/terms.html",
+    privacyPolicy: "/privacy.html",
+    termsOfUse: "/terms.html",
   },
 
-  // Prova social: o carrossel de prints de clientes. Print e nota so vao a tela, e so passam no build, com lastro e aprovacao
-  // registrados (validation.js). Por ora sao cinco vagas (`print: null`, quadro vazio). Para publicar um print, ponha o arquivo em
-  // public/images/prints/ e troque a vaga por:
-  //   { id: "print-1", print: "/images/prints/print-1.webp", alt: "o que o print mostra e diz", origem: "canal e data",
-  //     autorizacaoRef: "referencia da autorizacao do cliente", aprovado: true }
-  // Os cinco relatos em texto da versao anterior (aprovados pelo gerente em 23/11/2026) ficam no historico do git.
-  depoimentos: [
-    { id: "print-1", print: null },
-    { id: "print-2", print: null },
-    { id: "print-3", print: null },
-    { id: "print-4", print: null },
-    { id: "print-5", print: null },
+  // Prova social: o carrossel de prints de clientes. Print e nota só vão à tela, e só passam no build, com lastro e aprovação
+  // registrados (validation.js). Cada print: o arquivo em public/images/prints/, a transcrição (`alt`, sem nomes), a origem
+  // (canal e data), a referência opaca da autorização de uso e `approved: true` (aprovação do gerente). Enquanto algum desses
+  // campos faltar, o build recusa e a tela não mostra o print. Os cinco relatos em texto da versão anterior ficam no histórico do git.
+  testimonials: [
+    {
+      id: "dep1",
+      print: "/images/prints/dep1.webp",
+      alt: "Conversa no app: o cliente diz que gostou dos objetos 3D para interagir e do conteúdo, que está resumido sem perder nada importante, e que o que mais curtiu é o sistema de dieta com meta de carboidrato, a parte mais complexa, principalmente a definição da dieta para magrelos e gordos.",
+      origin: "print de conversa de chat enviado pelo gerente em 25/11/2026",
+      authorizationRef: "gerente-2026-11-25", // pedido do gerente para publicar; autorização do cliente sem registro no repo
+      approved: true,
+    },
+    {
+      id: "dep2",
+      print: "/images/prints/dep2.webp",
+      alt: "Conversa no app: quando perguntado o que mais gostou, o cliente responde que a melhor coisa é a calculadora e o roadmap, algo que ajuda a fazer cálculos que ele nem saberia que existem, e que se fosse só o roadmap já estaria bem. Conta que estava fazendo uma dieta e envia uma figura de gato.",
+      origin: "print de conversa de chat enviado pelo gerente em 25/11/2026",
+      authorizationRef: "gerente-2026-11-25", // pedido do gerente para publicar; autorização do cliente sem registro no repo
+      approved: true,
+    },
   ],
-  avaliacao: { nota: 4.5, maximo: 5, fonte: "informada pelo gerente em 23/11/2026; plataforma e total de avaliações não registrados", aprovado: true },
+  assessment: {
+    note: 4.5,
+    max: 5,
+    source:
+      "informada pelo gerente em 23/11/2026; plataforma e total de avaliações não registrados",
+    approved: true,
+  },
 };
 
 // E-mail público único: o fechamento e o rodapé leem daqui. Nulo quando o e-mail não é válido.
-export const PUBLIC_CONTACT = isRealEmail(CONFIG.fornecedor.contato) ? CONFIG.fornecedor.contato.trim() : null;
+export const PUBLIC_CONTACT = isRealEmail(CONFIG.supplier.contact)
+  ? CONFIG.supplier.contact.trim()
+  : null;
 
 // O rótulo padrão do CTA: vale para o botão que não traz rótulo próprio (o do vídeo e o do rodapé). Os demais
 // levam o texto da sua seção, em src/content/content.js.

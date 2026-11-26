@@ -1,13 +1,13 @@
 /**
  * Os quatro cantos da dobra. Kit de molduras do RF-G03, em SVG (RNF-L21).
  *
- * Sao quatro SVGs de tamanho fixo, um por canto, e nao um viewBox esticado
- * sobre a secao inteira: `preserveAspectRatio="none"` deformava o traco e
+ * São quatro SVGs de tamanho fixo, um por canto, e não um viewBox esticado
+ * sobre a seção inteira: `preserveAspectRatio="none"` deformava o traço e
  * jogava os cantos para dentro do texto conforme a altura da dobra mudava.
  *
  * `entrance`: na dobra os cantos se desenham por CSS (`css`, sem esperar o pacote de
- * JavaScript); no fechamento, so quando a secao chega (`js`: quem desenha e o
- * `openPanel`, que acha os `path` por `.moldura path`). Em CSS o traco usa
+ * JavaScript); no fechamento, só quando a seção chega (`js`: quem desenha é o
+ * `openPanel`, que acha os `path` por `.moldura path`). Em CSS o traço usa
  * `pathLength="1"` e anima o `stroke-dashoffset`.
  */
 const CORNERS = [
@@ -18,7 +18,7 @@ const CORNERS = [
 ];
 
 // 100 ms de atraso, 60 ms de escalonamento (o `drawStroke` do `openPanel`).
-const STROKE_DELAYS = ["[--atraso:100ms]", "[--atraso:160ms]", "[--atraso:220ms]", "[--atraso:280ms]"];
+const STROKE_DELAYS = ["[--delay:100ms]", "[--delay:160ms]", "[--delay:220ms]", "[--delay:280ms]"];
 
 /**
  * @param {object} props
@@ -29,7 +29,10 @@ export function Frame({ entrance = "js" }) {
   const isCss = entrance === "css";
 
   return (
-    <div className="moldura absolute inset-2 z-0 text-line-strong pointer-events-none" aria-hidden="true">
+    <div
+      className="moldura absolute inset-2 z-0 text-line-strong pointer-events-none"
+      aria-hidden="true"
+    >
       {CORNERS.map(({ positionClass, d }, i) => (
         <svg
           key={positionClass}
@@ -42,7 +45,11 @@ export function Frame({ entrance = "js" }) {
           strokeWidth="1.5"
         >
           {isCss ? (
-            <path className={`[stroke-dasharray:1] animate-tracar motion-reduce:animate-surgir ${STROKE_DELAYS[i]}`} d={d} pathLength="1" />
+            <path
+              className={`[stroke-dasharray:1] animate-draw motion-reduce:animate-emerge ${STROKE_DELAYS[i]}`}
+              d={d}
+              pathLength="1"
+            />
           ) : (
             <path d={d} />
           )}

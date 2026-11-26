@@ -7,12 +7,12 @@ import { TOUCH_FRAME_STEP_MS } from "../../sensory/field.js";
 const VERTEX_SOURCE = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
 
 /**
- * Versao em codigo do gif de fluido: ruido distorcido por ele mesmo (domain warp), so as cristas
- * acendem, e o cinza sai em pontos de dither ordenado (Bayer 4x4, celula de 3 px). Cinza neutro,
- * sem cor: o acento nao entra. O tempo anda num circulo, entao o ciclo de 12 s fecha sem corte.
+ * Versão em código do gif de fluido: ruído distorcido por ele mesmo (domain warp), só as cristas
+ * acendem, e o cinza sai em pontos de dither ordenado (Bayer 4x4, célula de 3 px). Cinza neutro,
+ * sem cor: o acento não entra. O tempo anda num círculo, então o ciclo de 12 s fecha sem corte.
  */
-// highp, nao mediump: nos GPUs de celular mediump e de 16 bits, e o hash `fract(sin(..)*43758.5453)` vira 0 em todo pixel
-// (o ruido some, nenhuma crista acende e o fundo fica invisivel). No desktop mediump e 32 bits, por isso so aparecia no deploy mobile.
+// highp, não mediump: nos GPUs de celular mediump e de 16 bits, e o hash `fract(sin(..)*43758.5453)` vira 0 em todo pixel
+// (o ruído some, nenhuma crista acende e o fundo fica invisível). No desktop mediump e 32 bits, por isso só aparecia no deploy mobile.
 const FRAGMENT_SOURCE = `#ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -37,23 +37,31 @@ void main(){
 }`;
 
 // Item perdido sai do pool; restaurado recria o programa (`montar`); desmontar perdido descarta.
-// Pool de no maximo um contexto pronto: criar custa ~200 ms de thread, entao o aquecimento o cria antes
-// do corte e quem desmonta devolve. Manifesto e Faca nunca estao na tela juntos, por isso um basta.
+// Pool de no máximo um contexto pronto: criar custa ~200 ms de thread, então o aquecimento o cria antes
+// do corte e quem desmonta devolve. Manifesto e Faca nunca estão na tela juntos, por isso um basta.
 const pool = [];
 // Compila e liga o programa no contexto dado. Qualquer falha perde o contexto e devolve null.
 /**
- * @param {WebGLRenderingContext} gl - Contexto ja criado.
- * @returns {{uniformR: WebGLUniformLocation, uniformT: WebGLUniformLocation}|null} Os uniforms, ou nulo se o programa nao compilou.
+ * @param {WebGLRenderingContext} gl - Contexto já criado.
+ * @returns {{uniformR: WebGLUniformLocation, uniformT: WebGLUniformLocation}|null} Os uniforms, ou nulo se o programa não compilou.
  */
 function mount(gl) {
-  const compile = (type, source) => { const shader = gl.createShader(type); gl.shaderSource(shader, source); gl.compileShader(shader); return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null; };
+  const compile = (type, source) => {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null;
+  };
   const program = gl.createProgram();
   const vertexShader = compile(gl.VERTEX_SHADER, VERTEX_SOURCE);
   if (vertexShader) gl.attachShader(program, vertexShader);
   const fragmentShader = compile(gl.FRAGMENT_SHADER, FRAGMENT_SOURCE);
   if (fragmentShader) gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
-  if (!vertexShader || !fragmentShader || !gl.getProgramParameter(program, gl.LINK_STATUS)) { gl.getExtension("WEBGL_lose_context")?.loseContext(); return null; }
+  if (!vertexShader || !fragmentShader || !gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return null;
+  }
   gl.useProgram(program);
   gl.uniform3f(gl.getUniformLocation(program, "c3"), 0.42, 0.42, 0.42);
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -61,7 +69,10 @@ function mount(gl) {
   const location = gl.getAttribLocation(program, "p");
   gl.enableVertexAttribArray(location);
   gl.vertexAttribPointer(location, 2, gl.FLOAT, false, 0, 0);
-  return { uniformR: gl.getUniformLocation(program, "r"), uniformT: gl.getUniformLocation(program, "t") };
+  return {
+    uniformR: gl.getUniformLocation(program, "r"),
+    uniformT: gl.getUniformLocation(program, "t"),
+  };
 }
 /**
  * @returns {object|null} O item do pool (canvas, contexto e uniforms), ou nulo sem WebGL.
@@ -74,25 +85,32 @@ function create() {
   if (!uniforms) return null;
   const entry = { canvas, gl, ...uniforms, isLost: false, onRestore: null };
   canvas.addEventListener("webglcontextlost", (event) => {
-    event.preventDefault(); entry.isLost = true;
-    const index = pool.indexOf(entry); if (index >= 0) pool.splice(index, 1);
+    event.preventDefault();
+    entry.isLost = true;
+    const index = pool.indexOf(entry);
+    if (index >= 0) pool.splice(index, 1);
   });
   canvas.addEventListener("webglcontextrestored", () => {
-    Object.assign(entry, mount(gl) ?? {}); entry.isLost = false; entry.onRestore?.();
+    Object.assign(entry, mount(gl) ?? {});
+    entry.isLost = false;
+    entry.onRestore?.();
   });
   return entry;
 }
 /**
- * Cria o contexto WebGL antes da montagem, para a compilacao nao cair na tela.
+ * Cria o contexto WebGL antes da montagem, para a compilação não cair na tela.
  * @returns {void}
  */
 export function warmUpFluid() {
-  if (!pool.length) { const entry = create(); if (entry) pool.push(entry); }
+  if (!pool.length) {
+    const entry = create();
+    if (entry) pool.push(entry);
+  }
 }
 
-// A pega do contexto so acontece quando a secao pai chega perto da tela, para a compilacao nao cair na montagem.
+// A pega do contexto só acontece quando a seção pai chega perto da tela, para a compilação não cair na montagem.
 /**
- * @returns {JSX.Element} O host do canvas WebGL, ou so o noscript sem JavaScript.
+ * @returns {JSX.Element} O host do canvas WebGL, ou só o noscript sem JavaScript.
  */
 export function FluidBackground() {
   const host = useRef(null);
@@ -101,52 +119,98 @@ export function FluidBackground() {
     const parent = host.current?.parentElement;
     if (!parent) return;
     let cleanup;
-    const deferObserver = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
-      deferObserver.disconnect();
-      cleanup = connect();
-    }, { rootMargin: "100% 0px" });
+    const deferObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        deferObserver.disconnect();
+        cleanup = connect();
+      },
+      { rootMargin: "100% 0px" },
+    );
     deferObserver.observe(parent);
     function connect() {
       const entry = pool.pop() ?? create();
       if (!entry) return;
       const { canvas, gl } = entry;
-      canvas.className = "absolute inset-0 size-full pointer-events-none opacity-30 [image-rendering:pixelated]";
+      canvas.className =
+        "absolute inset-0 size-full pointer-events-none opacity-30 [image-rendering:pixelated]";
       canvas.setAttribute("aria-hidden", "true");
       host.current.append(canvas);
-      const adjust = () => { canvas.width = Math.max(1, canvas.clientWidth); canvas.height = Math.max(1, canvas.clientHeight); gl.viewport(0, 0, canvas.width, canvas.height); };
-      // O relogio do shader nao anda com o laco parado (fora da tela, pausa): `offset` soma o tempo parado e `shown` guarda o ultimo instante
-      // desenhado. Sem isso, ao voltar a secao o fluido saltava para onde o relogio de parede o levaria. Nasce parado: o primeiro quadro e o instante 0.
-      let offset = 0, stoppedAt = performance.now(), shown = 0;
-      const draw = (ms) => { gl.uniform2f(entry.uniformR, canvas.width, canvas.height); gl.uniform1f(entry.uniformT, (ms / 12000) * Math.PI * 2); gl.drawArrays(gl.TRIANGLES, 0, 3); };
-      let isVisible = false, rafId = 0, lastTime = -Infinity;
+      const adjust = () => {
+        canvas.width = Math.max(1, canvas.clientWidth);
+        canvas.height = Math.max(1, canvas.clientHeight);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      };
+      // O relógio do shader não anda com o laço parado (fora da tela, pausa): `offset` soma o tempo parado e `shown` guarda o último instante
+      // desenhado. Sem isso, ao voltar a seção o fluido saltava para onde o relógio de parede o levaria. Nasce parado: o primeiro quadro é o instante 0.
+      let offset = 0;
+      let stoppedAt = performance.now();
+      let shown = 0;
+      const draw = (ms) => {
+        gl.uniform2f(entry.uniformR, canvas.width, canvas.height);
+        gl.uniform1f(entry.uniformT, (ms / 12000) * Math.PI * 2);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      };
+      let isVisible = false;
+      let rafId = 0;
+      let lastTime = -Infinity;
       const frameStep = isTouchPointer() ? TOUCH_FRAME_STEP_MS : 0;
       const loop = (ms) => {
-        if (ms - lastTime >= frameStep) { lastTime = ms; shown = ms - offset; draw(shown); }
+        if (ms - lastTime >= frameStep) {
+          lastTime = ms;
+          shown = ms - offset;
+          draw(shown);
+        }
         if (isVisible && !isPaused()) rafId = requestAnimationFrame(loop);
-        else { rafId = 0; stoppedAt = performance.now(); }
+        else {
+          rafId = 0;
+          stoppedAt = performance.now();
+        }
       };
       const tryStart = () => {
         if (rafId || !isVisible || isMotionReduced() || isPaused()) return;
         offset += performance.now() - stoppedAt;
         rafId = requestAnimationFrame(loop);
       };
-      adjust(); draw(0);
-      const observer = new IntersectionObserver(([event]) => { isVisible = event.isIntersecting; tryStart(); });
+      adjust();
+      draw(0);
+      const observer = new IntersectionObserver(([event]) => {
+        isVisible = event.isIntersecting;
+        tryStart();
+      });
       observer.observe(canvas);
-      const resizeObserver = new ResizeObserver(() => { adjust(); draw(shown); });
+      const resizeObserver = new ResizeObserver(() => {
+        adjust();
+        draw(shown);
+      });
       resizeObserver.observe(canvas);
       const unsubscribe = subscribeToPause(tryStart);
-      entry.onRestore = () => { adjust(); draw(shown); };
-      return () => { cancelAnimationFrame(rafId); observer.disconnect(); resizeObserver.disconnect(); unsubscribe(); canvas.remove(); entry.onRestore = null; if (!entry.isLost) pool.push(entry); };
+      entry.onRestore = () => {
+        adjust();
+        draw(shown);
+      };
+      return () => {
+        cancelAnimationFrame(rafId);
+        observer.disconnect();
+        resizeObserver.disconnect();
+        unsubscribe();
+        canvas.remove();
+        entry.onRestore = null;
+        if (!entry.isLost) pool.push(entry);
+      };
     }
-    return () => { deferObserver.disconnect(); cleanup?.(); };
+    return () => {
+      deferObserver.disconnect();
+      cleanup?.();
+    };
   }, []);
 
-  // Sem JavaScript, a camada do canvas vazio mantem o antialiasing do texto vizinho como sempre foi.
+  // Sem JavaScript, a camada do canvas vazio mantém o antialiasing do texto vizinho como sempre foi.
   return (
     <div className="contents" ref={host} aria-hidden="true">
-      <noscript><canvas className="absolute inset-0 size-full pointer-events-none opacity-30 [image-rendering:pixelated]" /></noscript>
+      <noscript>
+        <canvas className="absolute inset-0 size-full pointer-events-none opacity-30 [image-rendering:pixelated]" />
+      </noscript>
     </div>
   );
 }

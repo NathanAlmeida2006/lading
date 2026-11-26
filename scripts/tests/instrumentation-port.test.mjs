@@ -1,5 +1,5 @@
-// Porta da LGPD (src/infra/instrumentation.js): exatamente os 10 nomes, cada um funcao; imports frescos nao dividem consentimento;
-// os modulos de src/infra/ nao voltam a importar a porta nem os tres rastreadores se importam entre si.
+// Porta da LGPD (src/infra/instrumentation.js): exatamente os 10 nomes, cada um função; imports frescos não dividem consentimento;
+// os módulos de src/infra/ não voltam a importar a porta nem os três rastreadores se importam entre si.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -10,16 +10,28 @@ const raiz = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const infra = (arquivo) => join(raiz, "src", "infra", arquivo);
 
 const PORTA = [
-  "useCampaignParams", "buildCheckoutUrl", "readConsent", "subscribeToConsent",
-  "useConsent", "answerConsent", "trackCheckoutStart", "trackFaqOpen", "trackVideoStart", "startMeasurement",
+  "useCampaignParams",
+  "buildCheckoutUrl",
+  "readConsent",
+  "subscribeToConsent",
+  "useConsent",
+  "answerConsent",
+  "trackCheckoutStart",
+  "trackFaqOpen",
+  "trackVideoStart",
+  "startMeasurement",
 ].sort();
 
 // Imports relativos de um arquivo: `from "./x"`, `import "./x"` e `import("./x")`.
 function importsRelativos(arquivo) {
-  const texto = readFileSync(infra(arquivo), "utf8");
+  const text = readFileSync(infra(arquivo), "utf8");
   const achados = [];
-  for (const re of [/\bfrom\s+["'](\.{1,2}\/[^"']+)["']/g, /^\s*import\s+["'](\.{1,2}\/[^"']+)["']/gm, /import\(\s*["'](\.{1,2}\/[^"']+)["']\s*\)/g]) {
-    for (const m of texto.matchAll(re)) achados.push(m[1].replace(/^\.\//, ""));
+  for (const re of [
+    /\bfrom\s+["'](\.{1,2}\/[^"']+)["']/g,
+    /^\s*import\s+["'](\.{1,2}\/[^"']+)["']/gm,
+    /import\(\s*["'](\.{1,2}\/[^"']+)["']\s*\)/g,
+  ]) {
+    for (const m of text.matchAll(re)) achados.push(m[1].replace(/^\.\//, ""));
   }
   return achados;
 }
@@ -31,7 +43,7 @@ test("instrumentation.js exporta exatamente os 10 nomes da porta", async () => {
 
 test("cada export da porta e funcao", async () => {
   const modulo = await import("../../src/infra/instrumentation.js");
-  for (const nome of PORTA) assert.equal(typeof modulo[nome], "function", nome);
+  for (const name of PORTA) assert.equal(typeof modulo[name], "function", name);
 });
 
 test("imports frescos da porta nao compartilham o consentimento", async () => {
@@ -44,8 +56,19 @@ test("imports frescos da porta nao compartilham o consentimento", async () => {
 });
 
 test("modulos novos de src/infra/ nao importam a porta de volta, e pixel, alcance e consentimento nao se importam", () => {
-  for (const arquivo of ["storage.js", "params.js", "consent.js", "pixel.js", "clarity.js", "posthog.js", "reach.js"]) {
-    assert.ok(!importsRelativos(arquivo).some((i) => i.startsWith("instrumentation")), `${arquivo} importa instrumentation.js`);
+  for (const arquivo of [
+    "storage.js",
+    "params.js",
+    "consent.js",
+    "pixel.js",
+    "clarity.js",
+    "posthog.js",
+    "reach.js",
+  ]) {
+    assert.ok(
+      !importsRelativos(arquivo).some((i) => i.startsWith("instrumentation")),
+      `${arquivo} importa instrumentation.js`,
+    );
   }
   const irmaos = ["consent.js", "pixel.js", "clarity.js", "posthog.js", "reach.js"];
   for (const arquivo of irmaos) {

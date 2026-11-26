@@ -1,5 +1,5 @@
 // Metadados de busca e de compartilhamento: a landing tem canonical, Open Graph e twitter:card; robots.txt e sitemap.xml
-// apontam para o mesmo dominio. O og-image.jpg e posto a mao em public/ (o teste nao o exige: so a URL dele na tag).
+// apontam para o mesmo domínio. O og-image.jpg é posto à mão em public/ (o teste não o exige: só a URL dele na tag).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -27,7 +27,8 @@ test("robots.txt libera a indexacao e aponta para o sitemap; o sitemap lista a l
   assert.doesNotMatch(robots, /^Disallow:\s*\S/m);
   assert.ok(robots.includes(`Sitemap: ${SITE}/sitemap.xml`));
   const sitemap = ler("public/sitemap.xml");
-  for (const caminho of ["/", "/privacy.html", "/terms.html"]) assert.ok(sitemap.includes(`<loc>${SITE}${caminho}</loc>`), caminho);
+  for (const caminho of ["/", "/privacy.html", "/terms.html"])
+    assert.ok(sitemap.includes(`<loc>${SITE}${caminho}</loc>`), caminho);
 });
 
 test("o Node do build remoto: .node-version e engines pedem a mesma versao minima", () => {

@@ -1,30 +1,69 @@
-// Secoes e alcance (src/content/sections.js): ordem, indice e mapa de alcance das secoes mensuradas.
+// Seções e alcance (src/content/sections.js): ordem, índice e mapa de alcance das seções mensuradas.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
-import { SECTIONS, SECTIONS_BY_ID, INDEX_SECTION_IDS, REACH_BY_ID } from "../../src/content/sections.js";
+import {
+  SECTIONS,
+  SECTIONS_BY_ID,
+  INDEX_SECTION_IDS,
+  REACH_BY_ID,
+} from "../../src/content/sections.js";
 
-// A oferta (etapa 7) fica DEPOIS das objecoes (etapa 9) e a prova (5) ANTES do mapa (4) na pagina, por decisao de layout:
-// a etapa e o rotulo do evento de alcance (RF-L31) e nao foi renumerada, entao as duas saem da checagem de monotonia.
+// A oferta (etapa 7) fica DEPOIS das objeções (etapa 9) e a prova (5) ANTES do mapa (4) na página, por decisão de layout:
+// a etapa é o rótulo do evento de alcance (RF-L31) e não foi renumerada, então as duas saem da checagem de monotonia.
 test("etapaCanonica nao decresce ao longo de secoes (fora a oferta e a prova)", () => {
   const stages = SECTIONS.filter(({ id }) => id !== "oferta" && id !== "prova-social");
   for (let i = 1; i < stages.length; i++) {
-    assert.ok(stages[i].etapaCanonica >= stages[i - 1].etapaCanonica, stages[i].id);
+    assert.ok(stages[i].canonicalStage >= stages[i - 1].canonicalStage, stages[i].id);
   }
 });
 
 test("a ordem dos ids e exatamente a atual", () => {
-  assert.deepEqual(SECTIONS.map((s) => s.id), [
-    "inicio", "video", "app", "espelho", "espectro", "social-vibe", "o-que-e", "prova-social", "mapa", "amostra", "objecoes", "oferta", "fechamento", "rodape-legal",
-  ]);
+  assert.deepEqual(
+    SECTIONS.map((s) => s.id),
+    [
+      "inicio",
+      "video",
+      "app",
+      "espelho",
+      "espectro",
+      "social-vibe",
+      "o-que-e",
+      "prova-social",
+      "mapa",
+      "amostra",
+      "objecoes",
+      "oferta",
+      "fechamento",
+      "rodape-legal",
+    ],
+  );
 });
 
 test("INDEX_SECTION_IDS traz so as secoes presentes e indexadas (social-vibe, prova-social, amostra, rodape-legal, video, app e espectro ficam de fora)", () => {
-  assert.deepEqual(INDEX_SECTION_IDS, ["inicio", "espelho", "o-que-e", "mapa", "objecoes", "oferta", "fechamento"]);
+  assert.deepEqual(INDEX_SECTION_IDS, [
+    "inicio",
+    "espelho",
+    "o-que-e",
+    "mapa",
+    "objecoes",
+    "oferta",
+    "fechamento",
+  ]);
 });
 
 test("REACH_BY_ID tem so secoes presentes da lista de alcance", () => {
-  assert.deepEqual(Object.keys(REACH_BY_ID), ["video", "app", "espectro", "social-vibe", "prova-social", "mapa", "objecoes", "oferta", "fechamento"]);
+  assert.deepEqual(Object.keys(REACH_BY_ID), [
+    "video",
+    "app",
+    "espectro",
+    "social-vibe",
+    "prova-social",
+    "mapa",
+    "objecoes",
+    "oferta",
+    "fechamento",
+  ]);
 });
 
 test("video, app e espectro entram no alcance como suplementares (canonico false), nas etapas 1, 1 e 2", () => {
@@ -33,13 +72,20 @@ test("video, app e espectro entram no alcance como suplementares (canonico false
   assert.deepEqual(REACH_BY_ID.espectro, { etapa: 2, canonico: false });
 });
 
-// Registro e arvore JSX nos dois sentidos: o alcance acha a secao pelo id, e uma secao sem registro (ou registro sem secao) e bug.
+// Registro e árvore JSX nos dois sentidos: o alcance acha a seção pelo id, e uma seção sem registro (ou registro sem seção) é bug.
 test("o registro e a arvore tem as mesmas secoes, nos dois sentidos", () => {
   const dir = new URL("../../src/", import.meta.url);
-  const jsx = readdirSync(dir, { recursive: true }).filter((f) => f.endsWith(".jsx")).map((f) => readFileSync(new URL(f, dir), "utf8")).join("\n");
-  const naArvore = new Set([...jsx.matchAll(/<(?:section|footer)\b[^>]*?\bid="([^"]+)"/g)].map((m) => m[1]));
-  for (const id of naArvore) assert.ok(SECTIONS_BY_ID[id], `${id} esta na arvore e falta no registro`);
-  for (const { id, presente } of SECTIONS) if (presente) assert.ok(naArvore.has(id), `${id} esta no registro e falta na arvore`);
+  const jsx = readdirSync(dir, { recursive: true })
+    .filter((f) => f.endsWith(".jsx"))
+    .map((f) => readFileSync(new URL(f, dir), "utf8"))
+    .join("\n");
+  const naArvore = new Set(
+    [...jsx.matchAll(/<(?:section|footer)\b[^>]*?\bid="([^"]+)"/g)].map((m) => m[1]),
+  );
+  for (const id of naArvore)
+    assert.ok(SECTIONS_BY_ID[id], `${id} esta na arvore e falta no registro`);
+  for (const { id, isPresent: presente } of SECTIONS)
+    if (presente) assert.ok(naArvore.has(id), `${id} esta no registro e falta na arvore`);
 });
 
 test("mapa vai para { etapa: 4, canonico: true }", () => {
@@ -64,9 +110,13 @@ test("SECTIONS_BY_ID acha cada secao pelo id", () => {
   }
 });
 
-// O alcance e o indice acham a secao por document.getElementById: um id do registro que o JSX nao usa e uma secao muda.
+// O alcance e o índice acham a seção por document.getElementById: um id do registro que o JSX não usa e uma seção muda.
 test("cada secao presente do registro tem o mesmo id no JSX", () => {
   const dir = new URL("../../src/", import.meta.url);
-  const jsx = readdirSync(dir, { recursive: true }).filter((f) => f.endsWith(".jsx")).map((f) => readFileSync(new URL(f, dir), "utf8")).join("\n");
-  for (const { id, presente } of SECTIONS) if (presente) assert.ok(jsx.includes(`id="${id}"`), id);
+  const jsx = readdirSync(dir, { recursive: true })
+    .filter((f) => f.endsWith(".jsx"))
+    .map((f) => readFileSync(new URL(f, dir), "utf8"))
+    .join("\n");
+  for (const { id, isPresent: presente } of SECTIONS)
+    if (presente) assert.ok(jsx.includes(`id="${id}"`), id);
 });

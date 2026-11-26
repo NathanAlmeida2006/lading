@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR" class="has-[.com-consentimento]:scroll-pb-[var(--consentimento-altura,12rem)]">
+<html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -29,16 +29,16 @@
 
     <script>
       document.documentElement.classList.add("js");
-      // O relogio abaixo NAO depende do pacote de JavaScript, e e esse o ponto:
-      // se o pacote nao acordar em 8 s, a classe `js` sai e todo [data-revelar]
-      // e toda palavra apagada voltam a aparecer (RNF-L35). Aplicativo.jsx escreve `pronto` depois de hidratar. Se o pacote chegar
-      // depois da hora, a classe NAO volta: a pagina fica aberta, sem movimento.
+      // O relógio abaixo NÃO depende do pacote de JavaScript, e é esse o ponto:
+      // se o pacote não acordar em 8 s, a classe `js` sai e todo [data-revelar]
+      // e toda palavra apagada voltam a aparecer (RNF-L35). App.jsx escreve `pronto` depois de hidratar. Se o pacote chegar
+      // depois da hora, a classe NÃO volta: a página fica aberta, sem movimento.
       (function () {
         try {
-          // F5 sempre abre no topo (na dobra). A restauracao de rolagem do navegador depende de a pagina ja ter a altura
-          // final no instante em que ela roda, e aqui a altura muda depois (os trechos sticky das cortinas, o video), entao
-          // ele pousava em outra secao; e um `#secao` esquecido na URL (do indice fixo, do menu) levava a ela a cada recarga.
-          // So na recarga: voltar e avancar, e links com `#`, seguem como o navegador faz.
+          // F5 sempre abre no topo (na dobra). A restauração de rolagem do navegador depende de a página já ter a altura
+          // final no instante em que ela roda, e aqui a altura muda depois (os trechos sticky das cortinas, o vídeo), então
+          // ele pousava em outra seção; e um `#secao` esquecido na URL (do índice fixo, do menu) levava a ela a cada recarga.
+          // Só na recarga: voltar e avançar, e links com `#`, seguem como o navegador faz.
           var nav = performance.getEntriesByType("navigation")[0];
           if (nav && nav.type === "reload") {
             if ("scrollRestoration" in history) history.scrollRestoration = "manual";
@@ -46,14 +46,14 @@
             scrollTo(0, 0);
           }
           var raiz = document.documentElement;
-          // Quem volta da politica ou dos termos (a marca vem de src/entries/documents.js, na mesma aba) ja viu a abertura: sem cortina
-          // e sem a entrada do heroi. Vale uma vez: a marca e consumida aqui, e a proxima carga abre normal.
+          // Quem volta da política ou dos termos (a marca vem de src/entries/documents.js, na mesma aba) já viu a abertura: sem cortina
+          // e sem a entrada do herói. Vale uma vez: a marca é consumida aqui, e a próxima carga abre normal.
           var deDocumento = false;
           try {
-            deDocumento = sessionStorage.getItem("fluor:de-documento") === "1";
-            sessionStorage.removeItem("fluor:de-documento");
+            deDocumento = sessionStorage.getItem("fluor:from-document") === "1";
+            sessionStorage.removeItem("fluor:from-document");
           } catch (e) {}
-          if (deDocumento) raiz.classList.add("sem-entrada");
+          if (deDocumento) raiz.classList.add("without-entry");
           setTimeout(function () {
             if (!raiz.classList.contains("pronto")) raiz.classList.remove("js");
           }, 8000);
@@ -61,7 +61,7 @@
       })();
     </script>
   </head>
-  <body class="overflow-x-hidden pendente:overflow-hidden bg-void text-bone font-terciaria text-body [-webkit-font-smoothing:antialiased] [&.com-consentimento]:pb-[var(--consentimento-altura,12rem)]">
+  <body class="overflow-x-hidden pendente:overflow-hidden bg-void text-bone font-tertiary text-body [-webkit-font-smoothing:antialiased]">
     <div id="raiz"><!--app-html--></div>
     <script type="module" src="/src/entries/client.jsx"></script>
   </body>

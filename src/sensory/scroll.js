@@ -5,10 +5,16 @@ import Lenis from "lenis";
  * @returns {() => void} Função que destrói o Lenis e remove os ouvintes.
  */
 export function startLenis() {
-  const lenis = new Lenis({ autoRaf: false, anchors: true, lerp: 0.1, syncTouch: false, respectReducedMotion: true });
+  const lenis = new Lenis({
+    autoRaf: false,
+    anchors: true,
+    lerp: 0.1,
+    syncTouch: false,
+    respectReducedMotion: true,
+  });
 
-  // O intervalo entre quadros desta tela (6,9 ms a 144 Hz, 16,7 ms a 60 Hz), medido; usado so
-  // para por o relogio um quadro atras ao acordar.
+  // O intervalo entre quadros desta tela (6,9 ms a 144 Hz, 16,7 ms a 60 Hz), medido; usado só
+  // para pôr o relógio um quadro atrás ao acordar.
   let interval = 1000 / 60;
   let last = 0;
   let frame = 0;
@@ -16,9 +22,9 @@ export function startLenis() {
   let measureFrameB = 0;
   let isAlive = true;
 
-  // Na retomada, o navegador restaura a posicao do layout completo antes de
+  // Na retomada, o navegador restaura a posição do layout completo antes de
   // o chunk habilitar os trechos sticky. Ancorar esse crescimento somaria
-  // novamente a altura anterior. A restauracao continua sendo do navegador.
+  // novamente a altura anterior. A restauração continua sendo do navegador.
   const root = document.documentElement;
   const navigationType = performance.getEntriesByType("navigation")[0]?.type;
   let isAnchorPending = navigationType === "reload" || navigationType === "back_forward";
@@ -38,10 +44,14 @@ export function startLenis() {
     let isFontsReady = false;
     const checkAnchor = () => {
       if (!isAlive || !isAnchorPending || !isFontsReady || anchorFrameA || anchorFrameB) return;
-      if (!root.classList.contains("movimento-pronto") &&
-          !root.classList.contains("movimento-falhou") && root.classList.contains("js")) return;
-      // Os medidores de layout respondem a mesma mudanca de classe em RAF.
-      // Dois quadros deixam essas medidas aplicadas antes de devolver a ancora.
+      if (
+        !root.classList.contains("movimento-pronto") &&
+        !root.classList.contains("movimento-falhou") &&
+        root.classList.contains("js")
+      )
+        return;
+      // Os medidores de layout respondem a mesma mudança de classe em RAF.
+      // Dois quadros deixam essas medidas aplicadas antes de devolver a âncora.
       anchorFrameA = requestAnimationFrame(() => {
         anchorFrameA = 0;
         if (!isAlive || !isAnchorPending) return;
@@ -70,31 +80,49 @@ export function startLenis() {
   const wake = () => {
     if (!frame && isAlive) frame = requestAnimationFrame(tick);
   };
-  // A roda acorda o laco pelo evento do PROPRIO Lenis, nao por um ouvinte nosso em `window`: um segundo
-  // ouvinte de `wheel` fazia o Chrome entregar o primeiro evento depois do sono como nao cancelavel, e a
-  // pagina dava um quadro de rolagem nativa (400 px de uma vez) antes de o Lenis assumir.
-  // So a roda: o toque e nativo (`syncTouch: false`), e acordar o laco por ele seria um quadro por `touchmove`.
+  // A roda acorda o laço pelo evento do PRÓPRIO Lenis, não por um ouvinte nosso em `window`: um segundo
+  // ouvinte de `wheel` fazia o Chrome entregar o primeiro evento depois do sono como não cancelável, e a
+  // página dava um quadro de rolagem nativa (400 px de uma vez) antes de o Lenis assumir.
+  // Só a roda: o toque é nativo (`syncTouch: false`), e acordar o laço por ele seria um quadro por `touchmove`.
   const unsubscribeVirtual = lenis.on("virtual-scroll", ({ event }) => {
     if (event.type.includes("wheel") || event.type.includes("touch")) releaseAnchor();
     if (event.type.includes("wheel")) wake();
   });
   const handleAnchorClick = (event) => {
     const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
-    if (!anchor || !anchor.hash || anchor.origin !== location.origin || anchor.pathname !== location.pathname) return;
+    if (
+      !anchor ||
+      !anchor.hash ||
+      anchor.origin !== location.origin ||
+      anchor.pathname !== location.pathname
+    )
+      return;
     releaseAnchor();
     wake();
   };
   window.addEventListener("click", handleAnchorClick);
   const handleKeyScroll = (event) => {
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey ||
-        !["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) return;
+    if (
+      event.defaultPrevented ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      !["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)
+    )
+      return;
     const target = event.target;
-    if (target instanceof Element && (target.isContentEditable ||
-        target.closest("input, textarea, select, button, a, [contenteditable], [role='button'], [role='slider'], [role='spinbutton'], [role='textbox'], [role='combobox'], [role='listbox'], [role='menu'], [role='tree'], [role='grid']"))) return;
+    if (
+      target instanceof Element &&
+      (target.isContentEditable ||
+        target.closest(
+          "input, textarea, select, button, a, [contenteditable], [role='button'], [role='slider'], [role='spinbutton'], [role='textbox'], [role='combobox'], [role='listbox'], [role='menu'], [role='tree'], [role='grid']",
+        ))
+    )
+      return;
     releaseAnchor();
     if (lenis.isScrolling !== "smooth" || lenis.isStopped) return;
-    // A tecla fica nativa. Sem cancelar a interpolacao, o quadro seguinte
-    // sobrescreveria o movimento de PageDown ao terminar uma ancora.
+    // A tecla fica nativa. Sem cancelar a interpolação, o quadro seguinte
+    // sobrescreveria o movimento de PageDown ao terminar uma âncora.
     lenis.stop();
     lenis.start();
     cancelAnimationFrame(frame);

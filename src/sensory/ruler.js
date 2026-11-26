@@ -1,9 +1,9 @@
 /**
- * Medida de posicao no conteudo, usada pela rolagem das telas do app (video/AppScreen.jsx).
+ * Medida de posição no conteúdo, usada pela rolagem das telas do app (video/AppScreen.jsx).
  */
 
 /**
- * Onde um elemento comeca no conteudo `until` (offsetTop acumulado: nao muda com o `transform` do reveal). Sem `until`, sobe ate o topo.
+ * Onde um elemento começa no conteúdo `until` (offsetTop acumulado: não muda com o `transform` do reveal). Sem `until`, sobe até o topo.
  * @param {HTMLElement} element - Elemento medido.
  * @param {HTMLElement} [until] - Ancestral que marca o zero da conta.
  * @returns {number} Distância em pixels, em relação a `until`.

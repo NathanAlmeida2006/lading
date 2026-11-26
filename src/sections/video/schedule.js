@@ -2,9 +2,9 @@ import { useEffect, useRef } from "react";
 import { getBeatTime } from "./timing.js";
 
 /**
- * Agenda um `onStage(stage)` por [batida, estagio] da `linha`, no relogio do clique (`t0`, na escala de `agora`), e nao em cadeia:
- * nenhum estagio depende do anterior. Devolve a hora prevista de cada estagio (`horas`: quem anima por dentro conta dela), os timers
- * e `cancelar` (idempotente). `agora` e injetavel so para teste.
+ * Agenda um `onStage(stage)` por [batida, estágio] da `linha`, no relógio do clique (`t0`, na escala de `agora`), e não em cadeia:
+ * nenhum estágio depende do anterior. Devolve a hora prevista de cada estágio (`horas`: quem anima por dentro conta dela), os timers
+ * e `cancelar` (idempotente). `agora` é injetável só para teste.
  * @param {Array<[number, number]>} timeline - Pares [batida, estágio].
  * @param {number} t0 - Hora do clique, na escala de `now`.
  * @param {(stage: number) => void} onStage - Chamado em cada estágio.
@@ -27,7 +27,10 @@ export function scheduleStages(timeline, t0, onStage, now = () => performance.no
  */
 export function useTimeline(onStage) {
   const timers = useRef([]);
-  const stop = () => { timers.current.forEach(clearTimeout); timers.current = []; };
+  const stop = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  };
   useEffect(() => stop, []);
   const start = (timeline, t0) => {
     stop();
@@ -35,6 +38,8 @@ export function useTimeline(onStage) {
     timers.current = next;
     return times;
   };
-  const after = (ms, fn) => { timers.current.push(setTimeout(fn, ms)); };
+  const after = (ms, fn) => {
+    timers.current.push(setTimeout(fn, ms));
+  };
   return { start, after, stop };
 }

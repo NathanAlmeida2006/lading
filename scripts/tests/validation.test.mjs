@@ -1,11 +1,21 @@
-// Validadores de dado real (src/infra/validation.js). isRealText recusa marcador de pendencia (regra nova de [2.2-A]).
+// Validadores de dado real (src/infra/validation.js). isRealText recusa marcador de pendência (regra nova de [2.2-A]).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { isRealText, isRealEmail, getDocumentUrl } from "../../src/infra/validation.js";
 import { CONFIG } from "../../src/infra/config.js";
 
 test("isRealText barra marcadores de pendencia (colchetes, caixa e fronteira de palavra)", () => {
-  for (const valor of ["[A DEFINIR]", "[A CONFIRMAR]", "A DEFINIR", "A CONFIRMAR", "a definir", "texto a confirmar aqui", "[NOME OU RAZÃO SOCIAL]", "[CPF OU CNPJ]", "Rua X, [CIDADE/UF]"]) {
+  for (const valor of [
+    "[A DEFINIR]",
+    "[A CONFIRMAR]",
+    "A DEFINIR",
+    "A CONFIRMAR",
+    "a definir",
+    "texto a confirmar aqui",
+    "[NOME OU RAZÃO SOCIAL]",
+    "[CPF OU CNPJ]",
+    "Rua X, [CIDADE/UF]",
+  ]) {
     assert.equal(isRealText(valor), false, valor);
   }
 });
@@ -31,9 +41,9 @@ test("isRealText aprova texto normal", () => {
 });
 
 test("o e-mail do fornecedor e os documentos de CONFIG.legal continuam aprovados", () => {
-  assert.equal(isRealEmail(CONFIG.fornecedor.contato), true);
-  assert.equal(getDocumentUrl(CONFIG.legal.politicaPrivacidade), CONFIG.legal.politicaPrivacidade);
-  assert.equal(getDocumentUrl(CONFIG.legal.termosDeUso), CONFIG.legal.termosDeUso);
+  assert.equal(isRealEmail(CONFIG.supplier.contact), true);
+  assert.equal(getDocumentUrl(CONFIG.legal.privacyPolicy), CONFIG.legal.privacyPolicy);
+  assert.equal(getDocumentUrl(CONFIG.legal.termsOfUse), CONFIG.legal.termsOfUse);
 });
 
 test("isRealEmail aceita e-mails validos, com ou sem espacos ao redor", () => {
@@ -43,7 +53,15 @@ test("isRealEmail aceita e-mails validos, com ou sem espacos ao redor", () => {
 });
 
 test("isRealEmail recusa sem arroba, dominio sem ponto, espaco, '<', ':' e ',' na parte local e sublinhado no dominio", () => {
-  for (const valor of ["ab.com", "a@b", "a b@x.com", "a<b@x.com", "a:b@x.com", "a,b@x.com", "a@x_y.com"]) {
+  for (const valor of [
+    "ab.com",
+    "a@b",
+    "a b@x.com",
+    "a<b@x.com",
+    "a:b@x.com",
+    "a,b@x.com",
+    "a@x_y.com",
+  ]) {
     assert.equal(isRealEmail(valor), false, valor);
   }
 });
@@ -59,7 +77,17 @@ test("getDocumentUrl aceita arquivo local e URL https sem credenciais, devolvend
 });
 
 test("getDocumentUrl recusa '..', espaco, barra invertida, //, http, credenciais, ftp e texto invalido", () => {
-  const rejeitados = ["..", "/../terms.html", "/termos com espaco.html", "/a\\b.html", "//evil.com", "http://x.com", "https://u:p@x.com", "ftp://x.com", "texto invalido"];
+  const rejeitados = [
+    "..",
+    "/../terms.html",
+    "/termos com espaco.html",
+    "/a\\b.html",
+    "//evil.com",
+    "http://x.com",
+    "https://u:p@x.com",
+    "ftp://x.com",
+    "texto invalido",
+  ];
   for (const valor of rejeitados) {
     assert.equal(getDocumentUrl(valor), null, valor);
   }

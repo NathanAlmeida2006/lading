@@ -16,8 +16,8 @@ const URL_PROPERTY_PATTERN = /(?:url|referrer)$/i;
 
 /**
  * `before_send` do PostHog: as URLs do evento saem sem query e sem hash, nas propriedades, no `$set` e no `$set_once`.
- * Segunda camada contra PII: a URL da barra ja foi limpa antes de qualquer rastreador carregar (params.js); esta cobre o
- * referrer, que vem de fora, e o que a URL ganhar depois. Valor que nao e URL (`$direct`) passa como esta.
+ * Segunda camada contra PII: a URL da barra já foi limpa antes de qualquer rastreador carregar (params.js); esta cobre o
+ * referrer, que vem de fora, e o que a URL ganhar depois. Valor que não é URL (`$direct`) passa como está.
  * @param {import("posthog-js").CaptureResult|null} event - O evento que o SDK vai enviar.
  * @returns {import("posthog-js").CaptureResult|null} O mesmo evento, com as URLs cortadas.
  */
@@ -25,7 +25,8 @@ export function stripEventUrls(event) {
   for (const properties of [event?.properties, event?.$set, event?.$set_once]) {
     if (!properties) continue;
     for (const [key, value] of Object.entries(properties)) {
-      if (typeof value === "string" && URL_PROPERTY_PATTERN.test(key)) properties[key] = value.split(/[?#]/, 1)[0];
+      if (typeof value === "string" && URL_PROPERTY_PATTERN.test(key))
+        properties[key] = value.split(/[?#]/, 1)[0];
     }
   }
   return event;
@@ -54,7 +55,8 @@ function expirePostHogStorage() {
  * Apaga só o `__ph_opt_in_out_*` que a versão antiga gravou no localStorage: o SDK novo o lê e, com opt-out guardado, não captura.
  * @returns {void}
  */
-const expireLegacyOptFlags = () => removeStoredValues("localStorage", (key) => key.startsWith("__ph_opt_in_out_"));
+const expireLegacyOptFlags = () =>
+  removeStoredValues("localStorage", (key) => key.startsWith("__ph_opt_in_out_"));
 
 /** O que o SDK grava no aparelho com cookie e localStorage; em memória não grava nada. */
 const PERSISTENCE_FULL = "localStorage+cookie";
@@ -70,9 +72,9 @@ const PERSISTENCE_FULL = "localStorage+cookie";
  * @returns {import("./contracts.js").PostHogPort} A porta do PostHog.
  */
 export function createPostHog(readConsent) {
-  let isInjected = false; // o SDK que ESTE modulo pos na pagina; `window.posthog` alheio nao conta
-  let hasFailed = false; // host invalido ou script bloqueado (adblock, CSP, rede): nada mais e tentado nem enfileirado nesta carga
-  let isFullPersistence = false; // a persistencia que o SDK tem agora: true = localStorage+cookie, false = memory
+  let isInjected = false; // o SDK que ESTE módulo põe na página; `window.posthog` alheio não conta
+  let hasFailed = false; // host inválido ou script bloqueado (adblock, CSP, rede): nada mais é tentado nem enfileirado nesta carga
+  let isFullPersistence = false; // a persistência que o SDK tem agora: true = localStorage+cookie, false = memory
   let hasWarned = false;
 
   /**
@@ -92,7 +94,9 @@ export function createPostHog(readConsent) {
    */
   function getPostHog() {
     const candidate = /** @type {{capture?: unknown}|undefined} */ (getTrackerWindow().posthog);
-    return isInjected && !hasFailed && typeof candidate?.capture === "function" ? /** @type {PostHogApi} */ (/** @type {unknown} */ (candidate)) : undefined;
+    return isInjected && !hasFailed && typeof candidate?.capture === "function"
+      ? /** @type {PostHogApi} */ (/** @type {unknown} */ (candidate))
+      : undefined;
   }
 
   /**
@@ -130,8 +134,8 @@ export function createPostHog(readConsent) {
 
     queue.init(key, {
       api_host: host,
-      persistence: hasConsent ? PERSISTENCE_FULL : "memory", // sem aceite nada e gravado no aparelho (sem cookieless_mode: conflita com memory)
-      person_profiles: "identified_only", // visitante anonimo nao vira perfil, e identify() nunca e chamado
+      persistence: hasConsent ? PERSISTENCE_FULL : "memory", // sem aceite nada é gravado no aparelho (sem cookieless_mode: conflita com memory)
+      person_profiles: "identified_only", // visitante anônimo não vira perfil, e identify() nunca é chamado
       disable_session_recording: true, // quem grava a visita é o Clarity (política de privacidade): dois gravadores pesariam no celular
       capture_pageview: true,
       capture_pageleave: true,
@@ -163,25 +167,33 @@ export function createPostHog(readConsent) {
     const key = String(CONFIG.posthog.key ?? "").trim();
     const host = String(CONFIG.posthog.host ?? "").trim();
     if (!key || !host) {
-      warnOnce("[PostHog] chave ou host não configurados (VITE_POSTHOG_KEY, VITE_POSTHOG_HOST): script não carregado");
+      warnOnce(
+        "[PostHog] chave ou host não configurados (VITE_POSTHOG_KEY, VITE_POSTHOG_HOST): script não carregado",
+      );
       return;
     }
     if (!isInjected) {
       if (getTrackerWindow().posthog) return; // PostHog de outra origem: este módulo não assume o que não carregou
-      expireLegacyOptFlags(); // o opt-out gravado pela versao antiga calaria o SDK novo
+      expireLegacyOptFlags(); // o opt-out gravado pela versão antiga calaria o SDK novo
       try {
         inject(key, host, hasConsent);
         isInjected = true;
         isFullPersistence = hasConsent;
       } catch {
         hasFailed = true;
-        warnOnce("[PostHog] VITE_POSTHOG_HOST inválido (precisa ser URL https): script não carregado");
+        warnOnce(
+          "[PostHog] VITE_POSTHOG_HOST inválido (precisa ser URL https): script não carregado",
+        );
       }
       return;
     }
     if (hasConsent === isFullPersistence) return;
     isFullPersistence = hasConsent;
-    try { getPostHog()?.set_config({ persistence: hasConsent ? PERSISTENCE_FULL : "memory" }); } catch { /* o tracker nao derruba a pagina */ }
+    try {
+      getPostHog()?.set_config({ persistence: hasConsent ? PERSISTENCE_FULL : "memory" });
+    } catch {
+      /* o tracker não derruba a página */
+    }
     if (!hasConsent) expirePostHogStorage();
   }
 
@@ -192,7 +204,11 @@ export function createPostHog(readConsent) {
    * @returns {void}
    */
   function capture(name, properties) {
-    try { getPostHog()?.capture(name, properties); } catch { /* o tracker nao derruba a pagina */ }
+    try {
+      getPostHog()?.capture(name, properties);
+    } catch {
+      /* o tracker não derruba a página */
+    }
   }
 
   /**
@@ -201,7 +217,11 @@ export function createPostHog(readConsent) {
    * @returns {void}
    */
   function captureLog(options) {
-    try { getPostHog()?.captureLog(options); } catch { /* o tracker nao derruba a pagina */ }
+    try {
+      getPostHog()?.captureLog(options);
+    } catch {
+      /* o tracker não derruba a página */
+    }
   }
 
   return { loadPostHog, capture, captureLog };

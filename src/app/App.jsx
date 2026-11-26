@@ -31,36 +31,33 @@ import { KEYBOARD_TARGET } from "./ui.js";
 
 /**
  * O registro em sections.js fixa ids, etapas e presença; a árvore preserva RF-L08.
- * @returns {JSX.Element} A pagina inteira, na ordem das secoes.
+ * @returns {JSX.Element} A página inteira, na ordem das seções.
  */
 export function App() {
-  // Medicao: roda sempre, com ou sem `js` (nao e movimento). Os parametros de campanha nao passam por
-  // aqui: o `CtaButton` os le direto de instrumentation.js (`useCampaignParams`).
+  // Medição: roda sempre, com ou sem `js` (não é movimento). Os parâmetros de campanha não passam por
+  // aqui: o `CtaButton` os lê direto de instrumentation.js (`useCampaignParams`).
   useEffect(() => startMeasurement(REACH_BY_ID), []);
   useMotion(ensureVisibility);
   useMotion(startLenis);
 
-  // Por ultimo, depois de hidratar e de os efeitos acima rodarem: avisa o relogio do
+  // Por último, depois de hidratar e de os efeitos acima rodarem: avisa o relógio do
   // index.html que o pacote acordou. Sem este aviso, aos 8 s ele tira a classe `js` e a
-  // pagina abre inteira (RNF-L35).
+  // página abre inteira (RNF-L35).
   useEffect(() => {
     document.documentElement.classList.add("pronto");
   }, []);
 
   return (
     <>
-      {/* Primeiro alvo do teclado: fora da tela ate receber foco. */}
-      <a
-        className={`${KEYBOARD_TARGET} underline`}
-        href="#conteudo"
-      >
+      {/* Primeiro alvo do teclado: fora da tela até receber foco. */}
+      <a className={`${KEYBOARD_TARGET} underline`} href="#conteudo">
         Pular para o conteúdo
       </a>
 
       <MotionPause />
 
       {/* Logo depois do "pular": quem navega por teclado ou leitor encontra o aviso antes
-          de a pagina comecar. E fixo na base, entao a ordem do DOM nao mexe no desenho. */}
+          de a página começar. É fixo na base, então a ordem do DOM não mexe no desenho. */}
       <ConsentBanner />
 
       <main id="conteudo">
@@ -69,12 +66,12 @@ export function App() {
         <AppShowcase />
         <Mirror />
         <Spectrum />
-        {SECTIONS_BY_ID["social-vibe"].presente && <SocialVibe />}
+        {SECTIONS_BY_ID["social-vibe"].isPresent && <SocialVibe />}
         <Batch />
-        {SECTIONS_BY_ID["prova-social"].presente && <Proof />}
-        {SECTIONS_BY_ID.mapa.presente && <Weeks />}
+        {SECTIONS_BY_ID["prova-social"].isPresent && <Proof />}
+        {SECTIONS_BY_ID.mapa.isPresent && <Weeks />}
         <Objections />
-        {/* A unica oferta e preco da pagina: depois da dor, do mecanismo, do valor e das objecoes. A doca nao a esconde. */}
+        {/* A única oferta é preço da página: depois da dor, do mecanismo, do valor e das objeções. A doca não a esconde. */}
         <ValueStack />
         <Closing />
       </main>

@@ -1,4 +1,4 @@
-// Criterio 5 do cartao: nenhum ciclo de imports em src/. Le os imports estaticos, os reexports e os dinamicos por regex e faz DFS com pilha.
+// Critério 5 do cartão: nenhum ciclo de imports em src/. Lê os imports estáticos, os reexports e os dinâmicos por regex e faz DFS com pilha.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
@@ -6,19 +6,19 @@ import { join, dirname, resolve, relative, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const raiz = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "src");
-// Lista de ciclos conhecidos e aceitos: vazia de proposito. Um ciclo achado aqui e falha, nao entra na lista.
+// Lista de ciclos conhecidos e aceitos: vazia de propósito. Um ciclo achado aqui é falha, não entra na lista.
 const CICLOS_ACEITOS = [];
 const EXTENSOES_JS = [".js", ".jsx"];
 
 function arquivosJs(dir) {
-  return readdirSync(dir).flatMap((nome) => {
-    const caminho = join(dir, nome);
+  return readdirSync(dir).flatMap((name) => {
+    const caminho = join(dir, name);
     if (statSync(caminho).isDirectory()) return arquivosJs(caminho);
-    return EXTENSOES_JS.includes(extname(nome)) ? [caminho] : [];
+    return EXTENSOES_JS.includes(extname(name)) ? [caminho] : [];
   });
 }
 
-// Resolve um especificador relativo para um arquivo JS do src; devolve null para pacotes e ativos nao JS.
+// Resolve um especificador relativo para um arquivo JS do src; devolve null para pacotes e ativos não JS.
 function resolverImport(de, especificador) {
   const limpo = especificador.split("?")[0];
   if (!limpo.startsWith(".")) return null;
@@ -32,11 +32,15 @@ function resolverImport(de, especificador) {
 function grafo() {
   const arestas = new Map();
   for (const arquivo of arquivosJs(raiz)) {
-    const texto = readFileSync(arquivo, "utf8");
+    const text = readFileSync(arquivo, "utf8");
     const alvos = new Set();
-    const padroes = [/\bfrom\s+["']([^"']+)["']/g, /^\s*import\s+["']([^"']+)["']/gm, /\bimport\(\s*["']([^"']+)["']\s*\)/g];
+    const padroes = [
+      /\bfrom\s+["']([^"']+)["']/g,
+      /^\s*import\s+["']([^"']+)["']/gm,
+      /\bimport\(\s*["']([^"']+)["']\s*\)/g,
+    ];
     for (const re of padroes) {
-      for (const m of texto.matchAll(re)) {
+      for (const m of text.matchAll(re)) {
         const alvo = resolverImport(arquivo, m[1]);
         if (alvo) alvos.add(alvo);
       }
@@ -46,7 +50,7 @@ function grafo() {
   return arestas;
 }
 
-// DFS com pilha de recursao: devolve o primeiro ciclo achado como lista de caminhos, ou null.
+// DFS com pilha de recursão: devolve o primeiro ciclo achado como lista de caminhos, ou null.
 function acharCiclo(arestas) {
   const visitados = new Set();
   const pilha = [];
@@ -82,8 +86,8 @@ test("src/ tem arquivos JS a varrer (sanidade do grafo)", () => {
 test("o grafo de imports de src/ nao tem ciclo (inclui imports dinamicos)", () => {
   const arestas = grafo();
   const ciclo = acharCiclo(arestas);
-  const texto = ciclo ? ciclo.map((c) => relative(raiz, c)).join(" -> ") : "";
-  assert.equal(ciclo, null, `ciclo de imports: ${texto}`);
+  const text = ciclo ? ciclo.map((c) => relative(raiz, c)).join(" -> ") : "";
+  assert.equal(ciclo, null, `ciclo de imports: ${text}`);
   assert.deepEqual(CICLOS_ACEITOS, []);
 });
 
@@ -92,6 +96,12 @@ test("choreographies.js nao importa loader.js; openReadingMode mora em reading.j
   const carregador = join(raiz, "sensory", "loader.js");
   const coreografias = join(raiz, "sensory", "choreographies.js");
   const leitura = join(raiz, "sensory", "reading.js");
-  assert.ok(!(arestas.get(coreografias) ?? []).includes(carregador), "choreographies importa loader");
-  assert.ok((arestas.get(coreografias) ?? []).includes(leitura), "choreographies deveria importar reading");
+  assert.ok(
+    !(arestas.get(coreografias) ?? []).includes(carregador),
+    "choreographies importa loader",
+  );
+  assert.ok(
+    (arestas.get(coreografias) ?? []).includes(leitura),
+    "choreographies deveria importar reading",
+  );
 });

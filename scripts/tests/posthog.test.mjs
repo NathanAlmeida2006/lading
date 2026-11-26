@@ -6,7 +6,9 @@ import { CONFIG, readTrackerEnv } from "../../src/infra/config.js";
 import { createPostHog, stripEventUrls } from "../../src/infra/posthog.js";
 
 const fakeStorage = (map) => ({
-  get length() { return map.size; },
+  get length() {
+    return map.size;
+  },
   key: (i) => [...map.keys()][i] ?? null,
   getItem: (k) => map.get(k) ?? null,
   setItem: (k, v) => map.set(k, String(v)),
@@ -20,12 +22,20 @@ function ambiente({ cookie = "", local = new Map(), sessao = new Map() } = {}) {
   CONFIG.posthog.host = "https://us.i.posthog.com";
   const scripts = [];
   const cookies = [];
-  globalThis.window = { location: { hostname: "www.lithium.app.br" }, localStorage: fakeStorage(local), sessionStorage: fakeStorage(sessao) };
+  globalThis.window = {
+    location: { hostname: "www.lithium.app.br" },
+    localStorage: fakeStorage(local),
+    sessionStorage: fakeStorage(sessao),
+  };
   globalThis.document = {
     createElement: () => ({}),
     head: { appendChild: (el) => scripts.push(el) },
-    get cookie() { return cookie; },
-    set cookie(valor) { cookies.push(valor); },
+    get cookie() {
+      return cookie;
+    },
+    set cookie(valor) {
+      cookies.push(valor);
+    },
   };
   return {
     scripts,
@@ -41,12 +51,19 @@ function ambiente({ cookie = "", local = new Map(), sessao = new Map() } = {}) {
   };
 }
 
-// Expiracao gravada pelo navegador: o nome, `path=/` e, quando dado, o `domain`.
-const expirou = (cookies, nome, dominio) =>
-  cookies.some((c) => c.startsWith(`${nome}=; expires=Thu, 01 Jan 1970`) && c.endsWith(dominio ? `path=/; domain=${dominio}` : "path=/"));
+// Expiração gravada pelo navegador: o nome, `path=/` e, quando dado, o `domain`.
+const expirou = (cookies, name, dominio) =>
+  cookies.some(
+    (c) =>
+      c.startsWith(`${name}=; expires=Thu, 01 Jan 1970`) &&
+      c.endsWith(dominio ? `path=/; domain=${dominio}` : "path=/"),
+  );
 
 test("sem chave ou sem host nada e injetado", () => {
-  for (const [key, host] of [[null, "https://us.i.posthog.com"], ["phc_teste", null]]) {
+  for (const [key, host] of [
+    [null, "https://us.i.posthog.com"],
+    ["phc_teste", null],
+  ]) {
     const amb = ambiente();
     try {
       CONFIG.posthog.key = key;
@@ -54,7 +71,9 @@ test("sem chave ou sem host nada e injetado", () => {
       createPostHog(() => null).loadPostHog();
       assert.equal(amb.scripts.length, 0, `${key} ${host}`);
       assert.equal(globalThis.window.posthog, undefined);
-    } finally { amb.restaurar(); }
+    } finally {
+      amb.restaurar();
+    }
   }
 });
 
@@ -78,7 +97,9 @@ test("sem resposta ou com recusa: um script so, init em memory, so funil, sem gr
       assert.equal("opt_out_capturing_by_default" in opcoes, false);
       assert.equal(opcoes.before_send, stripEventUrls);
       assert.deepEqual(amb.fila(), []);
-    } finally { amb.restaurar(); }
+    } finally {
+      amb.restaurar();
+    }
   }
 });
 
@@ -91,7 +112,9 @@ test("aceite previo: o init ja nasce com localStorage+cookie, sem set_config", (
     assert.equal(amb.scripts.length, 1);
     assert.equal(globalThis.window.posthog._i[0][1].persistence, "localStorage+cookie");
     assert.deepEqual(amb.fila(), []);
-  } finally { amb.restaurar(); }
+  } finally {
+    amb.restaurar();
+  }
 });
 
 test("aceitar no banner: set_config para localStorage+cookie, uma vez, sem reiniciar o SDK", () => {
@@ -106,11 +129,17 @@ test("aceitar no banner: set_config para localStorage+cookie, uma vez, sem reini
     assert.equal(amb.scripts.length, 1);
     assert.equal(globalThis.window.posthog._i.length, 1);
     assert.deepEqual(amb.fila(), [["set_config", { persistence: "localStorage+cookie" }]]);
-  } finally { amb.restaurar(); }
+  } finally {
+    amb.restaurar();
+  }
 });
 
 test("aceitar e retirar: volta a memory e o que o PostHog gravou some", () => {
-  const local = new Map([["ph_phc_teste_posthog", "x"], ["__ph_opt_in_out_phc_teste", "1"], ["fluor:outra", "2"]]);
+  const local = new Map([
+    ["ph_phc_teste_posthog", "x"],
+    ["__ph_opt_in_out_phc_teste", "1"],
+    ["fluor:outra", "2"],
+  ]);
   const amb = ambiente({ cookie: "ph_phc_teste_posthog=abc; _ga=1", local });
   try {
     let aceite = true;
@@ -121,15 +150,29 @@ test("aceitar e retirar: volta a memory e o que o PostHog gravou some", () => {
     assert.deepEqual(amb.fila(), [["set_config", { persistence: "memory" }]]);
     assert.ok(expirou(amb.cookies, "ph_phc_teste_posthog", undefined), "host puro");
     assert.ok(expirou(amb.cookies, "ph_phc_teste_posthog", "www.lithium.app.br"), "subdominio");
-    assert.ok(expirou(amb.cookies, "ph_phc_teste_posthog", "lithium.app.br"), "dominio registravel");
-    assert.equal(amb.cookies.some((c) => c.startsWith("_ga=")), false);
+    assert.ok(
+      expirou(amb.cookies, "ph_phc_teste_posthog", "lithium.app.br"),
+      "dominio registravel",
+    );
+    assert.equal(
+      amb.cookies.some((c) => c.startsWith("_ga=")),
+      false,
+    );
     assert.deepEqual([...local.keys()], ["fluor:outra"]);
-  } finally { amb.restaurar(); }
+  } finally {
+    amb.restaurar();
+  }
 });
 
 test("recusa fria (false): o SDK entra em memory e o que uma visita anterior gravou some", () => {
-  const local = new Map([["ph_phc_velho_posthog", "x"], ["__ph_opt_in_out_phc_velho", "1"]]);
-  const sessao = new Map([["ph_phc_velho_window_id", "x"], ["fluor:consentimento", "false"]]);
+  const local = new Map([
+    ["ph_phc_velho_posthog", "x"],
+    ["__ph_opt_in_out_phc_velho", "1"],
+  ]);
+  const sessao = new Map([
+    ["ph_phc_velho_window_id", "x"],
+    ["fluor:consent", "false"],
+  ]);
   const amb = ambiente({ cookie: "ph_phc_velho_posthog=abc", local, sessao });
   try {
     createPostHog(() => false).loadPostHog();
@@ -137,18 +180,25 @@ test("recusa fria (false): o SDK entra em memory e o que uma visita anterior gra
     assert.equal(globalThis.window.posthog._i[0][1].persistence, "memory");
     assert.ok(expirou(amb.cookies, "ph_phc_velho_posthog", "lithium.app.br"));
     assert.equal(local.size, 0);
-    assert.deepEqual([...sessao.keys()], ["fluor:consentimento"]);
-  } finally { amb.restaurar(); }
+    assert.deepEqual([...sessao.keys()], ["fluor:consent"]);
+  } finally {
+    amb.restaurar();
+  }
 });
 
 test("sem resposta (null): nenhum cookie e apagado, mas o opt-out que a versao antiga deixou no localStorage sai (calaria o SDK)", () => {
-  const local = new Map([["ph_phc_teste_posthog", "x"], ["__ph_opt_in_out_phc_teste", "0"]]);
+  const local = new Map([
+    ["ph_phc_teste_posthog", "x"],
+    ["__ph_opt_in_out_phc_teste", "0"],
+  ]);
   const amb = ambiente({ cookie: "ph_phc_teste_posthog=abc", local });
   try {
     createPostHog(() => null).loadPostHog();
     assert.equal(amb.cookies.length, 0);
     assert.deepEqual([...local.keys()], ["ph_phc_teste_posthog"]);
-  } finally { amb.restaurar(); }
+  } finally {
+    amb.restaurar();
+  }
 });
 
 test("capture e captureLog saem no modo anonimo, so com o SDK desta carga", () => {
@@ -159,18 +209,34 @@ test("capture e captureLog saem no modo anonimo, so com o SDK desta carga", () =
     ph.loadPostHog();
     ph.capture("faq_opened", { faq_position: 2 });
     ph.captureLog({ body: "x", level: "info" });
-    assert.deepEqual(amb.fila(), [["capture", "faq_opened", { faq_position: 2 }], ["captureLog", { body: "x", level: "info" }]]);
-  } finally { amb.restaurar(); }
+    assert.deepEqual(amb.fila(), [
+      ["capture", "faq_opened", { faq_position: 2 }],
+      ["captureLog", { body: "x", level: "info" }],
+    ]);
+  } finally {
+    amb.restaurar();
+  }
 });
 
 test("nenhuma chamada identify existe no modulo", () => {
-  assert.doesNotMatch(readFileSync(new URL("../../src/infra/posthog.js", import.meta.url), "utf8"), /\.identify\(/);
+  assert.doesNotMatch(
+    readFileSync(new URL("../../src/infra/posthog.js", import.meta.url), "utf8"),
+    /\.identify\(/,
+  );
 });
 
 test("before_send: query e hash saem das URLs do evento; $direct e o resto ficam", () => {
   const evento = stripEventUrls({
-    properties: { $current_url: "https://lithium.app.br/?email=a%40b.com#x", $referrer: "https://mail.exemplo.com/inbox?token=abc", $referring_domain: "mail.exemplo.com", faq_position: 2 },
-    $set_once: { $initial_current_url: "https://lithium.app.br/?token=1", $initial_referrer: "$direct" },
+    properties: {
+      $current_url: "https://lithium.app.br/?email=a%40b.com#x",
+      $referrer: "https://mail.exemplo.com/inbox?token=abc",
+      $referring_domain: "mail.exemplo.com",
+      faq_position: 2,
+    },
+    $set_once: {
+      $initial_current_url: "https://lithium.app.br/?token=1",
+      $initial_referrer: "$direct",
+    },
   });
   assert.equal(evento.properties.$current_url, "https://lithium.app.br/");
   assert.equal(evento.properties.$referrer, "https://mail.exemplo.com/inbox");
@@ -182,16 +248,33 @@ test("before_send: query e hash saem das URLs do evento; $direct e o resto ficam
 });
 
 test("readTrackerEnv: so producao ou VITE_ENABLE_PIXEL_DEV liberam, e vazio vira null (a mesma trava dos tres rastreadores)", () => {
-  assert.equal(readTrackerEnv({ PROD: true, VITE_POSTHOG_KEY: " phc_x " }, "VITE_POSTHOG_KEY"), "phc_x");
-  assert.equal(readTrackerEnv({ PROD: false, DEV: true, VITE_POSTHOG_KEY: "phc_x" }, "VITE_POSTHOG_KEY"), null);
-  assert.equal(readTrackerEnv({ DEV: true, VITE_ENABLE_PIXEL_DEV: "1", VITE_POSTHOG_KEY: "phc_x" }, "VITE_POSTHOG_KEY"), "phc_x");
+  assert.equal(
+    readTrackerEnv({ PROD: true, VITE_POSTHOG_KEY: " phc_x " }, "VITE_POSTHOG_KEY"),
+    "phc_x",
+  );
+  assert.equal(
+    readTrackerEnv({ PROD: false, DEV: true, VITE_POSTHOG_KEY: "phc_x" }, "VITE_POSTHOG_KEY"),
+    null,
+  );
+  assert.equal(
+    readTrackerEnv(
+      { DEV: true, VITE_ENABLE_PIXEL_DEV: "1", VITE_POSTHOG_KEY: "phc_x" },
+      "VITE_POSTHOG_KEY",
+    ),
+    "phc_x",
+  );
   assert.equal(readTrackerEnv({ PROD: true, VITE_POSTHOG_KEY: "  " }, "VITE_POSTHOG_KEY"), null);
   assert.equal(readTrackerEnv(undefined, "VITE_POSTHOG_KEY"), null);
 });
 
 test("config.js le as quatro variaveis dos rastreadores pela mesma trava, e o client.jsx nao carrega o PostHog por conta propria", () => {
   const config = readFileSync(new URL("../../src/infra/config.js", import.meta.url), "utf8");
-  for (const chamada of ['readTrackerEnv(ENV, "VITE_META_PIXEL_ID")', 'readTrackerEnv(ENV, "VITE_CLARITY_ID")', 'readTrackerEnv(ENV, "VITE_POSTHOG_KEY")', 'readTrackerEnv(ENV, "VITE_POSTHOG_HOST")']) {
+  for (const chamada of [
+    'readTrackerEnv(ENV, "VITE_META_PIXEL_ID")',
+    'readTrackerEnv(ENV, "VITE_CLARITY_ID")',
+    'readTrackerEnv(ENV, "VITE_POSTHOG_KEY")',
+    'readTrackerEnv(ENV, "VITE_POSTHOG_HOST")',
+  ]) {
     assert.ok(config.includes(chamada), chamada);
   }
   const client = readFileSync(new URL("../../src/entries/client.jsx", import.meta.url), "utf8");
@@ -203,7 +286,9 @@ test("a gravacao de sessao do PostHog sai desligada no init (o Clarity e o grava
   try {
     createPostHog(() => true).loadPostHog();
     assert.equal(globalThis.window.posthog._i[0][1].disable_session_recording, true);
-  } finally { amb.restaurar(); }
+  } finally {
+    amb.restaurar();
+  }
 });
 
 test("aceite sem chave ou sem host avisa uma vez no console", () => {
@@ -265,21 +350,32 @@ test("host invalido (nao URL ou sem https) avisa uma vez, nao injeta e nao tenta
   }
 });
 
-// "Uma vez so": depois da falha, a carga nem volta a ler o host (a URL nao e analisada de novo a cada resposta do aviso).
+// "Uma vez só": depois da falha, a carga nem volta a ler o host (a URL não é analisada de novo a cada resposta do aviso).
 test("host invalido e lido uma vez so: depois da falha, as respostas seguintes nao tentam de novo", () => {
   const amb = ambiente();
   const original = console.warn;
   console.warn = () => {};
   let leituras = 0;
   try {
-    Object.defineProperty(CONFIG.posthog, "host", { get: () => { leituras++; return "nao-e-url"; }, configurable: true });
+    Object.defineProperty(CONFIG.posthog, "host", {
+      get: () => {
+        leituras++;
+        return "nao-e-url";
+      },
+      configurable: true,
+    });
     const ph = createPostHog(() => true);
     ph.loadPostHog();
     ph.loadPostHog();
     ph.loadPostHog();
     assert.equal(leituras, 1);
   } finally {
-    Object.defineProperty(CONFIG.posthog, "host", { value: null, writable: true, enumerable: true, configurable: true });
+    Object.defineProperty(CONFIG.posthog, "host", {
+      value: null,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
     console.warn = original;
     amb.restaurar();
   }
@@ -288,12 +384,18 @@ test("host invalido e lido uma vez so: depois da falha, as respostas seguintes n
 test("window.posthog de outra origem nao e sobrescrito nem usado", () => {
   const amb = ambiente();
   try {
-    const alheio = { capture() { throw new Error("alheio"); } };
+    const alheio = {
+      capture() {
+        throw new Error("alheio");
+      },
+    };
     globalThis.window.posthog = alheio;
     const ph = createPostHog(() => true);
     ph.loadPostHog();
     ph.capture("x");
     assert.equal(amb.scripts.length, 0);
     assert.equal(globalThis.window.posthog, alheio);
-  } finally { amb.restaurar(); }
+  } finally {
+    amb.restaurar();
+  }
 });

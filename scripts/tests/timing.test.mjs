@@ -1,9 +1,18 @@
-// Relogio do video (src/sections/video/timing.js): linha do tempo em batidas, estagios e a musica que cobre o roteiro.
+// Relógio do vídeo (src/sections/video/timing.js): linha do tempo em batidas, estágios e a música que cobre o roteiro.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { BEAT_MS, DROP_MS, HOOK_BEAT, getBeatTime, STAGES, TIMELINE, DO_IT_BEAT, MUSIC_END } from "../../src/sections/video/timing.js";
+import {
+  BEAT_MS,
+  DROP_MS,
+  HOOK_BEAT,
+  getBeatTime,
+  STAGES,
+  TIMELINE,
+  DO_IT_BEAT,
+  MUSIC_END,
+} from "../../src/sections/video/timing.js";
 
-// 36050 ms: duracao de public/audio/apex-video.mp3 (36,05 s, conforme o cabecalho de tempo.js). A musica precisa cobrir o roteiro dentro desse tempo.
+// 36050 ms: duração de public/audio/apex-video.mp3 (36,05 s, conforme o cabeçalho de tempo.js). A música precisa cobrir o roteiro dentro desse tempo.
 const DURACAO_DO_ARQUIVO_MS = 36050;
 const estagios = TIMELINE.map(([, estagio]) => estagio);
 
@@ -17,13 +26,16 @@ test("nenhum estagio se repete na TIMELINE", () => {
   assert.equal(new Set(estagios).size, estagios.length);
 });
 
-// Adaptacao: as capas usam STAGES.cover + i (cada capa e um indice proprio), por isso o teste confere o intervalo e nao so os nomes.
+// Adaptação: as capas usam STAGES.cover + i (cada capa é um índice próprio), por isso o teste confere o intervalo e não só os nomes.
 test("todo estagio da TIMELINE e um indice valido de STAGES, e todo estagio nomeado aparece na TIMELINE", () => {
   for (const estagio of estagios) {
-    assert.ok(Number.isInteger(estagio) && estagio >= STAGES.hook && estagio <= STAGES.doIt, `estagio ${estagio}`);
+    assert.ok(
+      Number.isInteger(estagio) && estagio >= STAGES.hook && estagio <= STAGES.doIt,
+      `estagio ${estagio}`,
+    );
   }
-  for (const [nome, estagio] of Object.entries(STAGES)) {
-    assert.ok(estagios.includes(estagio), nome);
+  for (const [name, estagio] of Object.entries(STAGES)) {
+    assert.ok(estagios.includes(estagio), name);
   }
 });
 

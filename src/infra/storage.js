@@ -28,7 +28,7 @@ function writeValue(store, key, value) {
   try {
     window[store].setItem(key, JSON.stringify(value));
   } catch {
-    /* navegacao anonima ou storage bloqueado: a pagina segue funcionando */
+    /* navegação anônima ou storage bloqueado: a página segue funcionando */
   }
 }
 
@@ -64,7 +64,7 @@ export function expireCookies(names) {
       }
     }
   } catch {
-    /* cookie bloqueado: nao ha o que apagar */
+    /* cookie bloqueado: não há o que apagar */
   }
 }
 
@@ -74,7 +74,10 @@ export function expireCookies(names) {
  */
 export function readCookieNames() {
   try {
-    return String(document.cookie ?? "").split(";").map((pair) => pair.split("=")[0].trim()).filter(Boolean);
+    return String(document.cookie ?? "")
+      .split(";")
+      .map((pair) => pair.split("=")[0].trim())
+      .filter(Boolean);
   } catch {
     return [];
   }

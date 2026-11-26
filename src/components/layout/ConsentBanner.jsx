@@ -6,31 +6,33 @@ import { getDocumentUrl } from "../../infra/validation.js";
 /**
  * Consentimento antes do evento de terceiro (RNF-L23).
  *
- * O Clarity (sessao e mapa de calor) e o PostHog (funil) carregam ja no inicio, anonimos e sem cookies; o aceite so libera os
- * cookies deles. O pixel da Meta (marketing) continua esperando o aceite (o orquestrador esta em instrumentation.js, nao aqui). O texto e curto e leva a politica de privacidade, que diz o que cada um faz: o
- * texto e o consentimento tudo ou nada foram mantidos pelo gerente em 22/11/2026. "Apenas essenciais" e uma opcao de peso igual a "Aceitar" (os dois em contorno, mesma classe) na tela,
- * e nao um link cinza no canto - o padrao escuro custaria mais em confianca do que rende em evento.
+ * O Clarity (sessão e mapa de calor) e o PostHog (funil) carregam já no início, anônimos e sem cookies; o aceite só libera os
+ * cookies deles. O pixel da Meta (marketing) continua esperando o aceite (o orquestrador está em instrumentation.js, não aqui).
  *
- * Renderiza `null` no primeiro passe para nao divergir do HTML pre-renderizado
- * (o servidor nao sabe o que este visitante ja respondeu).
+ * É um `<dialog>` modal com a página apagada atrás (pedido do gerente em 25/11/2026): só sai com uma resposta. "Recusar cookies"
+ * é um botão do mesmo tamanho de "Aceitar cookies" (um em contorno, outro cheio), e não um link cinza no canto - o padrão
+ * escuro custaria mais em confiança do que rende em evento. O consentimento continua tudo ou nada.
+ *
+ * Renderiza `null` no primeiro passe para não divergir do HTML pré-renderizado
+ * (o servidor não sabe o que este visitante já respondeu).
  */
 const SHOW_DELAY_MS = 1500;
 
 const BUTTON =
-  "flex-1 inline-flex items-center justify-center min-h-12 px-4 py-3 border rounded-xs cursor-pointer text-center " +
-  "font-secundaria text-label uppercase bg-transparent text-bone border-bone";
+  "inline-flex items-center justify-center min-h-14 px-6 py-4 border rounded-xs cursor-pointer text-center " +
+  "font-secondary text-label uppercase text-bone";
 
-const PRIVACY_URL = getDocumentUrl(CONFIG.legal.politicaPrivacidade);
+const PRIVACY_URL = getDocumentUrl(CONFIG.legal.privacyPolicy);
 
 /**
- * @returns {JSX.Element|null} Nada depois de respondido; o aviso enquanto a resposta nao existe.
+ * @returns {JSX.Element|null} Nada depois de respondido; o aviso enquanto a resposta não existe.
  */
 export function ConsentBanner() {
-  // A resposta mora em instrumentation.js, que tambem decide o pixel: aqui so se pergunta e se le.
+  // A resposta mora em instrumentation.js, que também decide o pixel: aqui só se pergunta e se lê.
   const answer = useConsent();
   const isDecided = answer !== null;
 
-  // O aviso espera 1,5 s para nao brigar com a primeira dobra.
+  // O aviso espera 1,5 s para não brigar com a primeira dobra.
   const [isReady, setIsReady] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), SHOW_DELAY_MS);
@@ -38,48 +40,62 @@ export function ConsentBanner() {
   }, []);
   const isVisible = isReady && !isDecided;
 
-  // A folga evita que o aviso, preso na base da tela, cubra o fim da pagina. O texto muda de altura com a largura da
-  // tela, entao a folga acompanha a altura medida do aviso (`--consentimento-altura`, lida pelo index.html).
-  const banner = useRef(null);
+  // `showModal` entrega de graça o fundo apagado, o bloqueio de cliques e o foco preso.
+  const dialog = useRef(null);
   useEffect(() => {
-    document.body.classList.toggle("com-consentimento", isVisible);
-    const node = banner.current;
-    const style = document.documentElement.style;
-    const observer = node && new ResizeObserver(() => style.setProperty("--consentimento-altura", `${Math.ceil(node.getBoundingClientRect().height)}px`));
-    observer?.observe(node);
-    return () => {
-      observer?.disconnect();
-      style.removeProperty("--consentimento-altura");
-      document.body.classList.remove("com-consentimento");
-    };
+    if (!isVisible) return;
+    dialog.current.showModal();
+    dialog.current.querySelector("button").focus(); // o foco começa em "Recusar", não no link
   }, [isVisible]);
 
   if (!isVisible) return null;
 
   return (
-    <aside
-      ref={banner}
-      className="fixed inset-x-0 bottom-0 z-20 px-4 pt-3 pb-[max(--spacing(3),env(safe-area-inset-bottom))] sm:pt-4 sm:pb-[max(--spacing(4),env(safe-area-inset-bottom))] bg-surface-1 border-t border-line-strong animate-sobe motion-reduce:animate-none"
+    <dialog
+      ref={dialog}
+      // Esc não responde pela pessoa. O Chrome fecha no segundo Esc mesmo assim: aí o aviso reabre.
+      onCancel={(event) => event.preventDefault()}
+      onClose={(event) => event.currentTarget.showModal()}
+      className="mt-auto mb-[max(--spacing(3),env(safe-area-inset-bottom))] mx-auto w-[calc(100%-var(--spacing)*6)] max-w-220 max-h-[calc(100dvh-var(--spacing)*6)] overflow-y-auto overscroll-contain p-6 sm:p-8 bg-surface-1 text-bone border border-line-strong rounded-xs backdrop:bg-[rgb(0_0_0/0.73)] animate-rise motion-reduce:animate-none"
       aria-label="Aviso de cookies"
+      data-lenis-prevent
     >
-      <div className="flex flex-col gap-2 max-w-240 mx-auto sm:flex-row sm:items-center sm:gap-6">
-        <p className="font-terciaria text-body text-center sm:text-left sm:flex-1 max-w-prose">
-          Medimos a visita de forma anônima, sem cookies. Aceitar libera cookies de análise completa e de marketing.
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
+        <div className="flex flex-col items-start gap-3 sm:flex-1">
+          <p className="font-secondary text-overline uppercase text-silver">
+            Preferências de privacidade
+          </p>
+          <h2 className="font-secondary text-h2 uppercase">Você aceita cookies?</h2>
+          <p className="font-tertiary text-caption text-silver">
+            Com seu aceite, usamos cookies de análise completa e de marketing. A medição anônima,
+            sem cookies, continua ligada.
+          </p>
           {PRIVACY_URL && (
-            <>
-              {" "}Veja a <a className="underline underline-offset-4" href={PRIVACY_URL}>Privacidade</a>.
-            </>
+            <a
+              className="font-tertiary text-caption underline underline-offset-4"
+              href={PRIVACY_URL}
+            >
+              Ler a política de privacidade
+            </a>
           )}
-        </p>
-        <div className="grid grid-cols-2 gap-3 sm:flex-none">
-          <button type="button" className={BUTTON} onClick={() => answerConsent(false)}>
-            Apenas essenciais
+        </div>
+        <div className="grid gap-3 sm:flex sm:flex-none">
+          <button
+            type="button"
+            className={`${BUTTON} bg-transparent border-line-strong`}
+            onClick={() => answerConsent(false)}
+          >
+            Recusar cookies
           </button>
-          <button type="button" className={BUTTON} onClick={() => answerConsent(true)}>
-            Aceitar
+          <button
+            type="button"
+            className={`${BUTTON} bg-accent border-accent`}
+            onClick={() => answerConsent(true)}
+          >
+            Aceitar cookies
           </button>
         </div>
       </div>
-    </aside>
+    </dialog>
   );
 }

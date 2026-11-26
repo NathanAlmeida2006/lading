@@ -7,7 +7,7 @@ import { expireCookies } from "./storage.js";
 
 /** @typedef {((...args: unknown[]) => void) & {q?: unknown[]}} ClarityFunction O `clarity` do snippet da Microsoft: guarda as chamadas em `q` até o script carregar. */
 
-// O id vira parte da URL do script: so letras e numeros entram.
+// O id vira parte da URL do script: só letras e números entram.
 const CLARITY_ID_PATTERN = /^[a-z0-9]+$/i;
 const CLARITY_COOKIE_NAMES = ["_clck", "_clsk"];
 
@@ -38,9 +38,9 @@ function getClarity() {
  * @returns {import("./contracts.js").ClarityPort} A porta do Clarity.
  */
 export function createClarity(readConsent, getTags = () => ({})) {
-  let isInjected = false; // o script que ESTE modulo pos na pagina; `window.clarity` alheio nao conta
-  let hasFailed = false; // o script nao carregou (bloqueado): o stub enfileiraria para sempre
-  let isGranted = false; // o ultimo estado de cookies enviado ao Clarity (o padrao enviado na injecao e negado)
+  let isInjected = false; // o script que ESTE módulo põe na página; `window.clarity` alheio não conta
+  let hasFailed = false; // o script não carregou (bloqueado): o stub enfileiraria para sempre
+  let isGranted = false; // o último estado de cookies enviado ao Clarity (o padrão enviado na injeção é negado)
   let hasTagged = false;
   let hasWarned = false;
 
@@ -61,8 +61,13 @@ export function createClarity(readConsent, getTags = () => ({})) {
   function sendConsent(isAnalyticsGranted) {
     isGranted = isAnalyticsGranted;
     try {
-      getClarity()?.("consentv2", { ad_Storage: "denied", analytics_Storage: isAnalyticsGranted ? "granted" : "denied" });
-    } catch { /* o tracker nao derruba a pagina */ }
+      getClarity()?.("consentv2", {
+        ad_Storage: "denied",
+        analytics_Storage: isAnalyticsGranted ? "granted" : "denied",
+      });
+    } catch {
+      /* o tracker não derruba a página */
+    }
   }
 
   /**
@@ -75,21 +80,31 @@ export function createClarity(readConsent, getTags = () => ({})) {
   function loadClarity() {
     const consent = readConsent();
     if (!isEligible(false)) {
-      if (!hasWarned) { hasWarned = true; console.warn("[Clarity] ID não configurado ou inválido (VITE_CLARITY_ID): script não carregado"); }
+      if (!hasWarned) {
+        hasWarned = true;
+        console.warn(
+          "[Clarity] ID não configurado ou inválido (VITE_CLARITY_ID): script não carregado",
+        );
+      }
       return;
     }
     if (!isInjected) {
-      if (getTrackerWindow().clarity) return; // clarity de outra origem: este modulo nao assume o que nao carregou
+      if (getTrackerWindow().clarity) return; // clarity de outra origem: este módulo não assume o que não carregou
       try {
-        const clarity = /** @type {ClarityFunction} */ (function () {
-          (clarity.q = clarity.q || []).push(arguments);
-        });
+        const clarity = /** @type {ClarityFunction} */ (
+          function () {
+            (clarity.q = clarity.q || []).push(arguments);
+          }
+        );
         getTrackerWindow().clarity = clarity;
-        sendConsent(false); // o padrao negado entra na fila antes do script existir
+        sendConsent(false); // o padrão negado entra na fila antes do script existir
         const script = document.createElement("script");
         script.async = true;
         script.src = `https://www.clarity.ms/tag/${getClarityId()}`;
-        script.onerror = () => { hasFailed = true; console.warn("[Clarity] script bloqueado (CSP, adblock ou rede)"); };
+        script.onerror = () => {
+          hasFailed = true;
+          console.warn("[Clarity] script bloqueado (CSP, adblock ou rede)");
+        };
         document.head.appendChild(script);
         isInjected = true;
       } catch {
@@ -111,7 +126,11 @@ export function createClarity(readConsent, getTags = () => ({})) {
    * @returns {void}
    */
   function setTag(key, value) {
-    try { if (isEligible()) getClarity()?.("set", key, value); } catch { /* o tracker nao derruba a pagina */ }
+    try {
+      if (isEligible()) getClarity()?.("set", key, value);
+    } catch {
+      /* o tracker não derruba a página */
+    }
   }
 
   /**
@@ -119,7 +138,11 @@ export function createClarity(readConsent, getTags = () => ({})) {
    * @returns {void}
    */
   function sendEvent(name) {
-    try { if (isEligible()) getClarity()?.("event", name); } catch { /* o tracker nao derruba a pagina */ }
+    try {
+      if (isEligible()) getClarity()?.("event", name);
+    } catch {
+      /* o tracker não derruba a página */
+    }
   }
 
   return { isEligible, loadClarity, setTag, sendEvent };

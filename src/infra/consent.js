@@ -1,13 +1,13 @@
 import { useSyncExternalStore } from "react";
 import { readSessionValue, writeSessionValue } from "./storage.js";
 
-const CONSENT_STORAGE_KEY = "fluor:consentimento";
+const CONSENT_STORAGE_KEY = "fluor:consent";
 
 /* -------------------------------------------------------------------------
    Consentimento
    ------------------------------------------------------------------------- */
 
-// No servidor e na hidratacao vale "sem aviso e sem doca": a resposta real so se le no navegador.
+// No servidor e na hidratação vale "sem aviso e sem doca": a resposta real só se lê no navegador.
 const getServerConsent = () => false;
 
 /**
@@ -16,7 +16,7 @@ const getServerConsent = () => false;
  */
 export function createConsent() {
   /** @type {boolean|null|undefined} */
-  let consent; // undefined = ainda nao lido; depois true | false | null (sem resposta)
+  let consent; // undefined = ainda não lido; depois true | false | null (sem resposta)
   const subscribers = new Set();
 
   /**
@@ -50,7 +50,7 @@ export function createConsent() {
   }
 
   /**
-   * A unica porta de entrada da resposta: grava, e quem assina (aviso, doca, alcance) reage.
+   * A única porta de entrada da resposta: grava, e quem assina (aviso, doca, alcance) reage.
    * `null` reabre a pergunta (o aviso volta e a medição para até nova resposta); qualquer outro
    * valor que não seja `true` conta como recusa.
    * @param {unknown} accepted - `true` quando o visitante aceitou; `null` para reabrir a escolha; qualquer outro valor é recusa.
@@ -60,7 +60,11 @@ export function createConsent() {
     consent = accepted === null ? null : accepted === true;
     writeSessionValue(CONSENT_STORAGE_KEY, consent);
     for (const subscriber of [...subscribers]) {
-      try { subscriber(); } catch (error) { console.error(error); }
+      try {
+        subscriber();
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 

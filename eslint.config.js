@@ -1,11 +1,11 @@
 import hooks from "eslint-plugin-react-hooks";
 
-// Alcance: src/, scripts/ e os arquivos de configuracao da raiz. So o que a auditoria [3.3-B] pede:
-// dependencia de hook (inclusive a do useMotion, que repassa as deps ao useEffect), HTML montado por texto e nome sem uso.
-// O que o .gitignore ja ignora fica fora, para o lint de um clone limpo ser igual ao local.
+// Alcance: src/, scripts/ e os arquivos de configuração da raiz. Só o que a auditoria [3.3-B] pede:
+// dependência de hook (inclusive a do useMotion, que repassa as deps ao useEffect), HTML montado por texto e nome sem uso.
+// O que o .gitignore já ignora fica fora, para o lint de um clone limpo ser igual ao local.
 const SEM_HTML = "Texto nao vira HTML: monte com JSX.";
 
-// O `no-unused-vars` do ESLint nao enxerga o uso em JSX (`<Dock />`): esta regra marca o nome da tag como usado,
+// O `no-unused-vars` do ESLint não enxerga o uso em JSX (`<Dock />`): esta regra marca o nome da tag como usado,
 // como a `jsx-uses-vars` do eslint-plugin-react, sem trazer o plugin inteiro.
 const jsx = {
   rules: {
@@ -24,21 +24,38 @@ const jsx = {
 export default [
   {
     ignores: [
-      "node_modules/**", "dist/**", "dist-ssr/**", ".regressao/**", "output/**", "docs/**", "public/**",
-      "source-media/**", ".claude/**", ".wrangler/**", ".playwright-cli/**", ".superpowers/**", "graphify-out/**",
-      "scripts/verificar*.mjs", "scripts/medir-carga*", "scripts/retestar-*",
+      "node_modules/**",
+      "dist/**",
+      "dist-ssr/**",
+      ".regressao/**",
+      "output/**",
+      "docs/**",
+      "public/**",
+      "source-media/**",
+      ".claude/**",
+      ".wrangler/**",
+      ".playwright-cli/**",
+      ".superpowers/**",
+      "graphify-out/**",
+      "scripts/verificar*.mjs",
+      "scripts/medir-carga*",
     ],
   },
   {
     files: ["**/*.{js,jsx,mjs}"],
     linterOptions: { reportUnusedDisableDirectives: "error" },
-    languageOptions: { ecmaVersion: "latest", sourceType: "module", parserOptions: { ecmaFeatures: { jsx: true } } },
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
     plugins: { "react-hooks": hooks, jsx },
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": ["error", { additionalHooks: "^useMotion$" }],
       "jsx/uses-vars": "error",
       "no-unused-vars": ["error", { ignoreRestSiblings: true, caughtErrors: "none" }],
+      "one-var": ["error", "never"],
       "no-restricted-syntax": [
         "error",
         { selector: "JSXAttribute[name.name='dangerouslySetInnerHTML']", message: SEM_HTML },
@@ -46,11 +63,14 @@ export default [
       ],
       "no-restricted-properties": [
         "error",
-        ...["innerHTML", "outerHTML", "insertAdjacentHTML"].map((property) => ({ property, message: SEM_HTML })),
+        ...["innerHTML", "outerHTML", "insertAdjacentHTML"].map((property) => ({
+          property,
+          message: SEM_HTML,
+        })),
       ],
     },
   },
-  // Unica excecao: o Wordmark injeta o SVG de src/assets/wordmark.svg (?raw, versionado, nao e entrada de terceiro).
+  // Única exceção: o Wordmark injeta o SVG de src/assets/wordmark.svg (?raw, versionado, não é entrada de terceiro).
   // O no-restricted-properties continua valendo no arquivo.
   { files: ["src/components/ui/Wordmark.jsx"], rules: { "no-restricted-syntax": "off" } },
 ];

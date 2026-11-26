@@ -22,14 +22,22 @@ export function useMotion(effect, deps = []) {
       if (!scope?.isActive) return;
       scope.isActive = false;
       for (const cleanup of scope.cleanup) {
-        try { cleanup(); } catch (error) { console.error(error); }
+        try {
+          cleanup();
+        } catch (error) {
+          console.error(error);
+        }
       }
       scope.cleanup.clear();
     };
     const execute = () => {
       clearScope();
-      if (!isMounted || !document.documentElement.classList.contains("js") ||
-          document.documentElement.classList.contains("movimento-falhou")) return;
+      if (
+        !isMounted ||
+        !document.documentElement.classList.contains("js") ||
+        document.documentElement.classList.contains("movimento-falhou")
+      )
+        return;
       scope = { isActive: true, cleanup: new Set() };
       const previous = currentScope;
       currentScope = scope;
@@ -46,8 +54,12 @@ export function useMotion(effect, deps = []) {
     };
     execute();
     const unsubscribePreference = subscribeToMotionPreference(execute);
-    return () => { isMounted = false; unsubscribePreference(); clearScope(); };
-  }, deps); // eslint-disable-line react-hooks/exhaustive-deps -- intencional: as deps sao as de quem chama o useMotion (a regra o confere pelo additionalHooks) e o efeito e a funcao do chamador, que e lida na montagem de cada rodada
+    return () => {
+      isMounted = false;
+      unsubscribePreference();
+      clearScope();
+    };
+  }, deps); // eslint-disable-line react-hooks/exhaustive-deps -- intencional: as deps são as de quem chama o useMotion (a regra o confere pelo additionalHooks) e o efeito é a função do chamador, que é lida na montagem de cada rodada
 }
 
 /**
@@ -66,39 +78,60 @@ function callChoreography(name, args, withSignal = false) {
     if (!isActive) return;
     isActive = false;
     controller.abort();
-    try { result?.revert?.(); } catch (error) { console.error(error); }
+    try {
+      result?.revert?.();
+    } catch (error) {
+      console.error(error);
+    }
     if (typeof result === "function") {
-      try { result(); } catch (error) { console.error(error); }
+      try {
+        result();
+      } catch (error) {
+        console.error(error);
+      }
     }
   };
   cancel.revert = cancel;
   scope?.cleanup.add(cancel);
   // Um clique no CTA também pode iniciar a carga. Ele segue seu href normal.
-  loadChoreographies().then((choreographyModule) => {
-    if (!isActive || (scope && !scope.isActive) || document.documentElement.classList.contains("movimento-falhou")) return;
-    document.documentElement.classList.add("movimento-pronto");
-    try {
-      result = choreographyModule[name](...args, ...(withSignal ? [controller.signal] : []));
-      if (result && typeof result.then === "function") {
-        result.then((cleanup) => {
-          result = cleanup;
-          if (!isActive) {
-            try {
-              if (typeof cleanup === "function") cleanup();
-              else cleanup?.revert?.();
-            } catch (error) { console.error(error); }
-          }
-        }).catch((error) => {
-          if (!isActive) return;
-          console.error(error);
-          openReadingMode();
-        });
+  loadChoreographies()
+    .then((choreographyModule) => {
+      if (
+        !isActive ||
+        (scope && !scope.isActive) ||
+        document.documentElement.classList.contains("movimento-falhou")
+      )
+        return;
+      document.documentElement.classList.add("movimento-pronto");
+      try {
+        result = choreographyModule[name](...args, ...(withSignal ? [controller.signal] : []));
+        if (result && typeof result.then === "function") {
+          result
+            .then((cleanup) => {
+              result = cleanup;
+              if (!isActive) {
+                try {
+                  if (typeof cleanup === "function") cleanup();
+                  else cleanup?.revert?.();
+                } catch (error) {
+                  console.error(error);
+                }
+              }
+            })
+            .catch((error) => {
+              if (!isActive) return;
+              console.error(error);
+              openReadingMode();
+            });
+        }
+      } catch (error) {
+        console.error(error);
+        openReadingMode();
       }
-    } catch (error) {
-      console.error(error);
-      openReadingMode();
-    }
-  }).catch(() => { if (isActive) openReadingMode(); }); // o erro da carga e registrado uma vez, em loader.js
+    })
+    .catch(() => {
+      if (isActive) openReadingMode();
+    }); // o erro da carga e registrado uma vez, em loader.js
   return cancel;
 }
 
@@ -120,7 +153,8 @@ export const revealInCascade = (...args) => callChoreography("revealInCascade", 
  * @param {{delay?: number}} [options={}] - Opções de `revealLineMask` (`delay`).
  * @returns {() => void} Função que cancela a divisão e a animação, mesmo antes de a coreografia carregar (a coreografia em si devolve uma Promise; este invólucro não).
  */
-export const revealLineMask = (target, options = {}) => callChoreography("revealLineMask", [target, options], true);
+export const revealLineMask = (target, options = {}) =>
+  callChoreography("revealLineMask", [target, options], true);
 /**
  * Sobe as linhas de dentro do recorte, escalonadas.
  * @param {Parameters<typeof import("./choreographies.js").raiseLines>} args - Linhas e opções de `raiseLines` (`delay`, `interval`, `duration`).
@@ -132,7 +166,8 @@ export const raiseLines = (...args) => callChoreography("raiseLines", args);
  * @param {Element} target - Elemento a pulsar.
  * @returns {(() => void) | undefined} Função que desfaz o pulso, ou undefined sem movimento.
  */
-export const pulse = (target) => (isMotionReduced() || isPaused() ? undefined : callChoreography("pulse", [target]));
+export const pulse = (target) =>
+  isMotionReduced() || isPaused() ? undefined : callChoreography("pulse", [target]);
 /**
  * Entrada do painel de tela cheia do fechamento.
  * @param {Parameters<typeof import("./choreographies.js").openPanel>} args - Partes do painel de `openPanel` (`frame`, `threads`, `kicker`, `lines`, `body`, `action`, `footer`).
@@ -161,9 +196,15 @@ export function ensureVisibility() {
   };
   const handleScroll = () => {
     if (timer) return;
-    timer = setTimeout(() => { timer = 0; sweep(); }, 2500);
+    timer = setTimeout(() => {
+      timer = 0;
+      sweep();
+    }, 2500);
   };
   handleScroll();
   window.addEventListener("scroll", handleScroll, { passive: true });
-  return () => { clearTimeout(timer); window.removeEventListener("scroll", handleScroll); };
+  return () => {
+    clearTimeout(timer);
+    window.removeEventListener("scroll", handleScroll);
+  };
 }
